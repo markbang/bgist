@@ -9,7 +9,6 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import Clipboard from '@react-native-clipboard/clipboard';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../navigation/types';
 import {lightTheme, darkTheme} from '../constants/theme';
@@ -27,6 +26,8 @@ export default function GistViewerScreen({route}: Props) {
   const lines = content.split('\n');
 
   const handleCopy = () => {
+    // Use React Native built-in Clipboard
+    const {Clipboard} = require('react-native');
     Clipboard.setString(content);
     Alert.alert('Copied', 'Code copied to clipboard');
   };

@@ -1,277 +1,188 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {useColorScheme, Pressable, Text, View, StyleSheet} from 'react-native';
+import {AuthProvider, useAuth} from './src/contexts/AuthContext';
+import {lightTheme, darkTheme} from './src/constants/theme';
+import LoginScreen from './src/screens/LoginScreen';
+import MyGistsScreen from './src/screens/MyGistsScreen';
+import ExploreScreen from './src/screens/ExploreScreen';
+import CreateGistScreen from './src/screens/CreateGistScreen';
+import StarredScreen from './src/screens/StarredScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
+import GistDetailScreen from './src/screens/GistDetailScreen';
+import GistEditorScreen from './src/screens/GistEditorScreen';
+import GistViewerScreen from './src/screens/GistViewerScreen';
+import UserProfileScreen from './src/screens/UserProfileScreen';
+import GistHistoryScreen from './src/screens/GistHistoryScreen';
+import type {RootStackParamList, MainTabParamList} from './src/navigation/types';
 
-import React, {useState, useEffect} from 'react';
-import {
-  Text,
-  View,
-  StyleSheet,
-  useColorScheme,
-  TouchableOpacity,
-  Alert,
-  Platform,
-  Dimensions,
-  ScrollView,
-} from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<MainTabParamList>();
 
-function App() {
+function TabIcon({label, focused, color}: {label: string; focused: boolean; color: string}) {
+  const icons: Record<string, string> = {
+    MyGists: '📝',
+    Explore: '🔍',
+    CreateGist: '➕',
+    Starred: '⭐',
+    Profile: '👤',
+  };
   return (
-    <SafeAreaProvider>
-      <ErrorBoundary>
-        <AppContent />
-      </ErrorBoundary>
-    </SafeAreaProvider>
+    <View style={styles.tabIconContainer}>
+      <Text style={{fontSize: 20}}>{icons[label] || '📄'}</Text>
+      <Text style={[styles.tabLabel, {color}]}>
+        {label === 'CreateGist' ? 'Create' : label}
+      </Text>
+    </View>
   );
 }
 
-class ErrorBoundary extends React.Component<
-  {children: React.ReactNode},
-  {hasError: boolean; error: Error | null; errorInfo: React.ErrorInfo | null}
-> {
-  constructor(props: {children: React.ReactNode}) {
-    super(props);
-    this.state = {hasError: false, error: null, errorInfo: null};
-  }
+function MainTabs() {
+  const scheme = useColorScheme();
+  const theme = scheme === 'dark' ? darkTheme : lightTheme;
+  const {colors} = theme;
 
-  static getDerivedStateFromError(error: Error) {
-    return {hasError: true, error};
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('BGist Error:', error, errorInfo);
-    this.setState({error, errorInfo});
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return <ErrorScreen error={this.state.error} errorInfo={this.state.errorInfo} />;
-    }
-    return this.props.children;
-  }
+  return (
+    <Tab.Navigator
+      screenOptions={({route}) => ({
+        headerStyle: {backgroundColor: colors.headerBg},
+        headerTintColor: colors.headerText,
+        headerTitleStyle: {fontWeight: '600'},
+        tabBarStyle: {
+          backgroundColor: colors.bgPrimary,
+          borderTopColor: colors.border,
+          height: 56,
+          paddingBottom: 4,
+          paddingTop: 4,
+        },
+        tabBarActiveTintColor: colors.tabIconActive,
+        tabBarInactiveTintColor: colors.tabIcon,
+        tabBarIcon: ({focused, color}) => (
+          <TabIcon label={route.name} focused={focused} color={color} />
+        ),
+        tabBarLabel: () => null,
+      })}>
+      <Tab.Screen
+        name="MyGists"
+        component={MyGistsScreen}
+        options={{title: 'My Gists'}}
+      />
+      <Tab.Screen
+        name="Explore"
+        component={ExploreScreen}
+        options={{title: 'Explore'}}
+      />
+      <Tab.Screen
+        name="CreateGist"
+        component={CreateGistScreen}
+        options={{title: 'Create'}}
+      />
+      <Tab.Screen
+        name="Starred"
+        component={StarredScreen}
+        options={{title: 'Starred'}}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{title: 'Profile'}}
+      />
+    </Tab.Navigator>
+  );
 }
 
-function ErrorScreen({error, errorInfo}: {error: Error | null; errorInfo: React.ErrorInfo | null}) {
-  const isDarkMode = useColorScheme() === 'dark';
-  
+function AppNavigator() {
+  const {isAuthenticated, isLoading} = useAuth();
+  const scheme = useColorScheme();
+  const theme = scheme === 'dark' ? darkTheme : lightTheme;
+  const {colors} = theme;
+
+  if (isLoading) {
+    return (
+      <View style={[styles.loadingContainer, {backgroundColor: colors.bgPrimary}]}>
+        <Text style={{color: colors.textPrimary, fontSize: 16}}>Loading...</Text>
+      </View>
+    );
+  }
+
   return (
-    <View style={[styles.errorContainer, isDarkMode && styles.darkContainer]}>
-      <Text style={[styles.errorTitle, isDarkMode && styles.darkText]}>
-        ⚠️ App Error
-      </Text>
-      <Text style={[styles.errorSubtitle, isDarkMode && styles.darkSubtitle]}>
-        An error occurred in the app
-      </Text>
-      <ScrollView style={styles.errorLogContainer}>
-        <Text style={[styles.errorLog, isDarkMode && styles.darkSubtitle]}>
-          {error ? error.toString() : 'Unknown error'}
-        </Text>
-        {errorInfo && errorInfo.componentStack && (
-          <Text style={[styles.errorLog, isDarkMode && styles.darkSubtitle]}>
-            {'\n'}{errorInfo.componentStack}
-          </Text>
+    <NavigationContainer>
+      <Stack.Navigator
+        screenOptions={{
+          headerStyle: {backgroundColor: colors.headerBg},
+          headerTintColor: colors.headerText,
+          headerTitleStyle: {fontWeight: '600'},
+        }}>
+        {isAuthenticated ? (
+          <>
+            <Stack.Screen
+              name="MainTabs"
+              component={MainTabs}
+              options={{headerShown: false}}
+            />
+            <Stack.Screen
+              name="GistDetail"
+              component={GistDetailScreen}
+              options={{title: 'Gist'}}
+            />
+            <Stack.Screen
+              name="GistEditor"
+              component={GistEditorScreen}
+              options={({route}) => ({
+                title: route.params?.mode === 'edit' ? 'Edit Gist' : 'Create Gist',
+              })}
+            />
+            <Stack.Screen
+              name="GistViewer"
+              component={GistViewerScreen}
+              options={{title: 'File'}}
+            />
+            <Stack.Screen
+              name="UserProfile"
+              component={UserProfileScreen}
+              options={({route}) => ({title: route.params.username})}
+            />
+            <Stack.Screen
+              name="GistHistory"
+              component={GistHistoryScreen}
+              options={{title: 'Revisions'}}
+            />
+          </>
+        ) : (
+          <Stack.Screen
+            name="Auth"
+            component={LoginScreen}
+            options={{headerShown: false}}
+          />
         )}
-      </ScrollView>
-      <Text style={[styles.info, isDarkMode && styles.darkSubtitle]}>
-        Please screenshot this and report the issue.
-      </Text>
-    </View>
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
-function AppContent() {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [deviceInfo, setDeviceInfo] = useState('');
-  const isDarkMode = useColorScheme() === 'dark';
-  const safeAreaInsets = useSafeAreaInsets();
-
-  useEffect(() => {
-    // Simulate loading
-    setTimeout(() => {
-      setIsLoaded(true);
-      setDeviceInfo(`
-Platform: ${Platform.OS} ${Platform.Version}
-Dimensions: ${Dimensions.get('window').width}x${Dimensions.get('window').height}
-Safe Area: top=${safeAreaInsets.top}, bottom=${safeAreaInsets.bottom}
-      `);
-    }, 1000);
-  }, []);
-
+export default function App() {
   return (
-    <View style={[styles.container, isDarkMode && styles.darkContainer]}>
-      <Text style={[styles.title, isDarkMode && styles.darkText]}>
-        BGist
-      </Text>
-      <Text style={[styles.subtitle, isDarkMode && styles.darkSubtitle]}>
-        A beautiful GitHub Gist client
-      </Text>
-      
-      {!isLoaded ? (
-        <Text style={[styles.loading, isDarkMode && styles.darkSubtitle]}>
-          Loading...
-        </Text>
-      ) : (
-        <>
-          <Text style={[styles.success, {color: '#1a7f37'}]}>
-            ✅ App loaded successfully!
-          </Text>
-          <Text style={[styles.deviceInfo, isDarkMode && styles.darkSubtitle]}>
-            {deviceInfo}
-          </Text>
-          
-          <TouchableOpacity
-            style={styles.testButton}
-            onPress={() => {
-              Alert.alert('Success!', 'React Native is working correctly on your device.');
-            }}>
-            <Text style={styles.testButtonText}>Test Alert</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={() => {
-              setDeviceInfo(prev => prev + '\n\nButton pressed at: ' + new Date().toISOString());
-            }}>
-            <Text style={[styles.secondaryButtonText, isDarkMode && styles.darkSubtitle]}>
-              Update Info
-            </Text>
-          </TouchableOpacity>
-        </>
-      )}
-      
-      <Text style={[styles.version, isDarkMode && styles.darkSubtitle]}>
-        React Native 0.84.1 • Build 9
-      </Text>
-    </View>
+    <AuthProvider>
+      <AppNavigator />
+    </AuthProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  loadingContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tabIconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffffff',
-    padding: 24,
   },
-  darkContainer: {
-    backgroundColor: '#0d1117',
-  },
-  title: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#1f2328',
-    marginBottom: 8,
-  },
-  darkText: {
-    color: '#e6edf3',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#656d76',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  darkSubtitle: {
-    color: '#8b949e',
-  },
-  loading: {
-    fontSize: 18,
-    color: '#656d76',
-    marginTop: 16,
-  },
-  success: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  deviceInfo: {
-    fontSize: 12,
-    fontFamily: Platform.select({ios: 'Menlo', android: 'monospace'}),
-    color: '#656d76',
-    marginBottom: 24,
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  testButton: {
-    backgroundColor: '#1f883d',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 6,
-    marginBottom: 12,
-    minWidth: 150,
-    alignItems: 'center',
-  },
-  testButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#d0d7de',
-    minWidth: 150,
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    color: '#656d76',
-    fontSize: 16,
+  tabLabel: {
+    fontSize: 10,
+    marginTop: 2,
     fontWeight: '500',
   },
-  version: {
-    fontSize: 12,
-    color: '#8c959f',
-    marginTop: 32,
-  },
-  errorContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#ffffff',
-    padding: 24,
-  },
-  errorTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#cf222e',
-    marginBottom: 8,
-  },
-  errorSubtitle: {
-    fontSize: 16,
-    color: '#656d76',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  errorLogContainer: {
-    width: '100%',
-    maxHeight: 300,
-    backgroundColor: '#f6f8fa',
-    borderRadius: 6,
-    padding: 12,
-    marginBottom: 16,
-  },
-  errorLog: {
-    fontSize: 12,
-    fontFamily: Platform.select({ios: 'Menlo', android: 'monospace'}),
-    color: '#656d76',
-    lineHeight: 18,
-  },
-  info: {
-    fontSize: 14,
-    color: '#656d76',
-    textAlign: 'center',
-  },
 });
-
-export default App;
