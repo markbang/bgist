@@ -32,8 +32,22 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       await login(patToken.trim());
-    } catch {
-      Alert.alert(t('common.error'), t('auth.invalidToken'));
+    } catch (error: any) {
+      if (error.message === 'FINE_GRAINED_TOKEN') {
+        Alert.alert(
+          t('common.error'),
+          t('auth.noFineGrained'),
+          [{text: 'OK'}],
+        );
+      } else if (error.message === 'INVALID_FORMAT') {
+        Alert.alert(
+          t('common.error'),
+          'Invalid token format. Token should start with ghp_',
+          [{text: 'OK'}],
+        );
+      } else {
+        Alert.alert(t('common.error'), t('auth.invalidToken'));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -80,6 +94,15 @@ export default function LoginScreen() {
                 gist
               </Text>
             </Text>
+
+            <View style={[styles.warningCard, {borderColor: colors.yellowBorder, backgroundColor: colors.yellowBg}]}>
+              <Text style={[styles.warningText, {color: colors.warning}]}>
+                ⚠️ {t('auth.classicToken')}
+              </Text>
+              <Text style={[styles.warningText, {color: colors.warning, fontSize: 12}]}>
+                {t('auth.noFineGrained')}
+              </Text>
+            </View>
 
             <View style={styles.inputGroup}>
               <Text style={[styles.inputLabel, {color: colors.textPrimary}]}>
@@ -207,5 +230,16 @@ const styles = StyleSheet.create({
   primaryBtnText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  warningCard: {
+    borderWidth: 1,
+    borderRadius: 6,
+    padding: 12,
+    marginBottom: 16,
+  },
+  warningText: {
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 18,
   },
 });

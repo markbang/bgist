@@ -7,6 +7,7 @@ import {
   FlatList,
   ActivityIndicator,
   useColorScheme,
+  Alert,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 import type {CompositeNavigationProp} from '@react-navigation/native';

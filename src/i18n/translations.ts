@@ -43,6 +43,8 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.signingIn': 'Signing in...',
     'auth.invalidToken': 'Invalid token. Please check and try again.',
     'auth.enterToken': 'Please enter a Personal Access Token',
+    'auth.classicToken': 'Please use Classic Personal Access Token',
+    'auth.noFineGrained': 'Fine-grained tokens (github_pat_) do not support Gist API. Use Classic tokens (ghp_) from github.com/settings/tokens',
 
     // Gist
     'gist.description': 'Gist description (optional)',
@@ -135,6 +137,8 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.signingIn': '登录中...',
     'auth.invalidToken': '令牌无效，请检查后重试',
     'auth.enterToken': '请输入个人访问令牌',
+    'auth.classicToken': '请使用 Classic 类型的令牌',
+    'auth.noFineGrained': 'Fine-grained 令牌 (github_pat_) 不支持 Gist API。请前往 github.com/settings/tokens 创建 Classic 令牌 (ghp_)',
 
     // Gist
     'gist.description': 'Gist 描述（可选）',

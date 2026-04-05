@@ -59,6 +59,14 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
 
   const login = async (newToken: string) => {
     try {
+      // Validate token format
+      if (newToken.startsWith('github_pat_')) {
+        throw new Error('FINE_GRAINED_TOKEN');
+      }
+      if (!newToken.startsWith('ghp_') && !newToken.startsWith('gho_') && newToken.length < 20) {
+        throw new Error('INVALID_FORMAT');
+      }
+
       setToken(newToken);
       setAuthToken(newToken);
       await AsyncStorage.setItem('github_token', newToken);
@@ -78,7 +86,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
         setToken(null);
         setAuthToken(null);
         await AsyncStorage.removeItem('github_token');
-        throw new Error('Invalid token');
+        throw new Error('INVALID_TOKEN');
       }
     } catch (error) {
       // Re-throw to let caller handle
