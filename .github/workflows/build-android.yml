@@ -1,8 +1,9 @@
-name: Build Android APK
+name: Build & Release Android APK
 
 on:
   push:
-    branches: [main]
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -36,20 +37,57 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Get version from package.json
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Verify tag matches version
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "Tag version $TAG_VERSION does not match package.json version $PACKAGE_VERSION"
+            exit 1
+          fi
+          echo "Version match: v$PACKAGE_VERSION"
+
       - name: Build Release APK
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
 
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bgist-apk
+          path: android/app/build/outputs/apk/release/BGist-*.apk
+          retention-days: 30
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ github.run_number }}
-          name: "BGist v0.1.1-build.${{ github.run_number }}"
+          tag_name: v${{ steps.version.outputs.version }}
+          name: "BGist v${{ steps.version.outputs.version }}"
           body: |
-            Auto-built from commit ${{ github.sha }}
+            ## BGist v${{ steps.version.outputs.version }}
 
-            ## Download
-            - `BGist-v*.apk` - Release build (optimized with ProGuard + R8)
-          files: android/app/build/outputs/apk/release/BGist-*.apk
+            GitHub Gist 移动端客户端
+
+            ### 下载
+            | 文件 | 说明 |
+            |------|------|
+            | `BGist-v${{ steps.version.outputs.version }}.apk` | Android Release 包 |
+
+            ### 功能
+            - ✅ GitHub PAT 登录
+            - ✅ 浏览/创建/编辑 Gist
+            - ✅ 星标/Fork/评论
+            - ✅ 中英文切换
+            - ✅ GitHub 风格设计
+
+            > 当前版本使用 debug 签名，正式发布需替换为正式签名
+          files: android/app/build/outputs/apk/release/BGist-v*.apk
+          generate_release_notes: false
+          draft: false
