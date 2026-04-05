@@ -7,6 +7,7 @@ import {AuthProvider, useAuth} from './src/contexts/AuthContext';
 import {I18nProvider} from './src/i18n/context';
 import {lightTheme, darkTheme} from './src/constants/theme';
 import {FileIcon, SearchIcon, PlusIcon, StarIcon, UserIcon} from './src/components/TabIcons';
+import ErrorBoundary from './src/components/ErrorBoundary';
 import LoginScreen from './src/screens/LoginScreen';
 import MyGistsScreen from './src/screens/MyGistsScreen';
 import ExploreScreen from './src/screens/ExploreScreen';
@@ -181,11 +182,13 @@ function AppNavigator() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <I18nProvider>
-        <AppNavigator />
-      </I18nProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <I18nProvider>
+          <AppNavigator />
+        </I18nProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

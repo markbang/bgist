@@ -1,6 +1,7 @@
 import React, {createContext, useContext, useState, useEffect} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type {UserInfo} from '../types/gist';
+import {setAuthToken} from '../api/gistApi';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -33,6 +34,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
         const storedToken = await AsyncStorage.getItem('github_token');
         if (storedToken) {
           setToken(storedToken);
+          setAuthToken(storedToken);
           // Fetch user info
           const response = await fetch('https://api.github.com/user', {
             headers: {
@@ -56,25 +58,38 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
   }, []);
 
   const login = async (newToken: string) => {
-    setToken(newToken);
-    await AsyncStorage.setItem('github_token', newToken);
+    try {
+      setToken(newToken);
+      setAuthToken(newToken);
+      await AsyncStorage.setItem('github_token', newToken);
 
-    const response = await fetch('https://api.github.com/user', {
-      headers: {
-        Authorization: `Bearer ${newToken}`,
-        Accept: 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-      },
-    });
-    if (response.ok) {
-      const userData = await response.json();
-      setUser(userData);
+      const response = await fetch('https://api.github.com/user', {
+        headers: {
+          Authorization: `Bearer ${newToken}`,
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      });
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+      } else {
+        // Token is invalid, clear it
+        setToken(null);
+        setAuthToken(null);
+        await AsyncStorage.removeItem('github_token');
+        throw new Error('Invalid token');
+      }
+    } catch (error) {
+      // Re-throw to let caller handle
+      throw error;
     }
   };
 
   const logout = async () => {
     setToken(null);
     setUser(null);
+    setAuthToken(null);
     await AsyncStorage.removeItem('github_token');
   };
 
