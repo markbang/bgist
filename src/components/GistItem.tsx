@@ -3,13 +3,14 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
+  Pressable,
   useColorScheme,
   Platform,
 } from 'react-native';
 import type {Gist} from '../types/gist';
 import {lightTheme, darkTheme} from '../constants/theme';
 import {timeAgo, getFileIcon, truncate} from '../utils/format';
+import {useI18n} from '../i18n/context';
 
 interface GistItemProps {
   gist: Gist;
@@ -20,101 +21,103 @@ export default function GistItem({gist, onPress}: GistItemProps) {
   const scheme = useColorScheme();
   const theme = scheme === 'dark' ? darkTheme : lightTheme;
   const {colors} = theme;
+  const {t} = useI18n();
 
   const fileEntries = Object.entries(gist.files);
-  const firstFile = fileEntries[0];
   const fileCount = fileEntries.length;
 
   return (
-    <TouchableOpacity
-      style={[styles.container, {backgroundColor: colors.bgPrimary}]}
-      onPress={onPress}
-      activeOpacity={0.6}>
-      {/* Header */}
+    <Pressable
+      style={({pressed}) => [
+        styles.container,
+        {
+          backgroundColor: pressed ? colors.bgTertiary : colors.bgPrimary,
+        },
+      ]}
+      onPress={onPress}>
+      {/* Header row */}
       <View style={styles.header}>
-        <Text style={[styles.description, {color: colors.textPrimary}]}>
+        <Text
+          style={[
+            styles.description,
+            {color: colors.textPrimary},
+          ]}
+          numberOfLines={1}>
           {gist.description || (
-            <Text style={{color: colors.textTertiary, fontStyle: 'italic'}}>
-              No description
+            <Text style={{color: colors.textTertiary}}>
+              {t('gist.noDescription')}
             </Text>
           )}
         </Text>
         <View
           style={[
-            styles.visibilityBadge,
+            styles.badge,
             {
               backgroundColor: gist.public
                 ? colors.greenBg
                 : colors.yellowBg,
-              borderColor: gist.public
-                ? colors.greenBorder
-                : colors.yellowBorder,
             },
           ]}>
           <Text
             style={[
-              styles.visibilityText,
+              styles.badgeText,
               {
                 color: gist.public ? colors.success : colors.warning,
               },
             ]}>
-            {gist.public ? 'Public' : 'Secret'}
+            {gist.public ? t('common.public') : t('common.secret')}
           </Text>
         </View>
       </View>
 
-      {/* Meta info */}
+      {/* Meta row */}
       <View style={styles.metaRow}>
         <Text style={[styles.owner, {color: colors.textLink}]}>
           {gist.owner.login}
         </Text>
-        <Text style={[styles.dot, {color: colors.textSecondary}]}>·</Text>
+        <Text style={[styles.dot, {color: colors.textTertiary}]}>·</Text>
         <Text style={[styles.time, {color: colors.textSecondary}]}>
-          Updated {timeAgo(gist.updated_at)}
+          {t('common.updated')} {timeAgo(gist.updated_at)}
         </Text>
       </View>
 
-      {/* Files */}
-      <View style={styles.filesContainer}>
-        {fileEntries.slice(0, 3).map(([key, file]) => (
-          <View key={key} style={styles.fileRow}>
-            <Text style={{fontSize: 14, marginRight: 6}}>
+      {/* Files preview */}
+      <View style={styles.filesSection}>
+        {fileEntries.slice(0, 2).map(([_, file]) => (
+          <View key={file.filename} style={styles.fileRow}>
+            <Text style={styles.fileIcon}>
               {getFileIcon(file.filename)}
             </Text>
             <Text
               style={[
                 styles.filename,
                 {color: colors.textPrimary},
-              ]}>
+              ]}
+              numberOfLines={1}>
               {file.filename}
             </Text>
             {file.language && (
-              <Text style={[styles.language, {color: colors.textSecondary}]}>
-                {file.language}
-              </Text>
+              <View style={[styles.langDot, {backgroundColor: '#8b949e'}]} />
             )}
           </View>
         ))}
-        {fileCount > 3 && (
-          <Text style={[styles.moreFiles, {color: colors.textLink}]}>
-            +{fileCount - 3} more file{fileCount - 3 > 1 ? 's' : ''}
+        {fileCount > 2 && (
+          <Text style={[styles.moreFiles, {color: colors.textSecondary}]}>
+            +{fileCount - 2} {t('gist.moreFiles')}
           </Text>
         )}
-
-        {/* Stats */}
-        <View style={styles.statsRow}>
-          <Text style={[styles.stat, {color: colors.textSecondary}]}>
-            ★ 0
-          </Text>
-          <Text style={[styles.stat, {color: colors.textSecondary}]}>
-            💬 {gist.comments}
-          </Text>
-          <Text style={[styles.stat, {color: colors.textSecondary}]}>
-            📄 {fileCount}
-          </Text>
-        </View>
       </View>
-    </TouchableOpacity>
+
+      {/* Bottom stats */}
+      <View style={styles.statsRow}>
+        <Text style={[styles.stat, {color: colors.textTertiary}]}>
+          ★ {gist.comments > 0 ? gist.comments : 0}
+        </Text>
+        <Text style={[styles.stat, {color: colors.textTertiary}]}>
+          💬 {gist.comments}
+        </Text>
+      </View>
+    </Pressable>
   );
 }
 
@@ -125,24 +128,21 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 4,
   },
   description: {
     flex: 1,
     fontSize: 15,
     fontWeight: '600',
-    lineHeight: 20,
     marginRight: 8,
   },
-  visibilityBadge: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    marginTop: 2,
+  badge: {
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
-  visibilityText: {
+  badgeText: {
     fontSize: 11,
     fontWeight: '500',
   },
@@ -162,31 +162,36 @@ const styles = StyleSheet.create({
   time: {
     fontSize: 13,
   },
-  filesContainer: {
-    paddingLeft: 0,
+  filesSection: {
+    marginBottom: 6,
   },
   fileRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 3,
+  },
+  fileIcon: {
+    fontSize: 14,
+    marginRight: 6,
   },
   filename: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: Platform.select({ios: 'Menlo', android: 'monospace'}),
+    flex: 1,
   },
-  language: {
-    fontSize: 12,
+  langDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     marginLeft: 8,
   },
   moreFiles: {
-    fontSize: 13,
+    fontSize: 12,
     marginTop: 2,
-    marginBottom: 6,
   },
   statsRow: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 4,
   },
   stat: {
     fontSize: 12,

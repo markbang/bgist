@@ -17,7 +17,7 @@ import type {MainTabParamList, RootStackParamList} from '../navigation/types';
 import {getMyGists} from '../api/gistApi';
 import type {Gist} from '../types/gist';
 import {lightTheme, darkTheme} from '../constants/theme';
-import {timeAgo, getFileIcon, truncate} from '../utils/format';
+import {useI18n} from '../i18n/context';
 import GistItem from '../components/GistItem';
 
 type Props = {
@@ -31,6 +31,7 @@ export default function MyGistsScreen({navigation}: Props) {
   const scheme = useColorScheme();
   const theme = scheme === 'dark' ? darkTheme : lightTheme;
   const {colors} = theme;
+  const {t} = useI18n();
 
   const [gists, setGists] = useState<Gist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -78,33 +79,24 @@ export default function MyGistsScreen({navigation}: Props) {
   const renderItem = ({item}: {item: Gist}) => (
     <GistItem
       gist={item}
-      onPress={() =>
-        navigation.navigate('GistDetail', {gistId: item.id})
-      }
+      onPress={() => navigation.navigate('GistDetail', {gistId: item.id})}
     />
   );
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Text style={[styles.emptyIcon, {fontSize: 48}]}>📝</Text>
+      <Text style={{fontSize: 48, marginBottom: 16}}>📝</Text>
       <Text style={[styles.emptyTitle, {color: colors.textPrimary}]}>
-        No gists yet
+        {t('gist.emptyTitle')}
       </Text>
       <Text style={[styles.emptyText, {color: colors.textSecondary}]}>
-        Create your first gist to get started
+        {t('gist.emptyText')}
       </Text>
       <TouchableOpacity
-        style={[
-          styles.createButton,
-          {backgroundColor: colors.btnPrimaryBg},
-        ]}
+        style={[styles.createBtn, {backgroundColor: colors.btnPrimaryBg}]}
         onPress={() => navigation.navigate('GistEditor', {mode: 'create'})}>
-        <Text
-          style={[
-            styles.createButtonText,
-            {color: colors.btnPrimaryText},
-          ]}>
-          Create Gist
+        <Text style={[styles.createBtnText, {color: colors.btnPrimaryText}]}>
+          {t('gist.createGist')}
         </Text>
       </TouchableOpacity>
     </View>
@@ -112,7 +104,7 @@ export default function MyGistsScreen({navigation}: Props) {
 
   if (isLoading && gists.length === 0) {
     return (
-      <View style={[styles.loadingContainer, {backgroundColor: colors.bgPrimary}]}>
+      <View style={[styles.loading, {backgroundColor: colors.bgPrimary}]}>
         <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
@@ -150,48 +142,21 @@ export default function MyGistsScreen({navigation}: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  separator: {
-    height: 1,
-    marginLeft: 16,
-  },
+  container: {flex: 1},
+  loading: {flex: 1, justifyContent: 'center', alignItems: 'center'},
+  separator: {height: 1, marginLeft: 16},
   emptyContainer: {
     alignItems: 'center',
     paddingVertical: 80,
     paddingHorizontal: 32,
   },
-  emptyIcon: {
-    marginBottom: 16,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  createButton: {
+  emptyTitle: {fontSize: 18, fontWeight: '600', marginBottom: 8},
+  emptyText: {fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: 24},
+  createBtn: {
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 6,
   },
-  createButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  footerLoader: {
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
+  createBtnText: {fontSize: 14, fontWeight: '600'},
+  footerLoader: {paddingVertical: 16, alignItems: 'center'},
 });

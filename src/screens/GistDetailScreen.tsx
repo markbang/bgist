@@ -10,6 +10,7 @@ import {
   TextInput,
   useColorScheme,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -28,6 +29,7 @@ import type {GistWithHistory, GistComment} from '../types/gist';
 import {lightTheme, darkTheme} from '../constants/theme';
 import {timeAgo, truncate, getFileIcon} from '../utils/format';
 import {useAuth} from '../contexts/AuthContext';
+import {useI18n} from '../i18n/context';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GistDetail'>;
 
@@ -37,6 +39,7 @@ export default function GistDetailScreen({route, navigation}: Props) {
   const {colors} = theme;
   const {user} = useAuth();
   const {gistId} = route.params;
+  const {t} = useI18n();
 
   const [gist, setGist] = useState<GistWithHistory | null>(null);
   const [comments, setComments] = useState<GistComment[]>([]);
@@ -57,7 +60,7 @@ export default function GistDetailScreen({route, navigation}: Props) {
       setComments(commentsData);
     } catch (error) {
       console.error('Failed to fetch gist:', error);
-      Alert.alert('Error', 'Failed to load gist');
+      Alert.alert(t('common.error'), t('gist.loadError'));
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -71,49 +74,41 @@ export default function GistDetailScreen({route, navigation}: Props) {
     }, [gistId]),
   );
 
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    fetchData();
-  };
-
   const handleStar = async () => {
     try {
-      if (isStarred) {
-        await unstarGist(gistId);
-      } else {
-        await starGist(gistId);
-      }
+      if (isStarred) await unstarGist(gistId);
+      else await starGist(gistId);
       setIsStarred(!isStarred);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update star');
+    } catch {
+      Alert.alert(t('common.error'), t('gist.starError'));
     }
   };
 
   const handleFork = async () => {
     try {
-      const forkedGist = await forkGist(gistId);
-      Alert.alert('Success', 'Gist forked!');
-      navigation.navigate('GistDetail', {gistId: forkedGist.id});
-    } catch (error) {
-      Alert.alert('Error', 'Failed to fork gist');
+      const forked = await forkGist(gistId);
+      Alert.alert('', t('gist.forkSuccess'));
+      navigation.navigate('GistDetail', {gistId: forked.id});
+    } catch {
+      Alert.alert(t('common.error'), t('gist.forkError'));
     }
   };
 
   const handleDelete = () => {
     Alert.alert(
-      'Delete Gist',
-      'Are you sure you want to delete this gist? This action cannot be undone.',
+      t('common.delete'),
+      t('gist.deleteConfirm'),
       [
-        {text: 'Cancel', style: 'cancel'},
+        {text: t('common.cancel'), style: 'cancel'},
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteGist(gistId);
               navigation.goBack();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete gist');
+            } catch {
+              Alert.alert(t('common.error'), t('gist.loadError'));
             }
           },
         },
@@ -127,14 +122,13 @@ export default function GistDetailScreen({route, navigation}: Props) {
       const comment = await addGistComment(gistId, newComment.trim());
       setComments(prev => [...prev, comment]);
       setNewComment('');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to add comment');
+    } catch {
+      Alert.alert(t('common.error'), t('gist.loadError'));
     }
   };
 
   const isOwner = gist?.owner?.login === user?.login;
 
-  // Update header buttons
   React.useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -159,16 +153,12 @@ export default function GistDetailScreen({route, navigation}: Props) {
                   ),
                 });
               }}>
-              <Text style={{color: colors.headerText, fontSize: 16}}>
-                ✏️
-              </Text>
+              <Text style={{color: colors.headerText, fontSize: 16}}>✏️</Text>
             </TouchableOpacity>
           )}
           {isOwner && (
             <TouchableOpacity onPress={handleDelete}>
-              <Text style={{color: colors.headerText, fontSize: 16}}>
-                🗑️
-              </Text>
+              <Text style={{color: colors.headerText, fontSize: 16}}>🗑️</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -178,7 +168,7 @@ export default function GistDetailScreen({route, navigation}: Props) {
 
   if (isLoading) {
     return (
-      <View style={[styles.loadingContainer, {backgroundColor: colors.bgPrimary}]}>
+      <View style={[styles.loading, {backgroundColor: colors.bgPrimary}]}>
         <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
@@ -186,8 +176,7 @@ export default function GistDetailScreen({route, navigation}: Props) {
 
   if (!gist) return null;
 
-  const fileEntries = Object.entries(gist.files);
-  const fileNames = fileEntries.map(([_, f]) => f.filename).join(', ');
+  const fileEntries = Object.entries(gist.files) as [string, any][];
 
   return (
     <ScrollView
@@ -195,40 +184,32 @@ export default function GistDetailScreen({route, navigation}: Props) {
       refreshControl={
         <RefreshControl
           refreshing={isRefreshing}
-          onRefresh={handleRefresh}
+          onRefresh={() => {
+            setIsRefreshing(true);
+            fetchData();
+          }}
           tintColor={colors.accent}
         />
       }>
-      {/* Header Info */}
+      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <Text
-            style={[
-              styles.description,
-              {color: colors.textPrimary},
-            ]}>
-            {gist.description || 'No description'}
+          <Text style={[styles.desc, {color: colors.textPrimary}]}>
+            {gist.description || t('gist.noDescription')}
           </Text>
           <View
             style={[
-              styles.visibilityBadge,
+              styles.badge,
               {
-                backgroundColor: gist.public
-                  ? colors.greenBg
-                  : colors.yellowBg,
-                borderColor: gist.public
-                  ? colors.greenBorder
-                  : colors.yellowBorder,
+                backgroundColor: gist.public ? colors.greenBg : colors.yellowBg,
               },
             ]}>
             <Text
               style={[
-                styles.visibilityText,
-                {
-                  color: gist.public ? colors.success : colors.warning,
-                },
+                styles.badgeText,
+                {color: gist.public ? colors.success : colors.warning},
               ]}>
-              {gist.public ? 'Public' : 'Secret'}
+              {gist.public ? t('common.public') : t('common.secret')}
             </Text>
           </View>
         </View>
@@ -236,29 +217,28 @@ export default function GistDetailScreen({route, navigation}: Props) {
         <View style={styles.metaRow}>
           <TouchableOpacity
             onPress={() =>
-              navigation.navigate('UserProfile', {
-                username: gist.owner.login,
-              })
+              navigation.navigate('UserProfile', {username: gist.owner.login})
             }>
-            <Text style={[styles.ownerName, {color: colors.textLink}]}>
+            <Text style={[styles.owner, {color: colors.textLink}]}>
               {gist.owner.login}
             </Text>
           </TouchableOpacity>
-          <Text style={[styles.metaText, {color: colors.textSecondary}]}>
+          <Text style={[styles.meta, {color: colors.textSecondary}]}>
             · {timeAgo(gist.created_at)}
           </Text>
         </View>
 
         <View style={styles.statsRow}>
-          <Text style={[styles.statsText, {color: colors.textSecondary}]}>
-            {fileEntries.length} file{fileEntries.length !== 1 ? 's' : ''}
+          <Text style={[styles.statText, {color: colors.textSecondary}]}>
+            {fileEntries.length} {t('common.files')}
+            {fileEntries.length !== 1 ? 's' : ''}
           </Text>
-          <Text style={[styles.statsText, {color: colors.textSecondary}]}>
-            · {gist.forks_url ? 'Forks' : ''} {gist.comments} comment{gist.comments !== 1 ? 's' : ''}
+          <Text style={[styles.statText, {color: colors.textSecondary}]}>
+            · {gist.comments} {t('common.comments').toLowerCase()}
           </Text>
         </View>
 
-        {/* Action Buttons */}
+        {/* Action buttons */}
         <View style={styles.actionsRow}>
           <TouchableOpacity
             style={[styles.actionBtn, {borderColor: colors.border}]}
@@ -267,16 +247,15 @@ export default function GistDetailScreen({route, navigation}: Props) {
               {isStarred ? '★' : '☆'}
             </Text>
             <Text style={[styles.actionBtnText, {color: colors.textPrimary}]}>
-              {isStarred ? 'Starred' : 'Star'}
+              {isStarred ? '★ ' + t('common.starred') : '☆ ' + t('common.star')}
             </Text>
           </TouchableOpacity>
-
           <TouchableOpacity
             style={[styles.actionBtn, {borderColor: colors.border}]}
             onPress={handleFork}>
             <Text style={{fontSize: 14, marginRight: 4}}>🍴</Text>
             <Text style={[styles.actionBtnText, {color: colors.textPrimary}]}>
-              Fork
+              {t('common.forks')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -284,13 +263,10 @@ export default function GistDetailScreen({route, navigation}: Props) {
 
       {/* Files */}
       <View style={styles.filesContainer}>
-        {fileEntries.map(([key, file]: [string, any]) => (
+        {fileEntries.map(([_, file]) => (
           <TouchableOpacity
-            key={key}
-            style={[
-              styles.fileCard,
-              {backgroundColor: colors.bgPrimary, borderColor: colors.border},
-            ]}
+            key={file.filename}
+            style={[styles.fileCard, {borderColor: colors.border}]}
             onPress={() =>
               navigation.navigate('GistViewer', {
                 gistId: gist.id,
@@ -302,34 +278,22 @@ export default function GistDetailScreen({route, navigation}: Props) {
               <Text style={{fontSize: 16, marginRight: 8}}>
                 {getFileIcon(file.filename)}
               </Text>
-              <Text
-                style={[
-                  styles.filename,
-                  {color: colors.textLink},
-                ]}>
+              <Text style={[styles.filename, {color: colors.textLink}]}>
                 {file.filename}
               </Text>
               <View style={{flex: 1}} />
               {file.language && (
-                <Text style={[styles.language, {color: colors.textSecondary}]}>
+                <Text style={[styles.lang, {color: colors.textSecondary}]}>
                   {file.language}
                 </Text>
               )}
-              <Text style={[styles.fileSize, {color: colors.textTertiary}]}>
+              <Text style={[styles.size, {color: colors.textTertiary}]}>
                 {(file.size / 1024).toFixed(1)} KB
               </Text>
             </View>
-            {/* Preview */}
-            <View
-              style={[
-                styles.codePreview,
-                {backgroundColor: colors.bgCode},
-              ]}>
+            <View style={[styles.codePreview, {backgroundColor: colors.bgCode}]}>
               <Text
-                style={[
-                  styles.previewText,
-                  {color: colors.textPrimary},
-                ]}
+                style={[styles.previewText, {color: colors.textPrimary}]}
                 numberOfLines={6}>
                 {truncate(file.content, 300)}
               </Text>
@@ -340,9 +304,9 @@ export default function GistDetailScreen({route, navigation}: Props) {
 
       {/* Comments */}
       {comments.length > 0 && (
-        <View style={[styles.commentsContainer, {borderColor: colors.border}]}>
+        <View style={[styles.commentsSection, {borderColor: colors.border}]}>
           <Text style={[styles.sectionTitle, {color: colors.textPrimary}]}>
-            Comments ({comments.length})
+            {t('common.comments')} ({comments.length})
           </Text>
           {comments.map(comment => (
             <View key={comment.id} style={styles.commentItem}>
@@ -352,16 +316,12 @@ export default function GistDetailScreen({route, navigation}: Props) {
                     username: comment.user.login,
                   })
                 }>
-                <Text
-                  style={[
-                    styles.commentAuthor,
-                    {color: colors.textLink},
-                  ]}>
+                <Text style={[styles.commentAuthor, {color: colors.textLink}]}>
                   {comment.user.login}
                 </Text>
               </TouchableOpacity>
               <Text style={[styles.commentDate, {color: colors.textSecondary}]}>
-                commented {timeAgo(comment.created_at)}
+                {timeAgo(comment.created_at)}
               </Text>
               <Text style={[styles.commentBody, {color: colors.textPrimary}]}>
                 {comment.body}
@@ -372,7 +332,7 @@ export default function GistDetailScreen({route, navigation}: Props) {
       )}
 
       {/* Add Comment */}
-      <View style={styles.addCommentContainer}>
+      <View style={styles.addComment}>
         <TextInput
           style={[
             styles.commentInput,
@@ -392,7 +352,7 @@ export default function GistDetailScreen({route, navigation}: Props) {
         />
         <TouchableOpacity
           style={[
-            styles.commentSubmitBtn,
+            styles.commentSubmit,
             {
               backgroundColor: newComment.trim()
                 ? colors.btnPrimaryBg
@@ -421,66 +381,19 @@ export default function GistDetailScreen({route, navigation}: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  description: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: '600',
-    lineHeight: 24,
-  },
-  visibilityBadge: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginLeft: 8,
-  },
-  visibilityText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  ownerName: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  metaText: {
-    fontSize: 14,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  statsText: {
-    fontSize: 13,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 8,
-  },
+  container: {flex: 1},
+  loading: {flex: 1, justifyContent: 'center', alignItems: 'center'},
+  header: {paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8},
+  headerTop: {flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8},
+  desc: {flex: 1, fontSize: 18, fontWeight: '600', lineHeight: 24, marginRight: 8},
+  badge: {borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2, marginTop: 2},
+  badgeText: {fontSize: 12, fontWeight: '500'},
+  metaRow: {flexDirection: 'row', alignItems: 'center', marginBottom: 4},
+  owner: {fontSize: 14, fontWeight: '500'},
+  meta: {fontSize: 14, marginHorizontal: 4},
+  statsRow: {flexDirection: 'row', alignItems: 'center', marginBottom: 12},
+  statText: {fontSize: 13},
+  actionsRow: {flexDirection: 'row', gap: 8, marginBottom: 8},
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -489,76 +402,31 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 6,
   },
-  actionBtnText: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  filesContainer: {
-    paddingHorizontal: 16,
-  },
-  fileCard: {
-    borderWidth: 1,
-    borderRadius: 6,
-    marginBottom: 12,
-    overflow: 'hidden',
-  },
+  actionBtnText: {fontSize: 13, fontWeight: '500'},
+  filesContainer: {paddingHorizontal: 16},
+  fileCard: {borderWidth: 1, borderRadius: 6, marginBottom: 12, overflow: 'hidden'},
   fileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-  filename: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  language: {
-    fontSize: 12,
-    marginLeft: 8,
-  },
-  fileSize: {
-    fontSize: 12,
-  },
+  filename: {fontSize: 14, fontWeight: '600'},
+  lang: {fontSize: 12, marginLeft: 8},
+  size: {fontSize: 12},
   codePreview: {
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderTopWidth: 1,
   },
-  previewText: {
-    fontSize: 12,
-    fontFamily: 'monospace',
-    lineHeight: 18,
-  },
-  commentsContainer: {
-    marginTop: 16,
-    borderTopWidth: 1,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
-  commentItem: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  commentAuthor: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  commentDate: {
-    fontSize: 12,
-    marginBottom: 6,
-  },
-  commentBody: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  addCommentContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
+  previewText: {fontSize: 12, fontFamily: Platform.select({ios: 'Menlo', android: 'monospace'}), lineHeight: 18},
+  commentsSection: {marginTop: 16, borderTopWidth: 1},
+  sectionTitle: {fontSize: 16, fontWeight: '600', paddingVertical: 12, paddingHorizontal: 16},
+  commentItem: {paddingHorizontal: 16, paddingVertical: 8},
+  commentAuthor: {fontSize: 14, fontWeight: '600'},
+  commentDate: {fontSize: 12, marginBottom: 6},
+  commentBody: {fontSize: 14, lineHeight: 20},
+  addComment: {paddingHorizontal: 16, paddingVertical: 12},
   commentInput: {
     borderWidth: 1,
     borderRadius: 6,
@@ -568,14 +436,11 @@ const styles = StyleSheet.create({
     minHeight: 80,
     marginBottom: 8,
   },
-  commentSubmitBtn: {
+  commentSubmit: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 6,
     alignSelf: 'flex-end',
   },
-  commentSubmitText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
+  commentSubmitText: {fontSize: 14, fontWeight: '600'},
 });

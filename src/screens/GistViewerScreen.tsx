@@ -12,6 +12,7 @@ import {
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../navigation/types';
 import {lightTheme, darkTheme} from '../constants/theme';
+import {useI18n} from '../i18n/context';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GistViewer'>;
 
@@ -19,79 +20,56 @@ export default function GistViewerScreen({route}: Props) {
   const scheme = useColorScheme();
   const theme = scheme === 'dark' ? darkTheme : lightTheme;
   const {colors} = theme;
+  const {t} = useI18n();
   const {filename, content} = route.params;
 
-  const [showLineNumbers, setShowLineNumbers] = useState(true);
-
+  const [showLines, setShowLines] = useState(true);
   const lines = content.split('\n');
 
   const handleCopy = () => {
-    // Use React Native built-in Clipboard
     const {Clipboard} = require('react-native');
     Clipboard.setString(content);
-    Alert.alert('Copied', 'Code copied to clipboard');
+    Alert.alert(t('common.copy'), t('common.copied'));
   };
 
   return (
     <View style={[styles.container, {backgroundColor: colors.bgCode}]}>
       {/* Toolbar */}
-      <View
-        style={[
-          styles.toolbar,
-          {backgroundColor: colors.bgSecondary, borderBottomColor: colors.border},
-        ]}>
-        <Text
-          style={[styles.filename, {color: colors.textPrimary}]}>
+      <View style={[styles.toolbar, {borderBottomColor: colors.border}]}>
+        <Text style={[styles.filename, {color: colors.textPrimary}]}>
           {filename}
         </Text>
-        <View style={{flexDirection: 'row', gap: 12}}>
+        <View style={{flexDirection: 'row', gap: 8}}>
           <TouchableOpacity
-            onPress={() => setShowLineNumbers(prev => !prev)}
-            style={[
-              styles.toolBtn,
-              {backgroundColor: showLineNumbers ? colors.accent : 'transparent'},
-            ]}>
+            onPress={() => setShowLines(p => !p)}
+            style={[styles.toolBtn, showLines && {backgroundColor: colors.accent}]}>
             <Text
               style={[
-                styles.toolBtnText,
-                {color: showLineNumbers ? '#fff' : colors.textSecondary},
+                styles.toolText,
+                {color: showLines ? '#fff' : colors.textSecondary},
               ]}>
               #
             </Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleCopy} style={styles.toolBtn}>
-            <Text style={[styles.toolBtnText, {color: colors.textSecondary}]}>
+            <Text style={[styles.toolText, {color: colors.textSecondary}]}>
               📋
             </Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Code Content */}
-      <ScrollView
-        horizontal
-        style={styles.codeScrollView}
-        contentContainerStyle={styles.codeContainer}>
-        <View style={styles.codeContent}>
+      {/* Code */}
+      <ScrollView horizontal style={styles.scroll}>
+        <View style={styles.content}>
           {lines.map((line: string, index: number) => (
-            <View key={index} style={styles.codeLine}>
-              {showLineNumbers && (
-                <Text
-                  style={[
-                    styles.lineNumber,
-                    {color: colors.textTertiary},
-                  ]}>
-                  {String(index + 1).padStart(
-                    String(lines.length).length,
-                    ' ',
-                  )}
+            <View key={index} style={styles.line}>
+              {showLines && (
+                <Text style={[styles.lineNum, {color: colors.textTertiary}]}>
+                  {String(index + 1).padStart(String(lines.length).length, ' ')}
                 </Text>
               )}
-              <Text
-                style={[
-                  styles.lineContent,
-                  {color: colors.textPrimary},
-                ]}>
+              <Text style={[styles.lineText, {color: colors.textPrimary}]}>
                 {line || ' '}
               </Text>
             </View>
@@ -103,9 +81,7 @@ export default function GistViewerScreen({route}: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: {flex: 1},
   toolbar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -119,35 +95,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: Platform.select({ios: 'Menlo', android: 'monospace'}),
   },
-  toolBtn: {
-    padding: 6,
-    borderRadius: 4,
-  },
-  toolBtnText: {
-    fontSize: 14,
-  },
-  codeScrollView: {
-    flex: 1,
-  },
-  codeContainer: {
-    paddingVertical: 8,
-  },
-  codeContent: {
-    paddingHorizontal: 8,
-  },
-  codeLine: {
-    flexDirection: 'row',
-    paddingVertical: 1,
-  },
-  lineNumber: {
+  toolBtn: {padding: 6, borderRadius: 4},
+  toolText: {fontSize: 14},
+  scroll: {flex: 1},
+  content: {paddingVertical: 8, paddingHorizontal: 8},
+  line: {flexDirection: 'row', paddingVertical: 1},
+  lineNum: {
     fontSize: 12,
     fontFamily: Platform.select({ios: 'Menlo', android: 'monospace'}),
     textAlign: 'right',
     width: 36,
     marginRight: 16,
-    userSelect: 'none',
   },
-  lineContent: {
+  lineText: {
     fontSize: 13,
     fontFamily: Platform.select({ios: 'Menlo', android: 'monospace'}),
     lineHeight: 20,

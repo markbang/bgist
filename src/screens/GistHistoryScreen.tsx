@@ -16,6 +16,7 @@ import {getGist} from '../api/gistApi';
 import type {GistHistoryEntry} from '../types/gist';
 import {lightTheme, darkTheme} from '../constants/theme';
 import {formatDateTime} from '../utils/format';
+import {useI18n} from '../i18n/context';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GistHistory'>;
 
@@ -23,6 +24,7 @@ export default function GistHistoryScreen({route}: Props) {
   const scheme = useColorScheme();
   const theme = scheme === 'dark' ? darkTheme : lightTheme;
   const {colors} = theme;
+  const {t} = useI18n();
   const {gistId} = route.params;
 
   const [history, setHistory] = useState<GistHistoryEntry[]>([]);
@@ -33,7 +35,7 @@ export default function GistHistoryScreen({route}: Props) {
       const gist = await getGist(gistId);
       setHistory(gist.history || []);
     } catch (error) {
-      console.error('Failed to fetch gist history:', error);
+      console.error('Failed to fetch history:', error);
     } finally {
       setIsLoading(false);
     }
@@ -50,12 +52,11 @@ export default function GistHistoryScreen({route}: Props) {
   };
 
   const renderItem = ({item}: {item: GistHistoryEntry}) => (
-    <View
-      style={[styles.historyItem, {borderColor: colors.border}]}>
+    <View style={[styles.historyItem, {borderColor: colors.border}]}>
       <View style={styles.historyHeader}>
         <View>
           <Text style={[styles.version, {color: colors.textPrimary}]}>
-            Version {item.version.slice(0, 7)}
+            {t('history.version')} {item.version.slice(0, 7)}
           </Text>
           <Text style={[styles.date, {color: colors.textSecondary}]}>
             {formatDateTime(item.committed_at)}
@@ -86,7 +87,7 @@ export default function GistHistoryScreen({route}: Props) {
 
   if (isLoading) {
     return (
-      <View style={[styles.loadingContainer, {backgroundColor: colors.bgPrimary}]}>
+      <View style={[styles.loading, {backgroundColor: colors.bgPrimary}]}>
         <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
@@ -97,7 +98,7 @@ export default function GistHistoryScreen({route}: Props) {
       {history.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={[styles.emptyText, {color: colors.textSecondary}]}>
-            No revision history available
+            {t('history.empty')}
           </Text>
         </View>
       ) : (
@@ -115,61 +116,17 @@ export default function GistHistoryScreen({route}: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  historyItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-  },
-  historyHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 4,
-  },
-  version: {
-    fontSize: 14,
-    fontWeight: '600',
-    fontFamily: Platform.select({ios: 'Menlo', android: 'monospace'}),
-  },
-  date: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  changeStatus: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  addition: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  deletion: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  historyFooter: {
-    marginTop: 4,
-  },
-  author: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyText: {
-    fontSize: 14,
-    textAlign: 'center',
-  },
+  container: {flex: 1},
+  loading: {flex: 1, justifyContent: 'center', alignItems: 'center'},
+  historyItem: {paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1},
+  historyHeader: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4},
+  version: {fontSize: 14, fontWeight: '600', fontFamily: Platform.select({ios: 'Menlo', android: 'monospace'})},
+  date: {fontSize: 12, marginTop: 2},
+  changeStatus: {flexDirection: 'row', gap: 8},
+  addition: {fontSize: 13, fontWeight: '500'},
+  deletion: {fontSize: 13, fontWeight: '500'},
+  historyFooter: {marginTop: 4},
+  author: {fontSize: 13, fontWeight: '500'},
+  emptyContainer: {flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32},
+  emptyText: {fontSize: 14, textAlign: 'center'},
 });

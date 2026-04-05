@@ -15,6 +15,7 @@ import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../navigation/types';
 import {createGist, editGist} from '../api/gistApi';
 import {lightTheme, darkTheme} from '../constants/theme';
+import {useI18n} from '../i18n/context';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GistEditor'>;
 
@@ -28,6 +29,7 @@ export default function GistEditorScreen({route, navigation}: Props) {
   const scheme = useColorScheme();
   const theme = scheme === 'dark' ? darkTheme : lightTheme;
   const {colors} = theme;
+  const {t} = useI18n();
 
   const {
     mode = 'create',
@@ -56,34 +58,25 @@ export default function GistEditorScreen({route, navigation}: Props) {
   };
 
   const addFile = () => {
-    const newId = `file-${Date.now()}`;
-    setFiles(prev => [...prev, {id: newId, filename: '', content: ''}]);
+    setFiles(prev => [...prev, {id: `file-${Date.now()}`, filename: '', content: ''}]);
   };
 
   const removeFile = (id: string) => {
     if (files.length <= 1) {
-      Alert.alert('Error', 'Gist must have at least one file');
+      Alert.alert(t('common.error'), t('gist.fileError'));
       return;
     }
     setFiles(prev => prev.filter(f => f.id !== id));
   };
 
   const handleSubmit = async () => {
-    // Validate
-    const emptyFile = files.find(f => !f.filename.trim() && !f.content.trim());
-    if (emptyFile) {
-      Alert.alert('Error', 'Each file needs a filename or content');
-      return;
-    }
-
     const noFilename = files.find(f => !f.filename.trim());
     if (noFilename) {
-      Alert.alert('Error', 'All files must have a filename');
+      Alert.alert(t('common.error'), t('gist.filenameError'));
       return;
     }
 
     setIsSubmitting(true);
-
     try {
       const gistFiles = Object.fromEntries(
         files.map(f => [f.filename, {content: f.content}]),
@@ -91,25 +84,13 @@ export default function GistEditorScreen({route, navigation}: Props) {
 
       let result;
       if (mode === 'edit' && gistId) {
-        result = await editGist(gistId, {
-          description,
-          files: gistFiles,
-        });
+        result = await editGist(gistId, {description, files: gistFiles});
       } else {
-        result = await createGist({
-          description,
-          public: isPublic,
-          files: gistFiles,
-        });
+        result = await createGist({description, public: isPublic, files: gistFiles});
       }
-
       navigation.navigate('GistDetail', {gistId: result.id});
     } catch (error: any) {
-      console.error('Failed to save gist:', error);
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || 'Failed to save gist',
-      );
+      Alert.alert(t('common.error'), error.response?.data?.message || t('gist.saveError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -120,18 +101,18 @@ export default function GistEditorScreen({route, navigation}: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.container, {backgroundColor: colors.bgPrimary}]}>
       <ScrollView style={styles.scrollView}>
-        {/* Title / Description */}
+        {/* Description */}
         <View style={styles.section}>
           <TextInput
             style={[
-              styles.descriptionInput,
+              styles.descInput,
               {
-                backgroundColor: colors.bgSecondary,
+                backgroundColor: colors.bgPrimary,
                 borderColor: colors.border,
                 color: colors.textPrimary,
               },
             ]}
-            placeholder="Gist description (optional)"
+            placeholder={t('gist.description')}
             placeholderTextColor={colors.placeholder}
             value={description}
             onChangeText={setDescription}
@@ -139,54 +120,46 @@ export default function GistEditorScreen({route, navigation}: Props) {
           />
         </View>
 
-        {/* Visibility Toggle */}
+        {/* Visibility */}
         <View style={[styles.visibilityRow, {borderColor: colors.border}]}>
           <TouchableOpacity
             style={[
-              styles.visibilityBtn,
-              isPublic
-                ? {backgroundColor: colors.btnPrimaryBg}
-                : {backgroundColor: colors.bgSecondary},
+              styles.visBtn,
+              isPublic ? {backgroundColor: colors.btnPrimaryBg} : {backgroundColor: colors.bgSecondary},
             ]}
             onPress={() => setIsPublic(true)}>
             <Text
               style={[
-                styles.visibilityBtnText,
+                styles.visBtnText,
                 {color: isPublic ? colors.btnPrimaryText : colors.textSecondary},
               ]}>
-              🔓 Public
+              🔓 {t('common.public')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
-              styles.visibilityBtn,
-              !isPublic
-                ? {backgroundColor: colors.btnPrimaryBg}
-                : {backgroundColor: colors.bgSecondary},
+              styles.visBtn,
+              !isPublic ? {backgroundColor: colors.btnPrimaryBg} : {backgroundColor: colors.bgSecondary},
             ]}
             onPress={() => setIsPublic(false)}>
             <Text
               style={[
-                styles.visibilityBtnText,
+                styles.visBtnText,
                 {color: !isPublic ? colors.btnPrimaryText : colors.textSecondary},
               ]}>
-              🔒 Secret
+              🔒 {t('common.secret')}
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* File Editors */}
         {files.map((file, index) => (
-          <View
-            key={file.id}
-            style={[styles.fileSection, {borderColor: colors.border}]}>
+          <View key={file.id} style={[styles.fileSection, {borderColor: colors.border}]}>
             <View style={styles.fileHeader}>
               <Text style={[styles.fileLabel, {color: colors.textSecondary}]}>
-                File {index + 1}
+                {t('gist.file')} {index + 1}
               </Text>
-              <TouchableOpacity
-                onPress={() => removeFile(file.id)}
-                style={styles.removeFileBtn}>
+              <TouchableOpacity onPress={() => removeFile(file.id)} style={styles.removeBtn}>
                 <Text style={{color: colors.danger, fontSize: 14}}>✕</Text>
               </TouchableOpacity>
             </View>
@@ -195,12 +168,12 @@ export default function GistEditorScreen({route, navigation}: Props) {
               style={[
                 styles.filenameInput,
                 {
-                  backgroundColor: colors.bgSecondary,
+                  backgroundColor: colors.bgPrimary,
                   borderColor: colors.border,
                   color: colors.textPrimary,
                 },
               ]}
-              placeholder="filename.ext (e.g. script.js)"
+              placeholder={t('gist.filename')}
               placeholderTextColor={colors.placeholder}
               value={file.filename}
               onChangeText={text => updateFile(file.id, {filename: text})}
@@ -217,7 +190,7 @@ export default function GistEditorScreen({route, navigation}: Props) {
                   color: colors.textPrimary,
                 },
               ]}
-              placeholder="Write your code here..."
+              placeholder={t('gist.codePlaceholder')}
               placeholderTextColor={colors.placeholder}
               value={file.content}
               onChangeText={text => updateFile(file.id, {content: text})}
@@ -227,51 +200,34 @@ export default function GistEditorScreen({route, navigation}: Props) {
               autoCorrect={false}
               autoComplete="off"
               spellCheck={false}
-              // Use monospace font for code editing
-              // Note: fontFamily might need adjustment per platform
             />
           </View>
         ))}
 
-        {/* Add File Button */}
         <TouchableOpacity
           style={[styles.addFileBtn, {borderColor: colors.border}]}
           onPress={addFile}>
           <Text style={[styles.addFileText, {color: colors.textLink}]}>
-            + Add another file
+            {t('gist.addFile')}
           </Text>
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Submit Button */}
-      <View
-        style={[
-          styles.footer,
-          {
-            backgroundColor: colors.bgPrimary,
-            borderTopColor: colors.border,
-          },
-        ]}>
+      {/* Submit */}
+      <View style={[styles.footer, {borderTopColor: colors.border}]}>
         <TouchableOpacity
           style={[
             styles.submitBtn,
-            {
-              backgroundColor: colors.btnPrimaryBg,
-              opacity: isSubmitting ? 0.7 : 1,
-            },
+            {backgroundColor: colors.btnPrimaryBg, opacity: isSubmitting ? 0.7 : 1},
           ]}
           onPress={handleSubmit}
           disabled={isSubmitting}>
-          <Text
-            style={[
-              styles.submitBtnText,
-              {color: colors.btnPrimaryText},
-            ]}>
+          <Text style={[styles.submitText, {color: colors.btnPrimaryText}]}>
             {isSubmitting
-              ? 'Saving...'
+              ? t('gist.saving')
               : mode === 'edit'
-              ? 'Update Gist'
-              : 'Create Gist'}
+              ? t('gist.updateGist')
+              : t('gist.createGist')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -280,16 +236,10 @@ export default function GistEditorScreen({route, navigation}: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  section: {
-    padding: 16,
-  },
-  descriptionInput: {
+  container: {flex: 1},
+  scrollView: {flex: 1},
+  section: {padding: 16},
+  descInput: {
     borderWidth: 1,
     borderRadius: 6,
     paddingHorizontal: 12,
@@ -304,15 +254,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     overflow: 'hidden',
   },
-  visibilityBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  visibilityBtnText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
+  visBtn: {flex: 1, paddingVertical: 10, alignItems: 'center'},
+  visBtnText: {fontSize: 14, fontWeight: '500'},
   fileSection: {
     marginHorizontal: 16,
     marginBottom: 16,
@@ -327,13 +270,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  fileLabel: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  removeFileBtn: {
-    padding: 4,
-  },
+  fileLabel: {fontSize: 13, fontWeight: '500'},
+  removeBtn: {padding: 4},
   filenameInput: {
     borderWidth: 1,
     borderTopWidth: 0,
@@ -362,22 +300,8 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     alignItems: 'center',
   },
-  addFileText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  footer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-  },
-  submitBtn: {
-    borderRadius: 6,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  submitBtnText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  addFileText: {fontSize: 14, fontWeight: '500'},
+  footer: {paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1},
+  submitBtn: {borderRadius: 6, paddingVertical: 12, alignItems: 'center'},
+  submitText: {fontSize: 16, fontWeight: '600'},
 });

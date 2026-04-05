@@ -3,35 +3,37 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   TextInput,
-  useColorScheme,
-  Alert,
+  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  useColorScheme,
+  Alert,
 } from 'react-native';
 import {useAuth} from '../contexts/AuthContext';
 import {lightTheme, darkTheme} from '../constants/theme';
+import {useI18n} from '../i18n/context';
 
 export default function LoginScreen() {
   const scheme = useColorScheme();
   const theme = scheme === 'dark' ? darkTheme : lightTheme;
   const {colors} = theme;
   const {login} = useAuth();
+  const {t} = useI18n();
   const [patToken, setPatToken] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handlePatLogin = async () => {
+  const handleLogin = async () => {
     if (!patToken.trim()) {
-      Alert.alert('Error', 'Please enter a Personal Access Token');
+      Alert.alert(t('common.error'), t('auth.enterToken'));
       return;
     }
     setIsLoading(true);
     try {
       await login(patToken.trim());
-    } catch (error) {
-      Alert.alert('Error', 'Invalid token. Please check and try again.');
+    } catch {
+      Alert.alert(t('common.error'), t('auth.invalidToken'));
     } finally {
       setIsLoading(false);
     }
@@ -44,86 +46,84 @@ export default function LoginScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled">
-        {/* GitHub-style Logo */}
-        <View style={styles.logoContainer}>
-          <View style={[styles.logoCircle, {backgroundColor: colors.textPrimary}]}>
-            <Text style={{fontSize: 24}}>🐙</Text>
+        {/* Logo */}
+        <View style={styles.logoSection}>
+          <View style={[styles.octocat, {backgroundColor: colors.textPrimary}]}>
+            <Text style={{fontSize: 36}}>🐙</Text>
           </View>
           <Text style={[styles.title, {color: colors.textPrimary}]}>
             BGist
           </Text>
           <Text style={[styles.subtitle, {color: colors.textSecondary}]}>
-            A beautiful GitHub Gist client
+            GitHub Gist 客户端
           </Text>
         </View>
 
         {/* Login Form */}
-        <View style={styles.formContainer}>
-          <Text style={[styles.sectionTitle, {color: colors.textPrimary}]}>
-            Sign in to GitHub
-          </Text>
-
-          <Text style={[styles.helpText, {color: colors.textSecondary}]}>
-            Create a token at{' '}
-            <Text style={{color: colors.textLink, fontWeight: '500'}}>
-              github.com/settings/tokens
-            </Text>{' '}
-            with the{' '}
-            <Text
-              style={[
-                styles.code,
-                {backgroundColor: colors.bgCode, color: colors.textPrimary},
-              ]}>
-              gist
-            </Text>{' '}
-            scope
-          </Text>
-
-          <View style={styles.inputContainer}>
-            <Text
-              style={[
-                styles.inputLabel,
-                {color: colors.textSecondary},
-              ]}>
-              Personal Access Token
+        <View style={styles.formSection}>
+          <View style={[styles.card, {borderColor: colors.border}]}>
+            <Text style={[styles.cardTitle, {color: colors.textPrimary}]}>
+              {t('auth.signInTitle')}
             </Text>
-            <TextInput
+
+            <Text style={[styles.helpText, {color: colors.textSecondary}]}>
+              {t('auth.patHelp')}{' '}
+              <Text style={{color: colors.textLink, fontWeight: '500'}}>
+                github.com/settings/tokens
+              </Text>{' '}
+              {t('auth.patScope')}{' '}
+              <Text
+                style={[
+                  styles.code,
+                  {backgroundColor: colors.bgCode, color: colors.textPrimary},
+                ]}>
+                gist
+              </Text>
+            </Text>
+
+            <View style={styles.inputGroup}>
+              <Text style={[styles.inputLabel, {color: colors.textPrimary}]}>
+                {t('auth.patLabel')}
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: colors.bgPrimary,
+                    borderColor: colors.border,
+                    color: colors.textPrimary,
+                  },
+                ]}
+                value={patToken}
+                onChangeText={setPatToken}
+                secureTextEntry
+                placeholder={t('auth.patPlaceholder')}
+                placeholderTextColor={colors.placeholder}
+                autoCapitalize="none"
+                autoCorrect={false}
+                selectTextOnFocus
+              />
+            </View>
+
+            <TouchableOpacity
               style={[
-                styles.input,
+                styles.primaryBtn,
                 {
-                  backgroundColor: colors.bgSecondary,
-                  borderColor: colors.border,
-                  color: colors.textPrimary,
+                  backgroundColor: colors.btnPrimaryBg,
+                  opacity: isLoading ? 0.6 : 1,
                 },
               ]}
-              value={patToken}
-              onChangeText={setPatToken}
-              secureTextEntry
-              placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-              placeholderTextColor={colors.placeholder}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
+              onPress={handleLogin}
+              disabled={isLoading}>
+              <Text
+                style={[
+                  styles.primaryBtnText,
+                  {color: colors.btnPrimaryText},
+                ]}>
+                {isLoading ? t('auth.signingIn') : t('auth.signIn')}
+              </Text>
+            </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            style={[
-              styles.primaryButton,
-              {
-                backgroundColor: colors.btnPrimaryBg,
-                opacity: isLoading ? 0.7 : 1,
-              },
-            ]}
-            onPress={handlePatLogin}
-            disabled={isLoading}>
-            <Text
-              style={[
-                styles.primaryButtonText,
-                {color: colors.btnPrimaryText},
-              ]}>
-              {isLoading ? 'Signing in...' : 'Sign In'}
-            </Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -136,20 +136,19 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 40,
   },
-  logoContainer: {
+  logoSection: {
     alignItems: 'center',
-    marginTop: 100,
-    marginBottom: 48,
+    paddingTop: 100,
+    paddingBottom: 48,
   },
-  logoCircle: {
+  octocat: {
     width: 72,
     height: 72,
     borderRadius: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   title: {
     fontSize: 32,
@@ -160,28 +159,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 4,
   },
-  formContainer: {
-    paddingHorizontal: 24,
+  formSection: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
   },
-  sectionTitle: {
+  card: {
+    borderWidth: 1,
+    borderRadius: 6,
+    padding: 20,
+  },
+  cardTitle: {
     fontSize: 20,
     fontWeight: '600',
-    marginBottom: 12,
-    textAlign: 'center',
+    marginBottom: 8,
   },
   helpText: {
     fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 24,
     lineHeight: 22,
+    marginBottom: 20,
   },
   code: {
-    fontSize: 13,
     paddingVertical: 2,
-    paddingHorizontal: 6,
+    paddingHorizontal: 5,
     borderRadius: 4,
+    fontSize: 13,
   },
-  inputContainer: {
+  inputGroup: {
     marginBottom: 16,
   },
   inputLabel: {
@@ -193,17 +196,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 6,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 8,
     fontSize: 14,
   },
-  primaryButton: {
+  primaryBtn: {
     borderRadius: 6,
-    paddingVertical: 12,
+    paddingVertical: 10,
     alignItems: 'center',
-    marginTop: 8,
   },
-  primaryButtonText: {
-    fontSize: 16,
+  primaryBtnText: {
+    fontSize: 14,
     fontWeight: '600',
   },
 });

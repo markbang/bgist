@@ -2,9 +2,11 @@ import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {useColorScheme, Pressable, Text, View, StyleSheet} from 'react-native';
+import {useColorScheme, Text, View, StyleSheet} from 'react-native';
 import {AuthProvider, useAuth} from './src/contexts/AuthContext';
+import {I18nProvider} from './src/i18n/context';
 import {lightTheme, darkTheme} from './src/constants/theme';
+import {FileIcon, SearchIcon, PlusIcon, StarIcon, UserIcon} from './src/components/TabIcons';
 import LoginScreen from './src/screens/LoginScreen';
 import MyGistsScreen from './src/screens/MyGistsScreen';
 import ExploreScreen from './src/screens/ExploreScreen';
@@ -17,32 +19,34 @@ import GistViewerScreen from './src/screens/GistViewerScreen';
 import UserProfileScreen from './src/screens/UserProfileScreen';
 import GistHistoryScreen from './src/screens/GistHistoryScreen';
 import type {RootStackParamList, MainTabParamList} from './src/navigation/types';
+import {useI18n} from './src/i18n/context';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 function TabIcon({label, focused, color}: {label: string; focused: boolean; color: string}) {
-  const icons: Record<string, string> = {
-    MyGists: '📝',
-    Explore: '🔍',
-    CreateGist: '➕',
-    Starred: '⭐',
-    Profile: '👤',
-  };
-  return (
-    <View style={styles.tabIconContainer}>
-      <Text style={{fontSize: 20}}>{icons[label] || '📄'}</Text>
-      <Text style={[styles.tabLabel, {color}]}>
-        {label === 'CreateGist' ? 'Create' : label}
-      </Text>
-    </View>
-  );
+  const size = 24;
+  switch (label) {
+    case 'MyGists':
+      return <FileIcon size={size} color={color} />;
+    case 'Explore':
+      return <SearchIcon size={size} color={color} />;
+    case 'CreateGist':
+      return <PlusIcon size={size} color={color} />;
+    case 'Starred':
+      return <StarIcon size={size} color={color} />;
+    case 'Profile':
+      return <UserIcon size={size} color={color} />;
+    default:
+      return <FileIcon size={size} color={color} />;
+  }
 }
 
 function MainTabs() {
   const scheme = useColorScheme();
   const theme = scheme === 'dark' ? darkTheme : lightTheme;
   const {colors} = theme;
+  const {t} = useI18n();
 
   return (
     <Tab.Navigator
@@ -62,7 +66,20 @@ function MainTabs() {
         tabBarIcon: ({focused, color}) => (
           <TabIcon label={route.name} focused={focused} color={color} />
         ),
-        tabBarLabel: () => null,
+        tabBarLabel: ({focused, color}) => {
+          const labels: Record<string, string> = {
+            MyGists: t('nav.myGists'),
+            Explore: t('nav.explore'),
+            CreateGist: t('nav.create'),
+            Starred: t('nav.starred'),
+            Profile: t('nav.profile'),
+          };
+          return (
+            <Text style={[styles.tabLabel, {color, fontWeight: focused ? '600' : '400'}]}>
+              {labels[route.name] || route.name}
+            </Text>
+          );
+        },
       })}>
       <Tab.Screen
         name="MyGists"
@@ -165,7 +182,9 @@ function AppNavigator() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppNavigator />
+      <I18nProvider>
+        <AppNavigator />
+      </I18nProvider>
     </AuthProvider>
   );
 }
@@ -176,13 +195,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  tabIconContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   tabLabel: {
     fontSize: 10,
     marginTop: 2,
-    fontWeight: '500',
   },
 });
