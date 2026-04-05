@@ -1,10 +1,34 @@
-# Add project specific ProGuard rules here.
-# By default, the flags in this file are appended to flags specified
-# in /usr/local/Cellar/android-sdk/24.3.3/tools/proguard/proguard-android.txt
-# You can edit the include path and order by changing the proguardFiles
-# directive in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# React Native ProGuard rules
 
-# Add any project specific keep options here:
+# Keep React Native classes
+-keep class com.facebook.react.** { *; }
+-keep class com.facebook.hermes.** { *; }
+-keep class com.facebook.jni.** { *; }
+
+# Keep JavaScript interface methods
+-keepclassmembers class * {
+    @com.facebook.react.bridge.ReactMethod <methods>;
+}
+
+# Keep native methods
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+# Keep async-storage
+-keep class com.reactnativecommunity.asyncstorage.** { *; }
+
+# Keep clipboard
+-keep class com.reactnativecommunity.clipboard.** { *; }
+
+# Keep webview
+-keep class com.reactnativecommunity.webview.** { *; }
+
+# Keep safe-area-context
+-keep class com.th3rdwave.safeareacontext.** { *; }
+
+# Keep screens
+-keep class com.swmansion.rnscreens.** { *; }
+
+# Keep navigation
+-keep class com.swmansion.gesturehandler.** { *; }
