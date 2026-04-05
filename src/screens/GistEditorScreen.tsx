@@ -83,6 +83,7 @@ export default function GistEditorScreen({route, navigation}: Props) {
       );
 
       console.log('Creating gist with files:', Object.keys(gistFiles));
+      console.log('Files object:', JSON.stringify(gistFiles));
 
       let result;
       if (mode === 'edit' && gistId) {
@@ -96,7 +97,13 @@ export default function GistEditorScreen({route, navigation}: Props) {
       navigation.navigate('GistDetail', {gistId: result.id});
     } catch (error: any) {
       console.error('Failed to save gist:', error);
-      Alert.alert(t('common.error'), error.response?.data?.message || t('gist.saveError'));
+      const status = error.response?.status;
+      const message = error.response?.data?.message || error.message || t('gist.saveError');
+      Alert.alert(
+        t('common.error'),
+        `HTTP ${status || '?'}\n${message}`,
+        [{text: 'OK'}],
+      );
     } finally {
       setIsSubmitting(false);
     }

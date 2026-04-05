@@ -47,8 +47,15 @@ export default function ExploreScreen({navigation}: Props) {
       if (pageNum === 1) setGists(data);
       else setGists(prev => [...prev, ...data]);
       setPage(pageNum);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch public gists:', error);
+      const status = error.response?.status;
+      const message = error.response?.data?.message || error.message || 'Unknown error';
+      Alert.alert(
+        'API Error',
+        `HTTP ${status || '?'}\n${message}`,
+        [{text: 'OK'}],
+      );
     } finally {
       setIsLoading(false);
     }

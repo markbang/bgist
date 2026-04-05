@@ -51,8 +51,15 @@ export default function MyGistsScreen({navigation}: Props) {
         setGists(data);
       }
       setPage(pageNum);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch gists:', error);
+      const status = error.response?.status;
+      const message = error.response?.data?.message || error.message || 'Unknown error';
+      Alert.alert(
+        'API Error',
+        `HTTP ${status || '?'}\n${message}`,
+        [{text: 'OK'}],
+      );
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);

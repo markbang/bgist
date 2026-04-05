@@ -19,10 +19,13 @@ const api = axios.create({
 });
 
 export function setAuthToken(token: string | null) {
+  console.log('setAuthToken called with:', token ? '***' + token.slice(-4) : 'null');
   if (token) {
     api.defaults.headers.Authorization = `Bearer ${token}`;
+    console.log('Authorization header set');
   } else {
     delete api.defaults.headers.Authorization;
+    console.log('Authorization header removed');
   }
 }
 
@@ -55,10 +58,18 @@ export async function exchangeCodeForToken(
 // ============ Gists ============
 
 export async function getMyGists(page = 1, perPage = 30): Promise<Gist[]> {
-  const {data} = await api.get<Gist[]>('/gists', {
-    params: {page, per_page: perPage},
-  });
-  return data;
+  console.log('getMyGists called, page:', page);
+  console.log('API defaults headers:', JSON.stringify(api.defaults.headers));
+  try {
+    const response = await api.get<Gist[]>('/gists', {
+      params: {page, per_page: perPage},
+    });
+    console.log('getMyGists response count:', response.data.length);
+    return response.data;
+  } catch (error: any) {
+    console.error('getMyGists error:', error.response?.status, error.response?.data);
+    throw error;
+  }
 }
 
 export async function getPublicGists(page = 1, perPage = 30): Promise<Gist[]> {
@@ -106,8 +117,16 @@ export async function searchGists(
 }
 
 export async function createGist(params: CreateGistParams): Promise<Gist> {
-  const {data} = await api.post<Gist>('/gists', params);
-  return data;
+  console.log('createGist params:', JSON.stringify(params, null, 2));
+  console.log('API defaults headers:', JSON.stringify(api.defaults.headers));
+  try {
+    const response = await api.post<Gist>('/gists', params);
+    console.log('createGist response status:', response.status);
+    return response.data;
+  } catch (error: any) {
+    console.error('createGist error:', error.response?.status, error.response?.data);
+    throw error;
+  }
 }
 
 export async function editGist(
