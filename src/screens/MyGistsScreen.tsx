@@ -41,7 +41,9 @@ export default function MyGistsScreen({navigation}: Props) {
 
   const fetchGists = async (pageNum = 1, append = false) => {
     try {
+      console.log('Fetching gists, page:', pageNum);
       const data = await getMyGists(pageNum, 30);
+      console.log('Fetched gists count:', data.length);
       if (data.length < 30) setHasMore(false);
       if (append) {
         setGists(prev => [...prev, ...data]);

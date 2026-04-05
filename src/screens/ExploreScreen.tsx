@@ -41,7 +41,9 @@ export default function ExploreScreen({navigation}: Props) {
 
   const fetchPublicGists = async (pageNum = 1) => {
     try {
+      console.log('Fetching public gists, page:', pageNum);
       const data = await getPublicGists(pageNum, 30);
+      console.log('Fetched public gists count:', data.length);
       if (pageNum === 1) setGists(data);
       else setGists(prev => [...prev, ...data]);
       setPage(pageNum);

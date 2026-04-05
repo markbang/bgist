@@ -3,6 +3,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {useColorScheme, Text, View, StyleSheet} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {AuthProvider, useAuth} from './src/contexts/AuthContext';
 import {I18nProvider} from './src/i18n/context';
 import {lightTheme, darkTheme} from './src/constants/theme';
@@ -48,6 +49,7 @@ function MainTabs() {
   const theme = scheme === 'dark' ? darkTheme : lightTheme;
   const {colors} = theme;
   const {t} = useI18n();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -58,8 +60,8 @@ function MainTabs() {
         tabBarStyle: {
           backgroundColor: colors.bgPrimary,
           borderTopColor: colors.border,
-          height: 56,
-          paddingBottom: 4,
+          height: 56 + insets.bottom,
+          paddingBottom: insets.bottom,
           paddingTop: 4,
         },
         tabBarActiveTintColor: colors.tabIconActive,

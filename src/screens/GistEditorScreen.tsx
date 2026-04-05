@@ -82,14 +82,20 @@ export default function GistEditorScreen({route, navigation}: Props) {
         files.map(f => [f.filename, {content: f.content}]),
       );
 
+      console.log('Creating gist with files:', Object.keys(gistFiles));
+
       let result;
       if (mode === 'edit' && gistId) {
+        console.log('Editing gist:', gistId);
         result = await editGist(gistId, {description, files: gistFiles});
       } else {
+        console.log('Creating new gist...');
         result = await createGist({description, public: isPublic, files: gistFiles});
       }
+      console.log('Gist created/edited, id:', result.id);
       navigation.navigate('GistDetail', {gistId: result.id});
     } catch (error: any) {
+      console.error('Failed to save gist:', error);
       Alert.alert(t('common.error'), error.response?.data?.message || t('gist.saveError'));
     } finally {
       setIsSubmitting(false);
