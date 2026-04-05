@@ -84,10 +84,6 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "0.1.1"
-        // Only include arm64-v8a and armeabi-v7a (covers 99%+ of devices)
-        ndk {
-            abiFilters "armeabi-v7a", "arm64-v8a"
-        }
     }
     signingConfigs {
         debug {
@@ -113,11 +109,38 @@ android {
         }
     }
 
-    // Rename APK output file
+    splits {
+        abi {
+            enable true
+            reset()
+            include "armeabi-v7a", "arm64-v8a"
+            universalApk true
+        }
+    }
+
+    // Map version codes for ABI splits
+    ext.abiVersionCodes = ["armeabi-v7a": 1, "arm64-v8a": 2]
     applicationVariants.all { variant ->
-        variant.outputs.all { output ->
+        variant.outputs.each { output ->
+            def abiName = output.getFilter(com.android.build.OutputFile.ABI)
+            def baseVersionCode = android.defaultConfig.versionCode
+            if (abiName != null) {
+                output.versionCodeOverride = baseVersionCode * 100 + abiVersionCodes[abiName]
+            }
+        }
+    }
+
+    // Rename APK output files
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def abiName = output.getFilter(com.android.build.OutputFile.ABI)
             def versionName = variant.versionName.replace(".", "-")
-            def newName = "BGist-v${versionName}.apk"
+            def newName = "BGist-v${versionName}"
+            if (abiName != null) {
+                newName += "-${abiName}.apk"
+            } else {
+                newName += "-universal.apk"
+            }
             output.outputFileName = newName
         }
     }

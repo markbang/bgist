@@ -60,6 +60,9 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
 
+      - name: List APK files
+        run: ls -lh android/app/build/outputs/apk/release/BGist-*.apk
+
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -85,7 +88,6 @@ jobs:
         run: |
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           if [ -z "$PREV_TAG" ]; then
-            # First release: get all commits
             npx changelogithub \
               --token $GITHUB_TOKEN \
               --github ${{ github.repository }} \
@@ -100,21 +102,42 @@ jobs:
               --output /tmp/changelog.md
           fi
 
+      - name: Generate Download Table
+        id: download_table
+        run: |
+          TABLE="## 📦 Download\n\n| File | Architecture | Size | Note |\n|------|-------------|------|------|\n"
+          for apk in android/app/build/outputs/apk/release/BGist-*.apk; do
+            filename=$(basename "$apk")
+            size=$(du -h "$apk" | cut -f1)
+            if echo "$filename" | grep -q "arm64-v8a"; then
+              arch="arm64-v8a (Modern devices)"
+            elif echo "$filename" | grep -q "armeabi-v7a"; then
+              arch="armeabi-v7a (Older devices)"
+            else
+              arch="Universal (All devices)"
+            fi
+            TABLE+="| \`$filename\` | $arch | $size | Download |\n"
+          done
+          echo -e "$TABLE"
+          echo "table<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$TABLE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Update Release Body
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           CHANGELOG=$(cat /tmp/changelog.md)
-          DOWNLOAD_TABLE="## 📦 Download
-
-          | File | Size | Note |
-          |------|------|------|
-          | \`BGist-v${{ steps.version.outputs.version }}.apk\` | ~20 MB | Android Release |
-
-          > 当前使用 debug 签名，正式发布需替换为正式签名密钥
-          "
+          DOWNLOAD_TABLE=$(echo -e "${{ steps.download_table.outputs.table }}")
+          
           BODY="${DOWNLOAD_TABLE}
-
+          
+          > 当前使用 debug 签名，正式发布需替换为正式签名密钥
+          > 
+          > **建议**: 优先下载 `arm64-v8a` 版本（现代手机），如不兼容再尝试 `universal` 版本。
+          
+          ---
+          
           ${CHANGELOG}"
           
           gh release edit v${{ steps.version.outputs.version }} \
