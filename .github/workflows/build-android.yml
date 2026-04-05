@@ -33,19 +33,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-
       - name: Build Release APK
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
+
+      - name: Get version
+        id: version
+        run: echo "name=version::$(date +'%Y.%m.%d')" >> $GITHUB_OUTPUT
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
@@ -55,7 +51,17 @@ jobs:
           retention-days: 30
 
       - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ steps.version.outputs.version }}-${{ github.sha }}
+          name: "BGist ${{ steps.version.outputs.version }}"
+          body: |
+            Auto-built from commit ${{ github.sha }}
+            
+            ## Changes
+            ${{ github.event.head_commit.message }}
+            
+            ## Download
+            - `app-release.apk` - Release build (debug-signed for testing)
           files: android/app/build/outputs/apk/release/app-release.apk
+          generate_release_notes: true
