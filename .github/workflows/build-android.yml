@@ -105,7 +105,10 @@ jobs:
       - name: Generate Download Table
         id: download_table
         run: |
-          TABLE="## 📦 Download\n\n| File | Architecture | Size | Note |\n|------|-------------|------|------|\n"
+          echo '## 📦 Download' > /tmp/download.md
+          echo '' >> /tmp/download.md
+          echo '| File | Architecture | Size | Note |' >> /tmp/download.md
+          echo '|------|-------------|------|------|' >> /tmp/download.md
           for apk in android/app/build/outputs/apk/release/BGist-*.apk; do
             filename=$(basename "$apk")
             size=$(du -h "$apk" | cut -f1)
@@ -116,25 +119,21 @@ jobs:
             else
               arch="Universal (All devices)"
             fi
-            TABLE+="| \`$filename\` | $arch | $size | Download |\n"
+            echo "| \`$filename\` | $arch | $size | Download |" >> /tmp/download.md
           done
-          echo -e "$TABLE"
-          echo "table<<EOF" >> $GITHUB_OUTPUT
-          echo -e "$TABLE" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo '' >> /tmp/download.md
+          echo '> 当前使用 debug 签名，正式发布需替换为正式签名密钥' >> /tmp/download.md
+          echo '> ' >> /tmp/download.md
+          echo '> **建议**: 优先下载 `arm64-v8a` 版本（现代手机），如不兼容再尝试 `universal` 版本。' >> /tmp/download.md
 
       - name: Update Release Body
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           CHANGELOG=$(cat /tmp/changelog.md)
-          DOWNLOAD_TABLE=$(echo -e "${{ steps.download_table.outputs.table }}")
+          DOWNLOAD_TABLE=$(cat /tmp/download.md)
           
           BODY="${DOWNLOAD_TABLE}
-          
-          > 当前使用 debug 签名，正式发布需替换为正式签名密钥
-          > 
-          > **建议**: 优先下载 `arm64-v8a` 版本（现代手机），如不兼容再尝试 `universal` 版本。
           
           ---
           
