@@ -4,9 +4,9 @@ import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {I18nProvider} from '../../i18n/context';
 import {createAppQueryClient} from '../../shared/api/queryClient';
 
-const queryClient = createAppQueryClient();
-
 export function AppProviders({children}: {children: React.ReactNode}) {
+  const [queryClient] = React.useState(() => createAppQueryClient());
+
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
