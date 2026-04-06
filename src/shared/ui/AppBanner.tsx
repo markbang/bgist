@@ -1,15 +1,12 @@
 import React from 'react';
-import {Pressable, StyleSheet, Text, View} from 'react-native';
+import {StyleSheet, Text, View} from 'react-native';
 import {appTheme} from '../../app/theme/tokens';
 
-type AppBannerTone = 'info' | 'success' | 'warning' | 'danger';
+type AppBannerTone = 'info' | 'warning' | 'danger';
 
 interface AppBannerProps {
-  title: string;
-  description?: string;
+  message: string;
   tone?: AppBannerTone;
-  actionLabel?: string;
-  onAction?: () => void;
 }
 
 const BANNER_TONES = {
@@ -17,11 +14,6 @@ const BANNER_TONES = {
     backgroundColor: '#eff6ff',
     borderColor: '#bfdbfe',
     accentColor: appTheme.colors.accent,
-  },
-  success: {
-    backgroundColor: '#ecfdf5',
-    borderColor: '#a7f3d0',
-    accentColor: appTheme.colors.success,
   },
   warning: {
     backgroundColor: '#fffbeb',
@@ -36,11 +28,8 @@ const BANNER_TONES = {
 } as const;
 
 export function AppBanner({
-  title,
-  description,
+  message,
   tone = 'info',
-  actionLabel,
-  onAction,
 }: AppBannerProps) {
   const colors = BANNER_TONES[tone];
 
@@ -55,15 +44,7 @@ export function AppBanner({
       ]}>
       <View style={[styles.accent, {backgroundColor: colors.accentColor}]} />
       <View style={styles.content}>
-        <Text style={styles.title}>{title}</Text>
-        {description ? <Text style={styles.description}>{description}</Text> : null}
-        {actionLabel && onAction ? (
-          <Pressable accessibilityRole="button" onPress={onAction} style={styles.action}>
-            <Text style={[styles.actionLabel, {color: colors.accentColor}]}>
-              {actionLabel}
-            </Text>
-          </Pressable>
-        ) : null}
+        <Text style={styles.message}>{message}</Text>
       </View>
     </View>
   );
@@ -86,24 +67,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    gap: appTheme.spacing.xs,
   },
-  title: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  description: {
+  message: {
     color: appTheme.colors.textSecondary,
-    fontSize: 14,
+    fontSize: 15,
     lineHeight: 20,
-  },
-  action: {
-    alignSelf: 'flex-start',
-    marginTop: appTheme.spacing.xs,
-  },
-  actionLabel: {
-    fontSize: 14,
-    fontWeight: '700',
   },
 });

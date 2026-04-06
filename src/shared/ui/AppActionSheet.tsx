@@ -12,28 +12,23 @@ import {AppButton} from './AppButton';
 
 type AppActionSheetTone = 'default' | 'danger';
 
-interface AppActionSheetOption {
+interface AppActionSheetAction {
   label: string;
   onPress: () => void;
   tone?: AppActionSheetTone;
-  disabled?: boolean;
 }
 
 interface AppActionSheetProps {
   visible: boolean;
   title?: string;
-  description?: string;
-  options: AppActionSheetOption[];
-  cancelLabel?: string;
+  actions: AppActionSheetAction[];
   onClose: () => void;
 }
 
 export function AppActionSheet({
   visible,
   title,
-  description,
-  options,
-  cancelLabel = 'Cancel',
+  actions,
   onClose,
 }: AppActionSheetProps) {
   return (
@@ -49,35 +44,31 @@ export function AppActionSheet({
         <View accessibilityViewIsModal style={styles.sheetWrap}>
           <View style={styles.sheet}>
             {title ? <Text style={styles.title}>{title}</Text> : null}
-            {description ? <Text style={styles.description}>{description}</Text> : null}
-            <View style={styles.options}>
-              {options.map(option => (
+            <View style={styles.actions}>
+              {actions.map(action => (
                 <Pressable
-                  key={option.label}
+                  key={action.label}
                   accessibilityRole="button"
-                  accessibilityLabel={option.label}
-                  accessibilityState={{disabled: option.disabled}}
-                  disabled={option.disabled}
+                  accessibilityLabel={action.label}
                   onPress={() => {
-                    option.onPress();
+                    action.onPress();
                     onClose();
                   }}
                   style={({pressed}) => [
-                    styles.option,
-                    pressed && !option.disabled ? styles.optionPressed : null,
-                    option.disabled ? styles.optionDisabled : null,
+                    styles.action,
+                    pressed ? styles.actionPressed : null,
                   ]}>
                   <Text
                     style={[
-                      styles.optionLabel,
-                      option.tone === 'danger' ? styles.optionLabelDanger : null,
+                      styles.actionLabel,
+                      action.tone === 'danger' ? styles.actionLabelDanger : null,
                     ]}>
-                    {option.label}
+                    {action.label}
                   </Text>
                 </Pressable>
               ))}
             </View>
-            <AppButton label={cancelLabel} onPress={onClose} variant="secondary" />
+            <AppButton label="Cancel" onPress={onClose} variant="secondary" />
           </View>
         </View>
       </SafeAreaView>
@@ -92,7 +83,7 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: appTheme.overlay.backdrop,
+    backgroundColor: appTheme.colors.overlay,
   },
   sheetWrap: {
     paddingHorizontal: appTheme.spacing.md,
@@ -113,15 +104,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
   },
-  description: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  options: {
+  actions: {
     gap: appTheme.spacing.xs,
   },
-  option: {
+  action: {
     minHeight: 52,
     borderRadius: appTheme.radius.md,
     borderCurve: 'continuous',
@@ -129,18 +115,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: appTheme.spacing.md,
   },
-  optionPressed: {
+  actionPressed: {
     opacity: 0.88,
   },
-  optionDisabled: {
-    opacity: 0.5,
-  },
-  optionLabel: {
+  actionLabel: {
     color: appTheme.colors.textPrimary,
     fontSize: 16,
     fontWeight: '600',
   },
-  optionLabelDanger: {
+  actionLabelDanger: {
     color: appTheme.colors.danger,
   },
 });

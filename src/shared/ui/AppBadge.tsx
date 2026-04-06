@@ -2,7 +2,7 @@ import React from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 import {appTheme} from '../../app/theme/tokens';
 
-type AppBadgeTone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger';
+type AppBadgeTone = 'public' | 'secret';
 
 interface AppBadgeProps {
   label: string;
@@ -10,34 +10,19 @@ interface AppBadgeProps {
 }
 
 const BADGE_TONES = {
-  neutral: {
-    backgroundColor: appTheme.colors.surfaceMuted,
-    borderColor: appTheme.colors.border,
-    textColor: appTheme.colors.textSecondary,
-  },
-  accent: {
+  public: {
     backgroundColor: appTheme.colors.accentSoft,
     borderColor: appTheme.colors.accentSoft,
     textColor: appTheme.colors.accent,
   },
-  success: {
-    backgroundColor: '#dff8ee',
-    borderColor: '#b8edd7',
-    textColor: appTheme.colors.success,
-  },
-  warning: {
-    backgroundColor: '#fef3c7',
-    borderColor: '#fde68a',
-    textColor: appTheme.colors.warning,
-  },
-  danger: {
-    backgroundColor: '#fee2e2',
-    borderColor: '#fecaca',
-    textColor: appTheme.colors.danger,
+  secret: {
+    backgroundColor: '#f3f4f6',
+    borderColor: '#e5e7eb',
+    textColor: '#374151',
   },
 } as const;
 
-export function AppBadge({label, tone = 'neutral'}: AppBadgeProps) {
+export function AppBadge({label, tone = 'public'}: AppBadgeProps) {
   const colors = BADGE_TONES[tone];
 
   return (

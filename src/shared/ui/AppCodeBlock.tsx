@@ -3,9 +3,9 @@ import {Platform, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {appTheme} from '../../app/theme/tokens';
 
 interface AppCodeBlockProps {
-  code: string;
-  language?: string;
-  showLineNumbers?: boolean;
+  filename?: string;
+  content: string;
+  showLines?: boolean;
 }
 
 const monoFont = Platform.select({
@@ -15,24 +15,24 @@ const monoFont = Platform.select({
 });
 
 export function AppCodeBlock({
-  code,
-  language,
-  showLineNumbers = false,
+  filename,
+  content,
+  showLines = false,
 }: AppCodeBlockProps) {
-  const lines = code.length > 0 ? code.split('\n') : [''];
+  const lines = content.length > 0 ? content.split('\n') : [''];
 
   return (
     <View style={styles.shell}>
-      {language ? (
+      {filename ? (
         <View style={styles.header}>
-          <Text style={styles.language}>{language}</Text>
+          <Text style={styles.filename}>{filename}</Text>
         </View>
       ) : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={styles.content}>
           {lines.map((line, index) => (
             <View key={`${index}-${line}`} style={styles.row}>
-              {showLineNumbers ? <Text style={styles.lineNumber}>{index + 1}</Text> : null}
+              {showLines ? <Text style={styles.lineNumber}>{index + 1}</Text> : null}
               <Text style={styles.line}>{line || ' '}</Text>
             </View>
           ))}
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: appTheme.spacing.md,
     paddingVertical: appTheme.spacing.sm,
   },
-  language: {
+  filename: {
     color: '#93c5fd',
     fontSize: 12,
     fontWeight: '700',

@@ -21,7 +21,7 @@ export function AppEmptyState({
 }: AppEmptyStateProps) {
   return (
     <View style={styles.container}>
-      {badgeLabel ? <AppBadge label={badgeLabel} tone="accent" /> : null}
+      {badgeLabel ? <AppBadge label={badgeLabel} tone="public" /> : null}
       <Text style={styles.title}>{title}</Text>
       {description ? <Text style={styles.description}>{description}</Text> : null}
       {actionLabel && onAction ? (

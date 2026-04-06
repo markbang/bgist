@@ -13,9 +13,7 @@ export const appTheme = {
     danger: '#dc2626',
     codeBg: '#0f172a',
     codeText: '#e2e8f0',
-  },
-  overlay: {
-    backdrop: 'rgba(15, 23, 42, 0.48)',
+    overlay: 'rgba(15, 23, 42, 0.48)',
   },
   shadow: {
     card: {

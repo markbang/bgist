@@ -8,21 +8,21 @@ interface AppSegment<T extends string> {
 }
 
 interface AppSegmentedControlProps<T extends string> {
-  segments: AppSegment<T>[];
+  options: AppSegment<T>[];
   value: T;
   onChange: (value: T) => void;
   disabled?: boolean;
 }
 
 export function AppSegmentedControl<T extends string>({
-  segments,
+  options,
   value,
   onChange,
   disabled = false,
 }: AppSegmentedControlProps<T>) {
   return (
     <View style={[styles.container, disabled ? styles.containerDisabled : null]}>
-      {segments.map(segment => {
+      {options.map(segment => {
         const isSelected = segment.value === value;
 
         return (
