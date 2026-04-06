@@ -1,4 +1,7 @@
 export const queryKeys = {
+  users: ['users'] as const,
+  userProfiles: ['users', 'profile'] as const,
+  userGistLists: ['users', 'gists'] as const,
   session: ['session'] as const,
   myGists: ['gists', 'mine'] as const,
   starredGists: ['gists', 'starred'] as const,

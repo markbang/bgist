@@ -1,9 +1,12 @@
+import type {ForwardedRef, ReactNode} from 'react';
+
 jest.mock('react-native-screens', () => {
   const React = require('react');
   const {View} = require('react-native');
 
-  const Mock = React.forwardRef(({children, ...props}, ref) =>
-    React.createElement(View, {...props, ref}, children),
+  const Mock = React.forwardRef(
+    ({children, ...props}: {children?: ReactNode}, ref: ForwardedRef<unknown>) =>
+      React.createElement(View, {...props, ref}, children),
   );
 
   Mock.displayName = 'MockScreen';
@@ -43,6 +46,10 @@ jest.mock('react-native-keychain', () => ({
   getGenericPassword: jest.fn(() => Promise.resolve(false)),
   setGenericPassword: jest.fn(() => Promise.resolve(true)),
   resetGenericPassword: jest.fn(() => Promise.resolve(true)),
+}));
+jest.mock('@react-native-clipboard/clipboard', () => ({
+  setString: jest.fn(),
+  getString: jest.fn(() => Promise.resolve('')),
 }));
 jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper', () => ({}), {
   virtual: true,

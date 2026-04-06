@@ -4,6 +4,11 @@ import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import LoginScreen from '../../features/auth/screens/LoginScreen';
 import {useSession} from '../../features/auth/session/SessionProvider';
+import {GistDetailScreen} from '../../features/gists/screens/GistDetailScreen';
+import {GistEditorScreen} from '../../features/gists/screens/GistEditorScreen';
+import {GistHistoryScreen} from '../../features/gists/screens/GistHistoryScreen';
+import {GistViewerScreen} from '../../features/gists/screens/GistViewerScreen';
+import {UserProfileScreen} from '../../features/profile/screens/UserProfileScreen';
 import {appTheme} from '../theme/tokens';
 import {MainTabs} from './MainTabs';
 import type {RootStackParamList} from './types';
@@ -54,46 +59,11 @@ export function RootNavigator() {
         {status === 'signedIn' ? (
           <>
             <Stack.Screen name="MainTabs" component={MainTabs} />
-            <Stack.Screen name="GistDetail">
-              {() => (
-                <PlaceholderScreen
-                  title="Gist detail"
-                  description="Task 5 wires the signed-in shell to the detail route. Detail content can land in a later task."
-                />
-              )}
-            </Stack.Screen>
-            <Stack.Screen name="GistEditor">
-              {() => (
-                <PlaceholderScreen
-                  title="Gist editor"
-                  description="Compose flows are reserved for later work. This route exists so navigation can already target it."
-                />
-              )}
-            </Stack.Screen>
-            <Stack.Screen name="GistViewer">
-              {() => (
-                <PlaceholderScreen
-                  title="File viewer"
-                  description="Viewer routes are registered and ready for future gist file browsing."
-                />
-              )}
-            </Stack.Screen>
-            <Stack.Screen name="UserProfile">
-              {() => (
-                <PlaceholderScreen
-                  title="User profile"
-                  description="Profile drill-down is registered here as a placeholder route for the new shell."
-                />
-              )}
-            </Stack.Screen>
-            <Stack.Screen name="GistHistory">
-              {() => (
-                <PlaceholderScreen
-                  title="Gist history"
-                  description="History drill-down is registered as part of the Task 5 signed-in navigation tree."
-                />
-              )}
-            </Stack.Screen>
+            <Stack.Screen name="GistDetail" component={GistDetailScreen} />
+            <Stack.Screen name="GistEditor" component={GistEditorScreen} />
+            <Stack.Screen name="GistViewer" component={GistViewerScreen} />
+            <Stack.Screen name="UserProfile" component={UserProfileScreen} />
+            <Stack.Screen name="GistHistory" component={GistHistoryScreen} />
           </>
         ) : status === 'signedOut' ? (
           <Stack.Screen name="Auth" component={LoginScreen} />

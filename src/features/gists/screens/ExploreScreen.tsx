@@ -20,6 +20,7 @@ interface ExploreScreenProps {
 
 export function ExploreScreen({navigation}: ExploreScreenProps) {
   const [query, setQuery] = React.useState('');
+  const lastAutoNavigatedQueryRef = React.useRef<string | null>(null);
   const publicGistsQuery = useQuery({
     queryKey: queryKeys.publicGists,
     queryFn: () => getPublicGists(1),
@@ -27,12 +28,21 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
 
   const gistReference = parseGistReference(query);
   const normalizedQuery = query.trim().toLowerCase();
+  const gistReferenceId = gistReference?.gistId;
 
   React.useEffect(() => {
-    if (gistReference) {
-      navigation.navigate('GistDetail', {gistId: gistReference.gistId});
+    if (!gistReferenceId) {
+      lastAutoNavigatedQueryRef.current = null;
+      return;
     }
-  }, [gistReference, navigation]);
+
+    if (lastAutoNavigatedQueryRef.current === normalizedQuery) {
+      return;
+    }
+
+    lastAutoNavigatedQueryRef.current = normalizedQuery;
+    navigation.navigate('GistDetail', {gistId: gistReferenceId});
+  }, [gistReferenceId, navigation, normalizedQuery]);
 
   const publicGists = publicGistsQuery.data ?? [];
   const filteredGists = publicGists.filter(gist => {

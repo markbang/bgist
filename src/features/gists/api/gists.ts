@@ -1,4 +1,11 @@
-import type {Gist, GistComment, GistWithHistory, UserInfo} from '../../../types/gist';
+import type {
+  CreateGistParams,
+  EditGistParams,
+  Gist,
+  GistComment,
+  GistWithHistory,
+  UserInfo,
+} from '../../../types/gist';
 import {githubClient} from '../../../shared/api/client';
 import {GitHubApiError} from '../../../shared/api/errors';
 
@@ -55,5 +62,39 @@ export async function isGistStarred(gistId: string) {
 
 export async function getGistComments(gistId: string) {
   const {data} = await githubClient.get<GistComment[]>(`/gists/${gistId}/comments`);
+  return data;
+}
+
+export async function createGist(params: CreateGistParams) {
+  const {data} = await githubClient.post<Gist>('/gists', params);
+  return data;
+}
+
+export async function editGist(gistId: string, params: EditGistParams) {
+  const {data} = await githubClient.patch<Gist>(`/gists/${gistId}`, params);
+  return data;
+}
+
+export async function deleteGist(gistId: string) {
+  await githubClient.delete(`/gists/${gistId}`);
+}
+
+export async function starGist(gistId: string) {
+  await githubClient.put(`/gists/${gistId}/star`);
+}
+
+export async function unstarGist(gistId: string) {
+  await githubClient.delete(`/gists/${gistId}/star`);
+}
+
+export async function forkGist(gistId: string) {
+  const {data} = await githubClient.post<Gist>(`/gists/${gistId}/forks`);
+  return data;
+}
+
+export async function addGistComment(gistId: string, body: string) {
+  const {data} = await githubClient.post<GistComment>(`/gists/${gistId}/comments`, {
+    body,
+  });
   return data;
 }

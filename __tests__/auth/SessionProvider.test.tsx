@@ -27,6 +27,12 @@ jest.mock('@react-navigation/native-stack', () => ({
     Screen: ({component: Component}: {component: React.ComponentType}) => <Component />,
   }),
 }));
+jest.mock('@react-navigation/bottom-tabs', () => ({
+  createBottomTabNavigator: () => ({
+    Navigator: ({children}: {children: React.ReactNode}) => <>{children}</>,
+    Screen: ({component: Component}: {component: React.ComponentType}) => <Component />,
+  }),
+}));
 
 function Probe() {
   const {status, user} = useSession();
@@ -67,7 +73,7 @@ afterEach(() => {
   githubOAuthConfig.clientId = originalClientId;
   jest.clearAllMocks();
   jest.restoreAllMocks();
-  delete (global as {fetch?: typeof fetch}).fetch;
+  Reflect.deleteProperty(globalThis, 'fetch');
 });
 
 test('restores a stored session', async () => {
@@ -111,7 +117,7 @@ test('waits for secure session restore before showing the login screen', async (
   renderWithSession(<RootNavigator />);
 
   expect(screen.queryByText('Sign in with GitHub')).toBeNull();
-  expect(screen.getByText('Restoring session…')).toBeTruthy();
+  expect(screen.getByText('Restoring session')).toBeTruthy();
 
   resolveReadSession?.(false);
 
@@ -133,7 +139,7 @@ test('signIn stores the OAuth session', async () => {
     accessToken: 'token-456',
   });
   githubOAuthConfig.clientId = 'bgist-test-client-id';
-  global.fetch = jest.fn().mockResolvedValue({
+  globalThis.fetch = jest.fn().mockResolvedValue({
     ok: true,
     json: async () => ({login: 'octocat'}),
   }) as jest.Mock;
@@ -170,7 +176,7 @@ test('clears query cache on signIn and signOut transitions', async () => {
     accessToken: 'token-789',
   });
   githubOAuthConfig.clientId = 'bgist-test-client-id';
-  global.fetch = jest.fn().mockResolvedValue({
+  globalThis.fetch = jest.fn().mockResolvedValue({
     ok: true,
     json: async () => ({login: 'octocat'}),
   }) as jest.Mock;

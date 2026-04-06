@@ -109,12 +109,13 @@ test('parses gist ids from gist URLs and raw id input', () => {
   expect(parseGistReference('not-a-gist')).toBeNull();
 });
 
-test('explore screen navigates immediately when a gist URL is entered', async () => {
+test('explore screen only auto-navigates once per gist reference and allows a new input to navigate again', async () => {
   const navigate = jest.fn();
+  const navigation = {navigate};
 
   (getPublicGists as jest.Mock).mockImplementation(() => new Promise(() => {}));
 
-  render(<ExploreScreen navigation={{navigate}} />, {
+  const {rerender} = render(<ExploreScreen navigation={navigation} />, {
     wrapper: createWrapper(),
   });
 
@@ -127,6 +128,21 @@ test('explore screen navigates immediately when a gist URL is entered', async ()
     expect(getPublicGists).toHaveBeenCalledWith(1);
     expect(navigate).toHaveBeenCalledWith('GistDetail', {
       gistId: 'aa5a315d61ae9438b18d',
+    });
+  });
+
+  rerender(<ExploreScreen navigation={navigation} />);
+
+  await waitFor(() => {
+    expect(navigate).toHaveBeenCalledTimes(1);
+  });
+
+  fireEvent.changeText(screen.getByLabelText('Search public gists'), 'bb6b9a4012f0c1234567');
+
+  await waitFor(() => {
+    expect(navigate).toHaveBeenCalledTimes(2);
+    expect(navigate).toHaveBeenLastCalledWith('GistDetail', {
+      gistId: 'bb6b9a4012f0c1234567',
     });
   });
 });

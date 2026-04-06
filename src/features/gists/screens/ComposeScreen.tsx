@@ -1,25 +1,32 @@
 import React from 'react';
 import {StyleSheet, Text, View} from 'react-native';
+import type {MainTabScreenProps} from '../../../app/navigation/types';
 import {appTheme} from '../../../app/theme/tokens';
+import {AppButton} from '../../../shared/ui/AppButton';
 import {AppCard} from '../../../shared/ui/AppCard';
 import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
 import {AppScreen} from '../../../shared/ui/AppScreen';
 
-export function ComposeScreen() {
+export function ComposeScreen({navigation}: MainTabScreenProps<'Compose'>) {
   return (
     <AppScreen>
       <View style={styles.container}>
         <Text style={styles.eyebrow}>Create</Text>
         <Text style={styles.title}>Compose</Text>
         <Text style={styles.subtitle}>
-          The editor flow is not part of Task 5, but this tab is now part of the signed-in shell.
+          Start a new gist draft from the tab bar, then edit files in a phone-first composer.
         </Text>
+
+        <AppButton
+          label="Create a gist"
+          onPress={() => navigation.navigate('GistEditor', {mode: 'create'})}
+        />
 
         <AppCard>
           <AppEmptyState
-            badgeLabel="Coming soon"
-            title="Compose will land in a follow-up task"
-            description="This placeholder reserves the tab and keeps the shell complete for the first mobile feed pass."
+            badgeLabel="Mobile flow"
+            title="Draft first, publish when ready"
+            description="Jump into the new editor with one tap, add one or more files, and save directly back into the gist stack."
           />
         </AppCard>
       </View>
