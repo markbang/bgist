@@ -25,19 +25,27 @@ export function AppInput({
   editable = true,
   multiline = false,
   style,
+  placeholderTextColor,
+  selectionColor,
+  accessibilityLabel,
+  accessibilityHint,
   ...props
 }: AppInputProps) {
   const message = errorMessage ?? helperText;
+  const inputAccessibilityLabel = accessibilityLabel ?? label ?? props.placeholder;
+  const inputAccessibilityHint = accessibilityHint ?? message;
 
   return (
     <View style={[styles.container, containerStyle]}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <TextInput
         {...props}
+        accessibilityHint={inputAccessibilityHint}
+        accessibilityLabel={inputAccessibilityLabel}
         editable={editable}
         multiline={multiline}
-        placeholderTextColor={appTheme.colors.textSecondary}
-        selectionColor={appTheme.colors.accent}
+        placeholderTextColor={placeholderTextColor ?? appTheme.colors.textSecondary}
+        selectionColor={selectionColor ?? appTheme.colors.accent}
         style={[
           styles.input,
           multiline ? styles.inputMultiline : null,

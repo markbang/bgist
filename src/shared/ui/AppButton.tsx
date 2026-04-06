@@ -2,6 +2,7 @@ import React from 'react';
 import {
   ActivityIndicator,
   Pressable,
+  PressableProps,
   StyleProp,
   StyleSheet,
   Text,
@@ -12,7 +13,7 @@ import {appTheme} from '../../app/theme/tokens';
 
 type AppButtonVariant = 'primary' | 'secondary' | 'danger';
 
-interface AppButtonProps {
+interface AppButtonProps extends Omit<PressableProps, 'children' | 'style'> {
   label: string;
   onPress?: () => void;
   variant?: AppButtonVariant;
@@ -51,15 +52,24 @@ export function AppButton({
   disabled = false,
   fullWidth = true,
   style,
+  accessibilityLabel,
+  accessibilityRole,
+  accessibilityState,
+  ...pressableProps
 }: AppButtonProps) {
   const isDisabled = disabled || loading;
   const buttonColors = BUTTON_VARIANTS[variant];
 
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{disabled: isDisabled, busy: loading}}
+      {...pressableProps}
+      accessibilityRole={accessibilityRole ?? 'button'}
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityState={{
+        ...accessibilityState,
+        disabled: isDisabled,
+        busy: loading,
+      }}
       disabled={isDisabled}
       onPress={onPress}
       style={({pressed}) => [

@@ -33,7 +33,9 @@ export function AppCodeBlock({
           {lines.map((line, index) => (
             <View key={`${index}-${line}`} style={styles.row}>
               {showLines ? <Text style={styles.lineNumber}>{index + 1}</Text> : null}
-              <Text style={styles.line}>{line || ' '}</Text>
+              <Text ellipsizeMode="clip" numberOfLines={1} style={styles.line}>
+                {line || ' '}
+              </Text>
             </View>
           ))}
         </View>
@@ -82,7 +84,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   line: {
-    flexShrink: 1,
+    flexShrink: 0,
     color: appTheme.colors.codeText,
     fontFamily: monoFont,
     fontSize: 13,

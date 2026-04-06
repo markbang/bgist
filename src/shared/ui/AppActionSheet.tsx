@@ -1,12 +1,6 @@
 import React from 'react';
-import {
-  Modal,
-  Pressable,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import {Modal, Pressable, StyleSheet, Text, View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {appTheme} from '../../app/theme/tokens';
 import {AppButton} from './AppButton';
 
@@ -39,45 +33,50 @@ export function AppActionSheet({
       statusBarTranslucent
       visible={visible}
       onRequestClose={onClose}>
-      <SafeAreaView style={styles.root}>
+      <View style={styles.root}>
         <Pressable style={styles.backdrop} onPress={onClose} />
-        <View accessibilityViewIsModal style={styles.sheetWrap}>
-          <View style={styles.sheet}>
-            {title ? <Text style={styles.title}>{title}</Text> : null}
-            <View style={styles.actions}>
-              {actions.map(action => (
-                <Pressable
-                  key={action.label}
-                  accessibilityRole="button"
-                  accessibilityLabel={action.label}
-                  onPress={() => {
-                    action.onPress();
-                    onClose();
-                  }}
-                  style={({pressed}) => [
-                    styles.action,
-                    pressed ? styles.actionPressed : null,
-                  ]}>
-                  <Text
-                    style={[
-                      styles.actionLabel,
-                      action.tone === 'danger' ? styles.actionLabelDanger : null,
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.safeArea}>
+          <View accessibilityViewIsModal style={styles.sheetWrap}>
+            <View style={styles.sheet}>
+              {title ? <Text style={styles.title}>{title}</Text> : null}
+              <View style={styles.actions}>
+                {actions.map(action => (
+                  <Pressable
+                    key={action.label}
+                    accessibilityRole="button"
+                    accessibilityLabel={action.label}
+                    onPress={() => {
+                      action.onPress();
+                      onClose();
+                    }}
+                    style={({pressed}) => [
+                      styles.action,
+                      pressed ? styles.actionPressed : null,
                     ]}>
-                    {action.label}
-                  </Text>
-                </Pressable>
-              ))}
+                    <Text
+                      style={[
+                        styles.actionLabel,
+                        action.tone === 'danger' ? styles.actionLabelDanger : null,
+                      ]}>
+                      {action.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <AppButton label="Cancel" onPress={onClose} variant="secondary" />
             </View>
-            <AppButton label="Cancel" onPress={onClose} variant="secondary" />
           </View>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
+    flex: 1,
+  },
+  safeArea: {
     flex: 1,
     justifyContent: 'flex-end',
   },
