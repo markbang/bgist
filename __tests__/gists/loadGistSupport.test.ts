@@ -1,10 +1,12 @@
+import {githubClient} from '../../src/shared/api/client';
+import {GitHubApiError} from '../../src/shared/api/errors';
 import type {GistComment} from '../../src/types/gist';
-import {getGistComments, isGistStarred} from '../../src/features/gists/api/gists';
 import {loadGistSupport} from '../../src/features/gists/api/loadGistSupport';
 
-jest.mock('../../src/features/gists/api/gists', () => ({
-  getGistComments: jest.fn(),
-  isGistStarred: jest.fn(),
+jest.mock('../../src/shared/api/client', () => ({
+  githubClient: {
+    get: jest.fn(),
+  },
 }));
 
 function createComment(): GistComment {
@@ -26,13 +28,28 @@ function createComment(): GistComment {
   };
 }
 
-test('loads comments even when the star status request fails', async () => {
-  (isGistStarred as jest.Mock).mockRejectedValue(new Error('404'));
-  (getGistComments as jest.Mock).mockResolvedValue([createComment()]);
+test('treats a 404 starred check as unstarred while still loading comments', async () => {
+  (githubClient.get as jest.Mock).mockImplementation((path: string) => {
+    if (path === '/gists/gist-123/star') {
+      return Promise.reject(
+        new GitHubApiError({
+          message: 'Not Found',
+          status: 404,
+          cause: new Error('404'),
+        }),
+      );
+    }
+
+    if (path === '/gists/gist-123/comments') {
+      return Promise.resolve({data: [createComment()]});
+    }
+
+    throw new Error(`Unexpected path: ${path}`);
+  });
 
   const result = await loadGistSupport('gist-123');
 
-  expect(result.starred).toBeNull();
-  expect(result.starredError).toBe('404');
+  expect(result.starred).toBe(false);
+  expect(result.starredError).toBeNull();
   expect(result.comments).toHaveLength(1);
 });

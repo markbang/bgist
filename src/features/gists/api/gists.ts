@@ -1,5 +1,6 @@
 import type {Gist, GistComment, GistWithHistory, UserInfo} from '../../../types/gist';
 import {githubClient} from '../../../shared/api/client';
+import {GitHubApiError} from '../../../shared/api/errors';
 
 export async function getMyGists(page = 1, perPage = 30) {
   const {data} = await githubClient.get<Gist[]>('/gists', {
@@ -40,8 +41,16 @@ export async function getGist(gistId: string) {
 }
 
 export async function isGistStarred(gistId: string) {
-  const {status} = await githubClient.get(`/gists/${gistId}/star`);
-  return status === 204;
+  try {
+    const {status} = await githubClient.get(`/gists/${gistId}/star`);
+    return status === 204;
+  } catch (error) {
+    if (error instanceof GitHubApiError && error.status === 404) {
+      return false;
+    }
+
+    throw error;
+  }
 }
 
 export async function getGistComments(gistId: string) {

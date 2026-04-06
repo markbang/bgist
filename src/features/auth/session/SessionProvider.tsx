@@ -1,4 +1,5 @@
 import React, {createContext, useContext, useEffect, useMemo, useState} from 'react';
+import {useQueryClient} from '@tanstack/react-query';
 import {startGitHubOAuth} from '../api/oauth';
 import {clearSession, readSession, saveSession, StoredSession} from '../storage/secureSessionStore';
 import {setApiAccessToken} from '../../../shared/api/client';
@@ -32,6 +33,7 @@ async function fetchCurrentUser(token: string) {
 }
 
 export function SessionProvider({children}: {children: React.ReactNode}) {
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState<SessionStatus>('loading');
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [user, setUser] = useState<StoredSession['user'] | null>(null);
@@ -89,6 +91,7 @@ export function SessionProvider({children}: {children: React.ReactNode}) {
           },
         };
         await saveSession(nextSession);
+        queryClient.clear();
         setApiAccessToken(nextSession.accessToken);
         setAccessToken(nextSession.accessToken);
         setUser(nextSession.user);
@@ -96,13 +99,14 @@ export function SessionProvider({children}: {children: React.ReactNode}) {
       },
       async signOut() {
         await clearSession();
+        queryClient.clear();
         setApiAccessToken(null);
         setAccessToken(null);
         setUser(null);
         setStatus('signedOut');
       },
     }),
-    [accessToken, status, user],
+    [accessToken, queryClient, status, user],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
