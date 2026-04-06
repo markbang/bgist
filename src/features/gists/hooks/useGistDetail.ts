@@ -7,15 +7,15 @@ export function useGistDetail(gistId: string) {
   const enabled = Boolean(gistId);
 
   const gistQuery = useQuery({
-    queryKey: queryKeys.gists.detail(gistId),
+    queryKey: queryKeys.gistDetail(gistId),
     queryFn: () => getGist(gistId),
     enabled,
   });
 
   const supportQuery = useQuery({
-    queryKey: queryKeys.gists.support(gistId),
+    queryKey: queryKeys.gistSupport(gistId),
     queryFn: () => loadGistSupport(gistId),
-    enabled,
+    enabled: gistQuery.isSuccess,
   });
 
   return {
