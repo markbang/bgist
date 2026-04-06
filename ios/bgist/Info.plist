@@ -55,5 +55,16 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.bgist.oauth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>bgist</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

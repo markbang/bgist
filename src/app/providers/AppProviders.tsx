@@ -3,6 +3,7 @@ import {QueryClientProvider} from '@tanstack/react-query';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {I18nProvider} from '../../i18n/context';
 import {createAppQueryClient} from '../../shared/api/queryClient';
+import {SessionProvider} from '../../features/auth/session/SessionProvider';
 
 export function AppProviders({children}: {children: React.ReactNode}) {
   const [queryClient] = React.useState(() => createAppQueryClient());
@@ -10,7 +11,9 @@ export function AppProviders({children}: {children: React.ReactNode}) {
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        <I18nProvider>{children}</I18nProvider>
+        <I18nProvider>
+          <SessionProvider>{children}</SessionProvider>
+        </I18nProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
   );
