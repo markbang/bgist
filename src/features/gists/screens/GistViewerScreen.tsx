@@ -417,7 +417,7 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
             accessibilityLabel={t('viewer.shareLink')}
             icon={<ActionIcon color={appTheme.colors.textPrimary} name="share" />}
             onPress={() => {
-              void Share.share({message: fileUrl}).catch(() => {
+              Share.share({message: fileUrl}).catch(() => {
                 Alert.alert(t('viewer.shareErrorTitle'), t('viewer.shareErrorDescription'));
               });
             }}
@@ -435,7 +435,7 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
               title={t('viewer.errorTitle')}
               description={t('viewer.errorDescription')}
               onRetry={() => {
-                void fileContentQuery.refetch();
+                fileContentQuery.refetch();
               }}
             />
           ) : showPreview && previewDocument ? (
