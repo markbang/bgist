@@ -57,7 +57,7 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
             options={appearanceOptions}
             value={colorMode}
             onChange={value => {
-              void setColorMode(value);
+              Promise.resolve(setColorMode(value)).catch(() => {});
             }}
           />
           <Text style={styles.helperText}>
@@ -80,7 +80,7 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
             options={languageOptions}
             value={language}
             onChange={value => {
-              void setLanguage(value);
+              Promise.resolve(setLanguage(value)).catch(() => {});
             }}
           />
         </AppCard>
