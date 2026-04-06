@@ -21,8 +21,7 @@ const SEGMENTS = [
 ] satisfies {label: string; value: HomeFeedSegment}[];
 
 export function HomeScreen({navigation}: HomeScreenProps) {
-  const [segment, setSegment] = React.useState<HomeFeedSegment>('my');
-  const {gists, isLoading, isError, refetch} = useHomeFeed(segment);
+  const {segment, setSegment, items, isLoading, isError, refetch} = useHomeFeed();
 
   let content: React.ReactNode;
 
@@ -43,7 +42,7 @@ export function HomeScreen({navigation}: HomeScreenProps) {
         }}
       />
     );
-  } else if (gists.length === 0) {
+  } else if (items.length === 0) {
     content = (
       <AppEmptyState
         badgeLabel={segment === 'my' ? 'My Feed' : 'Starred'}
@@ -58,7 +57,7 @@ export function HomeScreen({navigation}: HomeScreenProps) {
   } else {
     content = (
       <FlatList
-        data={gists}
+        data={items}
         keyExtractor={item => item.id}
         renderItem={({item}) => (
           <GistCard

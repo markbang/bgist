@@ -10,7 +10,6 @@ export function parseGistReference(input: string) {
   if (GIST_ID_PATTERN.test(value)) {
     return {
       gistId: value,
-      kind: 'id' as const,
     };
   }
 
@@ -24,7 +23,6 @@ export function parseGistReference(input: string) {
       if (gistId && GIST_ID_PATTERN.test(gistId)) {
         return {
           gistId,
-          kind: 'url' as const,
         };
       }
     }
@@ -35,7 +33,6 @@ export function parseGistReference(input: string) {
       if (GIST_ID_PATTERN.test(gistId)) {
         return {
           gistId,
-          kind: 'url' as const,
         };
       }
     }

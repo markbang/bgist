@@ -3,8 +3,6 @@ import {FlatList, StyleSheet, Text, View} from 'react-native';
 import {useQuery} from '@tanstack/react-query';
 import {appTheme} from '../../../app/theme/tokens';
 import {queryKeys} from '../../../shared/api/queryKeys';
-import {AppButton} from '../../../shared/ui/AppButton';
-import {AppCard} from '../../../shared/ui/AppCard';
 import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
 import {AppErrorState} from '../../../shared/ui/AppErrorState';
 import {AppInput} from '../../../shared/ui/AppInput';
@@ -24,11 +22,18 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
   const [query, setQuery] = React.useState('');
   const publicGistsQuery = useQuery({
     queryKey: queryKeys.publicGists,
-    queryFn: () => getPublicGists(),
+    queryFn: () => getPublicGists(1),
   });
 
   const gistReference = parseGistReference(query);
   const normalizedQuery = query.trim().toLowerCase();
+
+  React.useEffect(() => {
+    if (gistReference) {
+      navigation.navigate('GistDetail', {gistId: gistReference.gistId});
+    }
+  }, [gistReference, navigation]);
+
   const publicGists = publicGistsQuery.data ?? [];
   const filteredGists = publicGists.filter(gist => {
     if (!normalizedQuery) {
@@ -71,16 +76,12 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
         }}
       />
     );
-  } else if (filteredGists.length === 0) {
+  } else if (filteredGists.length === 0 && !gistReference) {
     content = (
       <AppEmptyState
-        badgeLabel={gistReference ? 'Gist ID' : 'Explore'}
-        title={gistReference ? 'That gist is not in this page of results' : 'No matching public gists'}
-        description={
-          gistReference
-            ? 'Use the detected gist reference below to jump to the detail route directly.'
-            : 'Try a different owner, description, or filename search.'
-        }
+        badgeLabel="Explore"
+        title="No matching public gists"
+        description="Try a different owner, description, or filename search."
       />
     );
   } else {
@@ -118,22 +119,6 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
             autoCorrect={false}
           />
         </View>
-
-        {gistReference ? (
-          <AppCard>
-            <Text style={styles.referenceEyebrow}>Detected gist reference</Text>
-            <Text style={styles.referenceId}>{gistReference.gistId}</Text>
-            <Text style={styles.referenceDescription}>
-              Open the placeholder detail screen directly for this gist ID.
-            </Text>
-            <AppButton
-              fullWidth={false}
-              label="Open gist"
-              onPress={() => navigation.navigate('GistDetail', {gistId: gistReference.gistId})}
-              variant="secondary"
-            />
-          </AppCard>
-        ) : null}
 
         <View style={styles.content}>{content}</View>
       </View>
@@ -176,22 +161,5 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: appTheme.spacing.xl,
     gap: appTheme.spacing.md,
-  },
-  referenceEyebrow: {
-    color: appTheme.colors.accent,
-    fontSize: 12,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  referenceId: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  referenceDescription: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 14,
-    lineHeight: 20,
   },
 });

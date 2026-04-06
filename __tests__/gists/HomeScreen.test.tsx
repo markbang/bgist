@@ -1,9 +1,16 @@
 import React from 'react';
-import {fireEvent, render, screen} from '@testing-library/react-native';
+import {fireEvent, render, screen, waitFor} from '@testing-library/react-native';
+import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import type {Gist} from '../../src/types/gist';
 import {HomeScreen} from '../../src/features/gists/screens/HomeScreen';
+import {ExploreScreen} from '../../src/features/gists/screens/ExploreScreen';
 import {parseGistReference} from '../../src/features/gists/utils/parseGistReference';
 import {useHomeFeed} from '../../src/features/gists/hooks/useHomeFeed';
+import {getPublicGists} from '../../src/features/gists/api/gists';
+
+jest.mock('../../src/features/gists/api/gists', () => ({
+  getPublicGists: jest.fn(),
+}));
 
 jest.mock('../../src/features/gists/hooks/useHomeFeed', () => ({
   useHomeFeed: jest.fn(),
@@ -56,16 +63,32 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        gcTime: Infinity,
+        retry: false,
+      },
+    },
+  });
+
+  return function Wrapper({children}: {children: React.ReactNode}) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  };
+}
+
 test('switches the home feed from My to Starred when the segment is pressed', () => {
-  (useHomeFeed as jest.Mock).mockImplementation((segment: 'my' | 'starred') => ({
-    segment,
-    setSegment: jest.fn(),
-    gists: segment === 'my' ? [createGist({id: 'mine-1', description: 'My gist'})] : [],
+  const setSegment = jest.fn();
+
+  (useHomeFeed as jest.Mock).mockReturnValue({
+    segment: 'my',
+    setSegment,
+    items: [createGist({id: 'mine-1', description: 'My gist'})],
     isLoading: false,
     isError: false,
-    error: null,
     refetch: jest.fn(),
-  }));
+  });
 
   render(<HomeScreen navigation={{navigate: jest.fn()}} />);
 
@@ -73,17 +96,37 @@ test('switches the home feed from My to Starred when the segment is pressed', ()
 
   fireEvent.press(screen.getByRole('button', {name: 'Starred'}));
 
-  expect(useHomeFeed).toHaveBeenLastCalledWith('starred');
+  expect(setSegment).toHaveBeenCalledWith('starred');
 });
 
 test('parses gist ids from gist URLs and raw id input', () => {
   expect(parseGistReference('https://gist.github.com/octocat/aa5a315d61ae9438b18d')).toEqual({
     gistId: 'aa5a315d61ae9438b18d',
-    kind: 'url',
   });
   expect(parseGistReference('aa5a315d61ae9438b18d')).toEqual({
     gistId: 'aa5a315d61ae9438b18d',
-    kind: 'id',
   });
   expect(parseGistReference('not-a-gist')).toBeNull();
+});
+
+test('explore screen navigates immediately when a gist URL is entered', async () => {
+  const navigate = jest.fn();
+
+  (getPublicGists as jest.Mock).mockImplementation(() => new Promise(() => {}));
+
+  render(<ExploreScreen navigation={{navigate}} />, {
+    wrapper: createWrapper(),
+  });
+
+  fireEvent.changeText(
+    screen.getByLabelText('Search public gists'),
+    'https://gist.github.com/octocat/aa5a315d61ae9438b18d',
+  );
+
+  await waitFor(() => {
+    expect(getPublicGists).toHaveBeenCalledWith(1);
+    expect(navigate).toHaveBeenCalledWith('GistDetail', {
+      gistId: 'aa5a315d61ae9438b18d',
+    });
+  });
 });

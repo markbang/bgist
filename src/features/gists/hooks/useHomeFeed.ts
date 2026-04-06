@@ -1,3 +1,4 @@
+import {useState} from 'react';
 import {useQuery} from '@tanstack/react-query';
 import type {Gist} from '../../../types/gist';
 import {queryKeys} from '../../../shared/api/queryKeys';
@@ -5,7 +6,9 @@ import {getMyGists, getStarredGists} from '../api/gists';
 
 export type HomeFeedSegment = 'my' | 'starred';
 
-export function useHomeFeed(segment: HomeFeedSegment) {
+export function useHomeFeed() {
+  const [segment, setSegment] = useState<HomeFeedSegment>('my');
+
   const myQuery = useQuery<Gist[]>({
     queryKey: queryKeys.myGists,
     queryFn: () => getMyGists(),
@@ -21,10 +24,11 @@ export function useHomeFeed(segment: HomeFeedSegment) {
   const activeQuery = segment === 'my' ? myQuery : starredQuery;
 
   return {
-    gists: activeQuery.data ?? [],
+    segment,
+    setSegment,
+    items: activeQuery.data ?? [],
     isLoading: activeQuery.isLoading,
     isError: activeQuery.isError,
-    error: activeQuery.error,
     refetch: activeQuery.refetch,
   };
 }
