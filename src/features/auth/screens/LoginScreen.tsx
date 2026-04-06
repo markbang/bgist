@@ -17,8 +17,13 @@ export default function LoginScreen() {
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <Text
           accessibilityRole="button"
+          accessibilityState={{disabled: isSubmitting}}
           style={styles.button}
           onPress={async () => {
+            if (isSubmitting) {
+              return;
+            }
+
             setError(null);
             setIsSubmitting(true);
             try {
