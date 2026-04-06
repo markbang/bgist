@@ -6,6 +6,7 @@ import {AppErrorState} from '../../../shared/ui/AppErrorState';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
 import {AppScreen} from '../../../shared/ui/AppScreen';
 import {AppSegmentedControl} from '../../../shared/ui/AppSegmentedControl';
+import {useI18n} from '../../../i18n/context';
 import {GistCard} from '../components/GistCard';
 import {type HomeFeedSegment, useHomeFeed} from '../hooks/useHomeFeed';
 
@@ -15,28 +16,28 @@ interface HomeScreenProps {
   };
 }
 
-const SEGMENTS = [
-  {label: 'My', value: 'my'},
-  {label: 'Starred', value: 'starred'},
-] satisfies {label: string; value: HomeFeedSegment}[];
-
 export function HomeScreen({navigation}: HomeScreenProps) {
+  const {t} = useI18n();
   const {segment, setSegment, items, isLoading, isError, refetch} = useHomeFeed();
+  const segments = [
+    {label: t('home.segmentMine'), value: 'my'},
+    {label: t('home.segmentStarred'), value: 'starred'},
+  ] satisfies {label: string; value: HomeFeedSegment}[];
 
   let content: React.ReactNode;
 
   if (isLoading) {
     content = (
       <AppLoadingState
-        label={segment === 'my' ? 'Loading your gists' : 'Loading starred gists'}
-        description="Pulling the latest items from GitHub."
+        label={segment === 'my' ? t('home.loadingMine') : t('home.loadingStarred')}
+        description={t('home.loadingDescription')}
       />
     );
   } else if (isError) {
     content = (
       <AppErrorState
-        title="Could not load this feed"
-        description="Try again to refresh the selected gist list."
+        title={t('home.errorTitle')}
+        description={t('home.errorDescription')}
         onRetry={() => {
           void refetch();
         }}
@@ -45,12 +46,12 @@ export function HomeScreen({navigation}: HomeScreenProps) {
   } else if (items.length === 0) {
     content = (
       <AppEmptyState
-        badgeLabel={segment === 'my' ? 'My Feed' : 'Starred'}
-        title={segment === 'my' ? 'No gists yet' : 'No starred gists yet'}
+        badgeLabel={segment === 'my' ? t('home.badgeMine') : t('home.badgeStarred')}
+        title={segment === 'my' ? t('home.emptyMineTitle') : t('home.emptyStarredTitle')}
         description={
           segment === 'my'
-            ? 'Create your first gist to start building your personal feed.'
-            : 'Star a few gists on GitHub and they will show up here.'
+            ? t('home.emptyMineDescription')
+            : t('home.emptyStarredDescription')
         }
       />
     );
@@ -75,12 +76,10 @@ export function HomeScreen({navigation}: HomeScreenProps) {
     <AppScreen>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>Your feeds</Text>
-          <Text style={styles.title}>Home</Text>
-          <Text style={styles.subtitle}>
-            Switch between your own gists and the ones you have starred.
-          </Text>
-          <AppSegmentedControl options={SEGMENTS} value={segment} onChange={setSegment} />
+          <Text style={styles.eyebrow}>{t('home.eyebrow')}</Text>
+          <Text style={styles.title}>{t('home.title')}</Text>
+          <Text style={styles.subtitle}>{t('home.subtitle')}</Text>
+          <AppSegmentedControl options={segments} value={segment} onChange={setSegment} />
         </View>
 
         <View style={styles.content}>{content}</View>

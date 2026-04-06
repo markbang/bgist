@@ -22,17 +22,18 @@ import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
 import {AppErrorState} from '../../../shared/ui/AppErrorState';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
 import {AppScreen} from '../../../shared/ui/AppScreen';
+import {useI18n} from '../../../i18n/context';
 import {useGistDetail} from '../hooks/useGistDetail';
 import {useGistMutations} from '../hooks/useGistMutations';
 
-function formatDate(value: string) {
+function formatDate(value: string, locale: string, fallback: string) {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return 'Unknown update';
+    return fallback;
   }
 
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString(locale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -44,11 +45,13 @@ function FilePreviewCard({
   language,
   preview,
   onPress,
+  openLabel,
 }: {
   filename: string;
   language: string | null;
   preview: string;
   onPress: () => void;
+  openLabel: string;
 }) {
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={filename} onPress={onPress}>
@@ -58,7 +61,7 @@ function FilePreviewCard({
             <Text style={styles.fileName}>{filename}</Text>
             {language ? <Text style={styles.fileLanguage}>{language}</Text> : null}
           </View>
-          <Text style={styles.fileLink}>Open</Text>
+          <Text style={styles.fileLink}>{openLabel}</Text>
         </View>
         <Text numberOfLines={6} style={styles.filePreview}>
           {preview || ' '}
@@ -95,6 +98,8 @@ function CommentRow({
 }
 
 export function GistDetailScreen({navigation, route}: RootStackScreenProps<'GistDetail'>) {
+  const {language, t} = useI18n();
+  const locale = language === 'zh' ? 'zh-CN' : 'en-US';
   const {gistId} = route.params;
   const {user} = useSession();
   const {gistQuery, supportQuery, gist, support} = useGistDetail(gistId);
@@ -107,60 +112,44 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
   } = useGistMutations();
   const [commentBody, setCommentBody] = React.useState('');
   const [sheetVisible, setSheetVisible] = React.useState(false);
-
-  if (gistQuery.isLoading) {
-    return (
-      <AppScreen>
-        <AppLoadingState
-          label="Loading gist"
-          description="Fetching the latest gist details from GitHub."
-        />
-      </AppScreen>
-    );
-  }
-
-  if (gistQuery.isError || !gist) {
-    return (
-      <AppScreen>
-        <AppErrorState
-          title="Could not load this gist"
-          description="Retry to fetch the gist details and try again."
-          onRetry={() => {
-            void gistQuery.refetch();
-          }}
-        />
-      </AppScreen>
-    );
-  }
-
-  const owner = gist.owner ?? gist.user ?? null;
-  const ownerLogin = owner?.login ?? 'unknown';
+  const owner = gist?.owner ?? gist?.user ?? null;
+  const ownerLogin = owner?.login ?? t('common.unknown').toLowerCase();
   const isOwner = user?.login === owner?.login;
-  const files = Object.values(gist.files);
+  const files = gist ? Object.values(gist.files) : [];
   const comments = support?.comments ?? [];
   const isSupportLoading = supportQuery.isLoading && !support;
   const starredErrorMessage =
-    support?.starredError ?? (supportQuery.isError ? 'Star status is unavailable right now.' : null);
+    support?.starredError ??
+    (supportQuery.isError ? 'Star status is unavailable right now.' : null);
   const commentsErrorMessage =
-    support?.commentsError ?? (supportQuery.isError ? 'Comments failed to load.' : null);
+    support?.commentsError ?? (supportQuery.isError ? t('gistDetail.commentsUnavailable') : null);
   const canToggleStar = typeof support?.starred === 'boolean';
+  const gistUrl = gist?.html_url ?? '';
 
   const openShare = React.useCallback(async () => {
     try {
-      await Share.share({message: gist.html_url});
+      if (!gistUrl) {
+        return;
+      }
+
+      await Share.share({message: gistUrl});
     } catch {
-      Alert.alert('Could not share link', 'Try again in a moment.');
+      Alert.alert(t('gistDetail.shareErrorTitle'), t('gistDetail.shareErrorDescription'));
     }
-  }, [gist.html_url]);
+  }, [gistUrl, t]);
 
   const copyLink = React.useCallback(() => {
-    Clipboard.setString(gist.html_url);
-    Alert.alert('Copied', 'Gist link copied to the clipboard.');
-  }, [gist.html_url]);
+    if (!gistUrl) {
+      return;
+    }
+
+    Clipboard.setString(gistUrl);
+    Alert.alert(t('common.copied'), t('gistDetail.copyLinkLabel'));
+  }, [gistUrl, t]);
 
   const handleToggleStar = React.useCallback(async () => {
     try {
-      if (!canToggleStar) {
+      if (!canToggleStar || !support) {
         return;
       }
 
@@ -171,9 +160,9 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
 
       await starGistMutation.mutateAsync({gistId});
     } catch {
-      Alert.alert('Could not update star', 'Try again in a moment.');
+      Alert.alert(t('gistDetail.starErrorTitle'), t('gistDetail.shareErrorDescription'));
     }
-  }, [canToggleStar, gistId, starGistMutation, support, unstarGistMutation]);
+  }, [canToggleStar, gistId, starGistMutation, support, t, unstarGistMutation]);
 
   const handleAddComment = React.useCallback(async () => {
     try {
@@ -186,15 +175,15 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
       await addCommentMutation.mutateAsync({gistId, body: trimmed});
       setCommentBody('');
     } catch {
-      Alert.alert('Could not post comment', 'Try again in a moment.');
+      Alert.alert(t('gistDetail.commentErrorTitle'), t('gistDetail.shareErrorDescription'));
     }
-  }, [addCommentMutation, commentBody, gistId]);
+  }, [addCommentMutation, commentBody, gistId, t]);
 
   const handleDelete = React.useCallback(() => {
-    Alert.alert('Delete gist', 'This action cannot be undone.', [
-      {text: 'Cancel', style: 'cancel'},
+    Alert.alert(t('gistDetail.deleteTitle'), t('gistDetail.deleteDescription'), [
+      {text: t('common.cancel'), style: 'cancel'},
       {
-        text: 'Delete',
+        text: t('common.delete'),
         style: 'destructive',
         onPress: () => {
           void (async () => {
@@ -202,21 +191,46 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
               await deleteGistMutation.mutateAsync({gistId});
               navigation.goBack();
             } catch {
-              Alert.alert('Could not delete gist', 'Try again in a moment.');
+              Alert.alert(t('gistDetail.deleteErrorTitle'), t('gistDetail.shareErrorDescription'));
             }
           })();
         },
       },
     ]);
-  }, [deleteGistMutation, gistId, navigation]);
+  }, [deleteGistMutation, gistId, navigation, t]);
+
+  if (gistQuery.isLoading) {
+    return (
+      <AppScreen>
+        <AppLoadingState
+          label={t('gistDetail.loadingTitle')}
+          description={t('gistDetail.loadingDescription')}
+        />
+      </AppScreen>
+    );
+  }
+
+  if (gistQuery.isError || !gist) {
+    return (
+      <AppScreen>
+        <AppErrorState
+          title={t('gistDetail.errorTitle')}
+          description={t('gistDetail.errorDescription')}
+          onRetry={() => {
+            void gistQuery.refetch();
+          }}
+        />
+      </AppScreen>
+    );
+  }
 
   const sheetActions = [
     {
-      label: 'Copy gist link',
+      label: t('gistDetail.copyLink'),
       onPress: copyLink,
     },
     {
-      label: 'Share gist link',
+      label: t('gistDetail.shareLink'),
       onPress: () => {
         void openShare();
       },
@@ -224,7 +238,7 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
     ...(isOwner
       ? [
           {
-            label: 'Edit gist',
+            label: t('gistDetail.edit'),
             onPress: () => {
               navigation.navigate('GistEditor', {
                 mode: 'edit',
@@ -233,7 +247,7 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
             },
           },
           {
-            label: 'Delete gist',
+            label: t('gistDetail.delete'),
             onPress: handleDelete,
             tone: 'danger' as const,
           },
@@ -245,11 +259,9 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
     <AppScreen>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>Gist detail</Text>
-          <Text style={styles.title}>{gist.description?.trim() || 'Untitled gist'}</Text>
-          <Text style={styles.subtitle}>
-            Review files, comments, and quick actions without leaving the new mobile shell.
-          </Text>
+          <Text style={styles.eyebrow}>{t('gistDetail.eyebrow')}</Text>
+          <Text style={styles.title}>{gist.description?.trim() || t('gistDetail.titleFallback')}</Text>
+          <Text style={styles.subtitle}>{t('gistDetail.subtitle')}</Text>
         </View>
 
         <AppCard>
@@ -266,10 +278,18 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
                 <Text style={styles.owner}>@{ownerLogin}</Text>
               )}
               <Text style={styles.metaText}>
-                Updated {formatDate(gist.updated_at)} · {files.length} file{files.length === 1 ? '' : 's'}
+                {t('gistDetail.metaSummary', {
+                  date: formatDate(gist.updated_at, locale, t('gistDetail.unknownUpdate')),
+                  count: files.length,
+                  fileLabel:
+                    files.length === 1 ? t('gistDetail.fileSingular') : t('gistDetail.filePlural'),
+                })}
               </Text>
             </View>
-            <AppBadge label={gist.public ? 'Public' : 'Secret'} tone={gist.public ? 'public' : 'secret'} />
+            <AppBadge
+              label={gist.public ? t('common.public') : t('common.secret')}
+              tone={gist.public ? 'public' : 'secret'}
+            />
           </View>
 
           <View style={styles.actions}>
@@ -278,12 +298,12 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
               disabled={!canToggleStar}
               label={
                 isSupportLoading
-                  ? 'Loading star…'
+                  ? t('gistDetail.loadingStar')
                   : !canToggleStar
-                    ? 'Star unavailable'
+                    ? t('gistDetail.starUnavailable')
                     : support?.starred
-                      ? 'Unstar'
-                      : 'Star'
+                      ? t('gistDetail.unstar')
+                      : t('common.star')
               }
               loading={starGistMutation.isPending || unstarGistMutation.isPending}
               onPress={() => {
@@ -293,7 +313,7 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
             />
             <AppButton
               fullWidth={false}
-              label="Fork"
+              label={t('gistDetail.fork')}
               loading={forkGistMutation.isPending}
               onPress={() => {
                 void (async () => {
@@ -301,7 +321,7 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
                     const nextGist = await forkGistMutation.mutateAsync({gistId});
                     navigation.navigate('GistDetail', {gistId: nextGist.id});
                   } catch {
-                    Alert.alert('Could not fork gist', 'Try again in a moment.');
+                    Alert.alert(t('gistDetail.forkErrorTitle'), t('gistDetail.shareErrorDescription'));
                   }
                 })();
               }}
@@ -309,13 +329,13 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
             />
             <AppButton
               fullWidth={false}
-              label="History"
+              label={t('gistDetail.history')}
               onPress={() => navigation.navigate('GistHistory', {gistId})}
               variant="secondary"
             />
             <AppButton
               fullWidth={false}
-              label="More"
+              label={t('gistDetail.more')}
               onPress={() => setSheetVisible(true)}
               variant="secondary"
             />
@@ -325,17 +345,18 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
         </AppCard>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Files</Text>
+          <Text style={styles.sectionTitle}>{t('gistDetail.filesTitle')}</Text>
           <View style={styles.sectionContent}>
             {files.map(file => (
               <FilePreviewCard
                 key={file.filename}
                 filename={file.filename}
                 language={file.language}
+                openLabel={t('common.open')}
                 preview={
                   file.truncated
-                    ? 'Preview unavailable for large files. Open the viewer to load the full content.'
-                    : file.content
+                    ? t('gistDetail.largePreview')
+                    : file.content ?? ''
                 }
                 onPress={() =>
                   navigation.navigate('GistViewer', {
@@ -353,13 +374,13 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Comments</Text>
+          <Text style={styles.sectionTitle}>{t('gistDetail.commentsTitle')}</Text>
           {commentsErrorMessage ? (
             <View style={styles.commentsError}>
               <AppBanner message={commentsErrorMessage} tone="warning" />
               <AppButton
                 fullWidth={false}
-                label="Retry comments"
+                label={t('gistDetail.retryComments')}
                 onPress={() => {
                   void supportQuery.refetch();
                 }}
@@ -368,14 +389,14 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
             </View>
           ) : isSupportLoading ? (
             <AppLoadingState
-              label="Loading comments"
-              description="Checking the latest comments for this gist."
+              label={t('gistDetail.commentsLoadingTitle')}
+              description={t('gistDetail.commentsLoadingDescription')}
             />
           ) : comments.length === 0 ? (
             <AppEmptyState
-              badgeLabel="Comments"
-              title="No comments yet"
-              description="Start the discussion by leaving the first comment."
+              badgeLabel={t('gistDetail.commentsTitle')}
+              title={t('gistDetail.commentsEmptyTitle')}
+              description={t('gistDetail.commentsEmptyDescription')}
             />
           ) : (
             <View style={styles.sectionContent}>
@@ -384,7 +405,7 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
                   key={comment.id}
                   author={comment.user?.login ?? 'unknown'}
                   body={comment.body}
-                  dateLabel={formatDate(comment.created_at)}
+                  dateLabel={formatDate(comment.created_at, locale, t('gistDetail.unknownUpdate'))}
                   onPressAuthor={
                     comment.user?.login
                       ? () => navigation.navigate('UserProfile', {username: comment.user.login})
@@ -397,12 +418,12 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
         </View>
 
         <AppCard>
-          <Text style={styles.sectionTitle}>Add comment</Text>
+          <Text style={styles.sectionTitle}>{t('gistDetail.addComment')}</Text>
           <TextInput
             multiline
             numberOfLines={4}
             onChangeText={setCommentBody}
-            placeholder="Write a comment"
+            placeholder={t('gistDetail.commentPlaceholder')}
             placeholderTextColor={appTheme.colors.textSecondary}
             style={styles.commentInput}
             textAlignVertical="top"
@@ -410,7 +431,7 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
           />
           <AppButton
             fullWidth={false}
-            label="Post comment"
+            label={t('gistDetail.postComment')}
             loading={addCommentMutation.isPending}
             onPress={() => {
               void handleAddComment();
@@ -422,7 +443,7 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
       <AppActionSheet
         actions={sheetActions}
         onClose={() => setSheetVisible(false)}
-        title="Gist actions"
+        title={t('gistDetail.actionsTitle')}
         visible={sheetVisible}
       />
     </AppScreen>

@@ -11,24 +11,29 @@ import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
 import {AppErrorState} from '../../../shared/ui/AppErrorState';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
 import {AppScreen} from '../../../shared/ui/AppScreen';
+import {useI18n} from '../../../i18n/context';
 import {getGist} from '../api/gists';
 
-function formatDateTime(value: string) {
+function formatDateTime(value: string, locale: string, fallback: string) {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return 'Unknown revision date';
+    return fallback;
   }
 
-  return date.toLocaleString();
+  return date.toLocaleString(locale);
 }
 
 function HistoryCard({
   entry,
   gistUrl,
+  t,
+  locale,
 }: {
   entry: GistHistoryEntry;
   gistUrl: string;
+  t: (key: string, values?: Record<string, string | number>) => string;
+  locale: string;
 }) {
   const revisionUrl = `${gistUrl}/${entry.version}`;
 
@@ -36,8 +41,12 @@ function HistoryCard({
     <AppCard>
       <View style={styles.historyHeader}>
         <View style={styles.historyTitleWrap}>
-          <Text style={styles.historyTitle}>Revision {entry.version.slice(0, 7)}</Text>
-          <Text style={styles.historyMeta}>{formatDateTime(entry.committed_at)}</Text>
+          <Text style={styles.historyTitle}>
+            {t('history.revisionTitle', {version: entry.version.slice(0, 7)})}
+          </Text>
+          <Text style={styles.historyMeta}>
+            {formatDateTime(entry.committed_at, locale, t('history.unknownDate'))}
+          </Text>
         </View>
         <View style={styles.historyChangeWrap}>
           <Text style={styles.historyAddition}>+{entry.change_status.additions}</Text>
@@ -49,10 +58,10 @@ function HistoryCard({
 
       <AppButton
         fullWidth={false}
-        label="Open revision"
+        label={t('history.openRevision')}
         onPress={() => {
           void Linking.openURL(revisionUrl).catch(() => {
-            Alert.alert('Could not open revision', 'Try again in a moment.');
+            Alert.alert(t('history.openErrorTitle'), t('history.openErrorDescription'));
           });
         }}
         variant="secondary"
@@ -62,6 +71,8 @@ function HistoryCard({
 }
 
 export function GistHistoryScreen({route}: RootStackScreenProps<'GistHistory'>) {
+  const {language, t} = useI18n();
+  const locale = language === 'zh' ? 'zh-CN' : 'en-US';
   const {gistId} = route.params;
   const historyQuery = useQuery({
     queryKey: queryKeys.gistHistory(gistId),
@@ -79,15 +90,15 @@ export function GistHistoryScreen({route}: RootStackScreenProps<'GistHistory'>) 
   if (historyQuery.isLoading) {
     content = (
       <AppLoadingState
-        label="Loading revision history"
-        description="Fetching the revision timeline for this gist."
+        label={t('history.loadingTitle')}
+        description={t('history.loadingDescription')}
       />
     );
   } else if (historyQuery.isError) {
     content = (
       <AppErrorState
-        title="Could not load revision history"
-        description="Retry to fetch the latest revision list."
+        title={t('history.errorTitle')}
+        description={t('history.errorDescription')}
         onRetry={() => {
           void historyQuery.refetch();
         }}
@@ -96,9 +107,9 @@ export function GistHistoryScreen({route}: RootStackScreenProps<'GistHistory'>) 
   } else if ((historyQuery.data?.history ?? []).length === 0) {
     content = (
       <AppEmptyState
-        badgeLabel="History"
-        title="No revisions yet"
-        description="This gist does not expose any revision history right now."
+        badgeLabel={t('history.title')}
+        title={t('history.emptyTitle')}
+        description={t('history.emptyDescription')}
       />
     );
   } else {
@@ -107,7 +118,12 @@ export function GistHistoryScreen({route}: RootStackScreenProps<'GistHistory'>) 
         data={historyQuery.data?.history ?? []}
         keyExtractor={item => item.version}
         renderItem={({item}) => (
-          <HistoryCard entry={item} gistUrl={historyQuery.data?.gistUrl ?? `https://gist.github.com/${gistId}`} />
+          <HistoryCard
+            entry={item}
+            gistUrl={historyQuery.data?.gistUrl ?? `https://gist.github.com/${gistId}`}
+            locale={locale}
+            t={t}
+          />
         )}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
@@ -119,11 +135,9 @@ export function GistHistoryScreen({route}: RootStackScreenProps<'GistHistory'>) 
     <AppScreen>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>Timeline</Text>
-          <Text style={styles.title}>Revision history</Text>
-          <Text style={styles.subtitle}>
-            Inspect previous gist revisions and open the matching GitHub revision page.
-          </Text>
+          <Text style={styles.eyebrow}>{t('history.eyebrow')}</Text>
+          <Text style={styles.title}>{t('history.title')}</Text>
+          <Text style={styles.subtitle}>{t('history.subtitle')}</Text>
         </View>
 
         <View style={styles.content}>{content}</View>

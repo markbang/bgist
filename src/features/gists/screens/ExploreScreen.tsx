@@ -8,6 +8,7 @@ import {AppErrorState} from '../../../shared/ui/AppErrorState';
 import {AppInput} from '../../../shared/ui/AppInput';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
 import {AppScreen} from '../../../shared/ui/AppScreen';
+import {useI18n} from '../../../i18n/context';
 import {GistCard} from '../components/GistCard';
 import {getPublicGists} from '../api/gists';
 import {parseGistReference} from '../utils/parseGistReference';
@@ -19,6 +20,7 @@ interface ExploreScreenProps {
 }
 
 export function ExploreScreen({navigation}: ExploreScreenProps) {
+  const {t} = useI18n();
   const [query, setQuery] = React.useState('');
   const lastAutoNavigatedQueryRef = React.useRef<string | null>(null);
   const publicGistsQuery = useQuery({
@@ -72,15 +74,15 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
   if (publicGistsQuery.isLoading) {
     content = (
       <AppLoadingState
-        label="Loading public gists"
-        description="Fetching the latest public feed from GitHub."
+        label={t('explore.loadingTitle')}
+        description={t('explore.loadingDescription')}
       />
     );
   } else if (publicGistsQuery.isError) {
     content = (
       <AppErrorState
-        title="Could not load public gists"
-        description="Retry to refresh the explore feed."
+        title={t('explore.errorTitle')}
+        description={t('explore.errorDescription')}
         onRetry={() => {
           void publicGistsQuery.refetch();
         }}
@@ -89,9 +91,9 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
   } else if (filteredGists.length === 0 && !gistReference) {
     content = (
       <AppEmptyState
-        badgeLabel="Explore"
-        title="No matching public gists"
-        description="Try a different owner, description, or filename search."
+        badgeLabel={t('explore.title')}
+        title={t('explore.emptyTitle')}
+        description={t('explore.emptyDescription')}
       />
     );
   } else {
@@ -115,14 +117,12 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
     <AppScreen>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>Discover</Text>
-          <Text style={styles.title}>Explore</Text>
-          <Text style={styles.subtitle}>
-            Search the public feed by description, owner, filename, or paste a gist URL.
-          </Text>
+          <Text style={styles.eyebrow}>{t('explore.eyebrow')}</Text>
+          <Text style={styles.title}>{t('explore.title')}</Text>
+          <Text style={styles.subtitle}>{t('explore.subtitle')}</Text>
           <AppInput
-            label="Search public gists"
-            placeholder="Paste a gist URL or search by keyword"
+            label={t('explore.inputLabel')}
+            placeholder={t('explore.inputPlaceholder')}
             value={query}
             onChangeText={setQuery}
             autoCapitalize="none"

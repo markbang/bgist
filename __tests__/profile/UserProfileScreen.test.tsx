@@ -25,7 +25,32 @@ jest.mock('../../src/i18n/context', () => ({
   useI18n: jest.fn(() => ({
     language: 'en',
     setLanguage: jest.fn(),
-    t: (key: string) => key,
+    t: (key: string) =>
+      (
+        {
+          'profile.publicGists': 'Public gists',
+          'profile.followers': 'Followers',
+          'profile.following': 'Following',
+          'userProfile.publicRepos': 'Public repos',
+          'userProfile.eyebrow': 'Profile',
+          'userProfile.subtitle':
+            'Public GitHub identity, follow signals, and published gists in one mobile-first view.',
+          'userProfile.publicProfile': 'Public profile',
+          'userProfile.openGitHub': 'Open GitHub profile',
+          'userProfile.sectionTitle': 'Public gists',
+          'userProfile.sectionSubtitle':
+            'Open any published gist to inspect files, comments, and history.',
+          'userProfile.loadingTitle': 'Loading profile',
+          'userProfile.loadingDescription':
+            'Fetching public profile details and published gists from GitHub.',
+          'userProfile.errorTitle': 'Could not load this profile',
+          'userProfile.errorDescription':
+            'Retry to fetch the latest profile card and public gist list.',
+          'userProfile.emptyTitle': 'No public gists yet',
+          'userProfile.emptyDescription':
+            'This user has not published any public gists yet.',
+        } as Record<string, string>
+      )[key] ?? key,
   })),
 }));
 

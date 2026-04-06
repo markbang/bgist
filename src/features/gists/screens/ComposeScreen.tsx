@@ -6,27 +6,28 @@ import {AppButton} from '../../../shared/ui/AppButton';
 import {AppCard} from '../../../shared/ui/AppCard';
 import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
 import {AppScreen} from '../../../shared/ui/AppScreen';
+import {useI18n} from '../../../i18n/context';
 
 export function ComposeScreen({navigation}: MainTabScreenProps<'Compose'>) {
+  const {t} = useI18n();
+
   return (
     <AppScreen>
       <View style={styles.container}>
-        <Text style={styles.eyebrow}>Create</Text>
-        <Text style={styles.title}>Compose</Text>
-        <Text style={styles.subtitle}>
-          Start a new gist draft from the tab bar, then edit files in a phone-first composer.
-        </Text>
+        <Text style={styles.eyebrow}>{t('compose.eyebrow')}</Text>
+        <Text style={styles.title}>{t('compose.title')}</Text>
+        <Text style={styles.subtitle}>{t('compose.subtitle')}</Text>
 
         <AppButton
-          label="Create a gist"
+          label={t('compose.cta')}
           onPress={() => navigation.navigate('GistEditor', {mode: 'create'})}
         />
 
         <AppCard>
           <AppEmptyState
-            badgeLabel="Mobile flow"
-            title="Draft first, publish when ready"
-            description="Jump into the new editor with one tap, add one or more files, and save directly back into the gist stack."
+            badgeLabel={t('compose.badge')}
+            title={t('compose.emptyTitle')}
+            description={t('compose.emptyDescription')}
           />
         </AppCard>
       </View>

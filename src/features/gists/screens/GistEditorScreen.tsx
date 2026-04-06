@@ -24,6 +24,7 @@ import {AppCard} from '../../../shared/ui/AppCard';
 import {AppErrorState} from '../../../shared/ui/AppErrorState';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
 import {AppScreen} from '../../../shared/ui/AppScreen';
+import {useI18n} from '../../../i18n/context';
 import {getGist} from '../api/gists';
 import {useGistMutations} from '../hooks/useGistMutations';
 
@@ -103,6 +104,7 @@ function buildEditFilesPayload(files: DraftFile[], deletedOriginalFilenames: str
 }
 
 export function GistEditorScreen({navigation, route}: RootStackScreenProps<'GistEditor'>) {
+  const {t} = useI18n();
   const isEditMode = route.params.mode === 'edit';
   const editGistId = isEditMode ? route.params.gistId : null;
   const routeDraftFiles = route.params.files;
@@ -153,7 +155,7 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
   const removeFile = React.useCallback((fileId: string) => {
     setFiles(current => {
       if (current.length <= 1) {
-        Alert.alert('Keep one file', 'A gist needs at least one file before you can save it.');
+        Alert.alert(t('editor.keepOneFileTitle'), t('editor.keepOneFileDescription'));
         return current;
       }
 
@@ -169,19 +171,19 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
 
       return current.filter(file => file.id !== fileId);
     });
-  }, []);
+  }, [t]);
 
   const handleSubmit = React.useCallback(async () => {
     const trimmedDescription = description.trim();
     const normalizedFilenames = files.map(file => file.filename.trim());
 
     if (normalizedFilenames.some(name => !name)) {
-      Alert.alert('Missing filename', 'Every file needs a filename before you can save.');
+      Alert.alert(t('editor.missingFilenameTitle'), t('editor.missingFilenameDescription'));
       return;
     }
 
     if (new Set(normalizedFilenames).size !== normalizedFilenames.length) {
-      Alert.alert('Duplicate filename', 'Each file must use a unique filename.');
+      Alert.alert(t('editor.duplicateFilenameTitle'), t('editor.duplicateFilenameDescription'));
       return;
     }
 
@@ -215,7 +217,7 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
 
       navigation.navigate('GistDetail', {gistId: result.id});
     } catch {
-      Alert.alert('Could not save gist', 'Try again in a moment.');
+      Alert.alert(t('editor.saveErrorTitle'), t('editor.saveErrorDescription'));
     }
   }, [
     createGistMutation,
@@ -227,14 +229,15 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
     isPublic,
     navigation,
     route.params,
+    t,
   ]);
 
   if (isEditMode && !hasHydratedEditState && existingGistQuery.isLoading) {
     return (
       <AppScreen>
         <AppLoadingState
-          label="Loading gist draft"
-          description="Fetching the latest gist files before opening the editor."
+          label={t('editor.loadingDraftTitle')}
+          description={t('editor.loadingDraftDescription')}
         />
       </AppScreen>
     );
@@ -244,8 +247,8 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
     return (
       <AppScreen>
         <AppErrorState
-          title="Could not load gist draft"
-          description="Retry to fetch the current gist files before editing."
+          title={t('editor.errorDraftTitle')}
+          description={t('editor.errorDraftDescription')}
           onRetry={() => {
             void existingGistQuery.refetch();
           }}
@@ -265,46 +268,47 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
-              <Text style={styles.eyebrow}>{isEditMode ? 'Edit gist' : 'Create gist'}</Text>
-              <Text style={styles.title}>{isEditMode ? 'Update your gist' : 'Compose a new gist'}</Text>
+              <Text style={styles.eyebrow}>{isEditMode ? t('editor.editEyebrow') : t('editor.createEyebrow')}</Text>
+              <Text style={styles.title}>{isEditMode ? t('editor.editTitle') : t('editor.createTitle')}</Text>
               <Text style={styles.subtitle}>
                 {isEditMode
-                  ? 'Rename files, update code, and save the latest revision from your phone.'
-                  : 'Draft files, choose visibility, and publish a new gist without leaving the mobile shell.'}
+                  ? t('editor.editSubtitle')
+                  : t('editor.createSubtitle')}
               </Text>
             </View>
 
             <AppCard>
-              <Text style={styles.sectionTitle}>Details</Text>
+              <Text style={styles.sectionTitle}>{t('editor.detailsTitle')}</Text>
               <TextInput
                 accessibilityLabel="Gist description"
                 onChangeText={setDescription}
-                placeholder="What is this gist about?"
+                placeholder={t('editor.descriptionPlaceholder')}
                 placeholderTextColor={appTheme.colors.textSecondary}
                 style={styles.descriptionInput}
                 value={description}
               />
 
               <View style={styles.visibilityHeader}>
-                <Text style={styles.label}>Visibility</Text>
-                <AppBadge label={isPublic ? 'Public' : 'Secret'} tone={isPublic ? 'public' : 'secret'} />
+                <Text style={styles.label}>{t('editor.visibility')}</Text>
+                <AppBadge
+                  label={isPublic ? t('common.public') : t('common.secret')}
+                  tone={isPublic ? 'public' : 'secret'}
+                />
               </View>
 
               {isEditMode ? (
-                <Text style={styles.helperText}>
-                  Visibility is fixed for existing gists, so this editor keeps the current setting.
-                </Text>
+                <Text style={styles.helperText}>{t('editor.visibilityLocked')}</Text>
               ) : (
                 <View style={styles.visibilityButtons}>
                   <AppButton
                     fullWidth={false}
-                    label="Public"
+                    label={t('common.public')}
                     onPress={() => setIsPublic(true)}
                     variant={isPublic ? 'primary' : 'secondary'}
                   />
                   <AppButton
                     fullWidth={false}
-                    label="Secret"
+                    label={t('common.secret')}
                     onPress={() => setIsPublic(false)}
                     variant={!isPublic ? 'primary' : 'secondary'}
                   />
@@ -313,25 +317,27 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
             </AppCard>
 
             <View style={styles.fileSectionHeader}>
-              <Text style={styles.sectionTitle}>Files</Text>
-              <AppButton fullWidth={false} label="Add file" onPress={addFile} variant="secondary" />
+              <Text style={styles.sectionTitle}>{t('common.files')}</Text>
+              <AppButton fullWidth={false} label={t('editor.addFile')} onPress={addFile} variant="secondary" />
             </View>
 
             {files.map((file, index) => (
               <AppCard key={file.id}>
                 <View style={styles.fileHeader}>
                   <View style={styles.fileHeaderText}>
-                    <Text style={styles.fileTitle}>File {index + 1}</Text>
+                    <Text style={styles.fileTitle}>{t('editor.fileTitle', {index: index + 1})}</Text>
                     <Text style={styles.fileMeta}>
-                      {file.originalFilename ? `Editing ${file.originalFilename}` : 'New file'}
+                      {file.originalFilename
+                        ? t('editor.editingFile', {filename: file.originalFilename})
+                        : t('editor.newFile')}
                     </Text>
                   </View>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`Remove file ${index + 1}`}
+                    accessibilityLabel={t('editor.removeFileLabel', {index: index + 1})}
                     onPress={() => removeFile(file.id)}
                     style={({pressed}) => [styles.removeButton, pressed ? styles.removePressed : null]}>
-                    <Text style={styles.removeButtonText}>Remove</Text>
+                    <Text style={styles.removeButtonText}>{t('editor.remove')}</Text>
                   </Pressable>
                 </View>
 
@@ -340,7 +346,7 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
                   autoCapitalize="none"
                   autoCorrect={false}
                   onChangeText={value => updateFile(file.id, {filename: value})}
-                  placeholder="filename.ext"
+                  placeholder={t('editor.filenamePlaceholder')}
                   placeholderTextColor={appTheme.colors.textSecondary}
                   style={styles.filenameInput}
                   value={file.filename}
@@ -351,7 +357,7 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
                   autoCorrect={false}
                   multiline
                   onChangeText={value => updateFile(file.id, {content: value})}
-                  placeholder="Write your file content"
+                  placeholder={t('editor.contentPlaceholder')}
                   placeholderTextColor={appTheme.colors.textSecondary}
                   spellCheck={false}
                   style={styles.contentInput}
@@ -364,7 +370,7 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
 
           <View style={styles.footer}>
             <AppButton
-              label={isEditMode ? 'Save changes' : 'Create gist'}
+              label={isEditMode ? t('editor.saveChanges') : t('gist.createGist')}
               loading={createGistMutation.isPending || editGistMutation.isPending}
               onPress={() => {
                 void handleSubmit();

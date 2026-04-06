@@ -10,6 +10,7 @@ import {AppErrorState} from '../../../shared/ui/AppErrorState';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
 import {AppScreen} from '../../../shared/ui/AppScreen';
 import type {RootStackScreenProps} from '../../../app/navigation/types';
+import {useI18n} from '../../../i18n/context';
 
 function createFileAnchor(filename: string) {
   return filename
@@ -20,6 +21,7 @@ function createFileAnchor(filename: string) {
 }
 
 export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
+  const {t} = useI18n();
   const {gistId, filename, content, gistUrl, rawUrl, truncated = false} = route.params;
   const [showLines, setShowLines] = React.useState(true);
   const resolvedGistUrl = gistUrl ?? `https://gist.github.com/${gistId}`;
@@ -43,58 +45,56 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
 
   const copyValue = React.useCallback((value: string, label: string) => {
     Clipboard.setString(value);
-    Alert.alert('Copied', `${label} copied to the clipboard.`);
-  }, []);
+    Alert.alert(t('common.copied'), `${label} ${t('common.copied').toLowerCase()}`);
+  }, [t]);
 
   return (
     <AppScreen>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>Code viewer</Text>
+          <Text style={styles.eyebrow}>{t('viewer.eyebrow')}</Text>
           <Text style={styles.title}>{filename}</Text>
-          <Text style={styles.subtitle}>
-            Read the file content, toggle line numbers, and share the source link.
-          </Text>
+          <Text style={styles.subtitle}>{t('viewer.subtitle')}</Text>
         </View>
 
         <View style={styles.actions}>
           <AppButton
             fullWidth={false}
-            label={showLines ? 'Hide lines' : 'Show lines'}
+            label={showLines ? t('viewer.hideLines') : t('viewer.showLines')}
             onPress={() => setShowLines(current => !current)}
             variant="secondary"
           />
           <AppButton
             fullWidth={false}
-            label="Copy content"
+            label={t('viewer.copyContent')}
             disabled={!canCopyContent}
             onPress={() => {
               if (!canCopyContent) {
                 return;
               }
 
-              copyValue(resolvedContent, 'Content');
+              copyValue(resolvedContent, t('viewer.copyContentLabel'));
             }}
             variant="secondary"
           />
           <AppButton
             fullWidth={false}
-            label="Copy gist link"
-            onPress={() => copyValue(resolvedGistUrl, 'Gist link')}
+            label={t('viewer.copyGistLink')}
+            onPress={() => copyValue(resolvedGistUrl, t('viewer.copyGistLinkLabel'))}
             variant="secondary"
           />
           <AppButton
             fullWidth={false}
-            label="Copy file link"
-            onPress={() => copyValue(fileUrl, 'File link')}
+            label={t('viewer.copyFileLink')}
+            onPress={() => copyValue(fileUrl, t('viewer.copyFileLinkLabel'))}
             variant="secondary"
           />
           <AppButton
             fullWidth={false}
-            label="Share link"
+            label={t('viewer.shareLink')}
             onPress={() => {
               void Share.share({message: fileUrl}).catch(() => {
-                Alert.alert('Could not share link', 'Try again in a moment.');
+                Alert.alert(t('viewer.shareErrorTitle'), t('viewer.shareErrorDescription'));
               });
             }}
             variant="secondary"
@@ -104,13 +104,13 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
         <AppCard style={styles.codeShell}>
           {needsRemoteContent && fileContentQuery.isLoading ? (
             <AppLoadingState
-              label="Loading full file"
-              description="Fetching the complete file contents from GitHub."
+              label={t('viewer.loadingTitle')}
+              description={t('viewer.loadingDescription')}
             />
           ) : needsRemoteContent && fileContentQuery.isError ? (
             <AppErrorState
-              title="Could not load this file"
-              description="Retry to fetch the full file contents."
+              title={t('viewer.errorTitle')}
+              description={t('viewer.errorDescription')}
               onRetry={() => {
                 void fileContentQuery.refetch();
               }}

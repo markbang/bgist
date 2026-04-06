@@ -195,6 +195,70 @@ test('shows a page error when the gist itself cannot load', () => {
   expect(refetch).toHaveBeenCalled();
 });
 
+test('keeps hook order stable when the gist query transitions from loading to success', () => {
+  const navigation = {
+    goBack: jest.fn(),
+    navigate: jest.fn(),
+  } as unknown as RootStackScreenProps<'GistDetail'>['navigation'];
+
+  let detailState: any = {
+    gist: null,
+    support: null,
+    gistQuery: {
+      isLoading: true,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    supportQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+  };
+
+  (useGistDetail as jest.Mock).mockImplementation(() => detailState);
+
+  const {rerender} = render(
+    <GistDetailScreen
+      navigation={navigation}
+      route={{key: 'GistDetail-gist-1', name: 'GistDetail', params: {gistId: 'gist-1'}}}
+    />,
+  );
+
+  expect(screen.getByText('Loading gist')).toBeTruthy();
+
+  detailState = {
+    gist: createGist(),
+    support: {
+      starred: false,
+      starredError: null,
+      comments: [],
+      commentsError: null,
+    },
+    gistQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    supportQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+  };
+
+  expect(() =>
+    rerender(
+      <GistDetailScreen
+        navigation={navigation}
+        route={{key: 'GistDetail-gist-1', name: 'GistDetail', params: {gistId: 'gist-1'}}}
+      />,
+    ),
+  ).not.toThrow();
+
+  expect(screen.getByText('Useful gist')).toBeTruthy();
+});
+
 test('renders safely when the gist owner is missing', () => {
   (useGistDetail as jest.Mock).mockReturnValue({
     gist: createGist({

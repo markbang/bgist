@@ -86,7 +86,7 @@ test('submits a new gist from create mode', async () => {
   fireEvent.changeText(screen.getByLabelText('Gist description'), 'Demo gist');
   fireEvent.changeText(screen.getByLabelText('Filename 1'), 'index.ts');
   fireEvent.changeText(screen.getByLabelText('Content 1'), 'export {}');
-  fireEvent.press(screen.getByRole('button', {name: 'Create gist'}));
+  fireEvent.press(screen.getByRole('button', {name: 'Create Gist'}));
 
   await waitFor(() => {
     expect(createGistMutation.mutateAsync).toHaveBeenCalledWith({

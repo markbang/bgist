@@ -13,7 +13,7 @@ import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
 import {AppScreen} from '../../../shared/ui/AppScreen';
 
 export function ProfileScreen() {
-  const {language, setLanguage} = useI18n();
+  const {language, setLanguage, t} = useI18n();
   const {status, user, signOut} = useSession();
   const userQuery = useQuery({
     queryKey: queryKeys.userProfile(user?.login ?? 'me'),
@@ -22,15 +22,15 @@ export function ProfileScreen() {
   });
 
   const profile = userQuery.data;
-  const displayName = profile?.name ?? user?.name ?? user?.login ?? 'GitHub user';
+  const displayName = profile?.name ?? user?.name ?? user?.login ?? t('profile.defaultDisplayName');
   const profileUrl = profile?.html_url ?? (user?.login ? `https://github.com/${user.login}` : null);
 
   if (status === 'loading' && !user) {
     return (
       <AppScreen>
         <AppLoadingState
-          label="Loading profile"
-          description="Restoring your session and fetching your GitHub profile."
+          label={t('profile.loadingTitle')}
+          description={t('profile.loadingDescription')}
         />
       </AppScreen>
     );
@@ -40,9 +40,9 @@ export function ProfileScreen() {
     return (
       <AppScreen>
         <AppEmptyState
-          badgeLabel="Profile"
-          title="No signed-in user"
-          description="Sign in to see your profile details in this tab."
+          badgeLabel={t('nav.profile')}
+          title={t('profile.emptyTitle')}
+          description={t('profile.emptyDescription')}
         />
       </AppScreen>
     );
@@ -66,23 +66,25 @@ export function ProfileScreen() {
           <View style={styles.stats}>
             <View style={styles.stat}>
               <Text style={styles.statValue}>{profile?.public_gists ?? '—'}</Text>
-              <Text style={styles.statLabel}>Public gists</Text>
+              <Text style={styles.statLabel}>{t('profile.publicGists')}</Text>
             </View>
             <View style={styles.stat}>
               <Text style={styles.statValue}>{profile?.followers ?? '—'}</Text>
-              <Text style={styles.statLabel}>Followers</Text>
+              <Text style={styles.statLabel}>{t('profile.followers')}</Text>
             </View>
             <View style={styles.stat}>
               <Text style={styles.statValue}>{profile?.following ?? '—'}</Text>
-              <Text style={styles.statLabel}>Following</Text>
+              <Text style={styles.statLabel}>{t('profile.following')}</Text>
             </View>
           </View>
         </AppCard>
 
         <AppCard>
-          <Text style={styles.sectionTitle}>Preferences</Text>
+          <Text style={styles.sectionTitle}>{t('profile.preferences')}</Text>
           <AppButton
-            label={`Language: ${language === 'en' ? 'English' : 'Chinese'}`}
+            label={t('profile.languageToggle', {
+              language: language === 'en' ? t('common.languageEnglish') : t('common.languageChinese'),
+            })}
             onPress={() => {
               void setLanguage(language === 'en' ? 'zh' : 'en');
             }}
@@ -91,10 +93,10 @@ export function ProfileScreen() {
         </AppCard>
 
         <AppCard>
-          <Text style={styles.sectionTitle}>Account</Text>
+          <Text style={styles.sectionTitle}>{t('profile.account')}</Text>
           <AppButton
             disabled={!profileUrl}
-            label="Open GitHub profile"
+            label={t('profile.openGitHubButton')}
             onPress={() => {
               if (profileUrl) {
                 void Linking.openURL(profileUrl);
@@ -103,7 +105,7 @@ export function ProfileScreen() {
             variant="secondary"
           />
           <AppButton
-            label="Sign out"
+            label={t('auth.signOut')}
             onPress={() => {
               void signOut();
             }}
@@ -113,8 +115,8 @@ export function ProfileScreen() {
 
         {userQuery.isLoading ? (
           <AppLoadingState
-            label="Refreshing profile"
-            description="Fetching the latest public GitHub profile fields."
+            label={t('profile.refreshingTitle')}
+            description={t('profile.refreshingDescription')}
           />
         ) : null}
       </ScrollView>

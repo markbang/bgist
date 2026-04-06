@@ -11,6 +11,7 @@ import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
 import {AppErrorState} from '../../../shared/ui/AppErrorState';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
 import {AppScreen} from '../../../shared/ui/AppScreen';
+import {useI18n} from '../../../i18n/context';
 import type {UserInfo} from '../../../types/gist';
 import {GistCard} from '../../gists/components/GistCard';
 import {getUserGists, getUserInfo} from '../../gists/api/gists';
@@ -24,16 +25,22 @@ function StatCard({label, value}: {label: string; value: number}) {
   );
 }
 
-function ProfileHero({profile, username}: {profile: UserInfo; username: string}) {
+function ProfileHero({
+  profile,
+  username,
+  t,
+}: {
+  profile: UserInfo;
+  username: string;
+  t: (key: string) => string;
+}) {
   const metaItems = [profile.company, profile.location, profile.blog].filter(Boolean) as string[];
 
   return (
     <View style={styles.header}>
-      <Text style={styles.eyebrow}>Profile</Text>
+      <Text style={styles.eyebrow}>{t('userProfile.eyebrow')}</Text>
       <Text style={styles.title}>{profile.name ?? username}</Text>
-      <Text style={styles.subtitle}>
-        Public GitHub identity, follow signals, and published gists in one mobile-first view.
-      </Text>
+      <Text style={styles.subtitle}>{t('userProfile.subtitle')}</Text>
 
       <AppCard>
         <View style={styles.identity}>
@@ -41,7 +48,7 @@ function ProfileHero({profile, username}: {profile: UserInfo; username: string})
           <View style={styles.identityCopy}>
             <View style={styles.identityHeading}>
               <Text style={styles.name}>{profile.name ?? username}</Text>
-              <AppBadge label="Public profile" tone="public" />
+              <AppBadge label={t('userProfile.publicProfile')} tone="public" />
             </View>
             <Text style={styles.login}>@{profile.login}</Text>
             {profile.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
@@ -59,15 +66,15 @@ function ProfileHero({profile, username}: {profile: UserInfo; username: string})
         ) : null}
 
         <View style={styles.statsGrid}>
-          <StatCard label="Public gists" value={profile.public_gists} />
-          <StatCard label="Followers" value={profile.followers} />
-          <StatCard label="Following" value={profile.following} />
-          <StatCard label="Public repos" value={profile.public_repos} />
+          <StatCard label={t('profile.publicGists')} value={profile.public_gists} />
+          <StatCard label={t('profile.followers')} value={profile.followers} />
+          <StatCard label={t('profile.following')} value={profile.following} />
+          <StatCard label={t('userProfile.publicRepos')} value={profile.public_repos} />
         </View>
 
         <AppButton
           fullWidth={false}
-          label="Open GitHub profile"
+          label={t('userProfile.openGitHub')}
           onPress={() => {
             void Linking.openURL(profile.html_url);
           }}
@@ -76,16 +83,15 @@ function ProfileHero({profile, username}: {profile: UserInfo; username: string})
       </AppCard>
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Public gists</Text>
-        <Text style={styles.sectionSubtitle}>
-          Open any published gist to inspect files, comments, and history.
-        </Text>
+        <Text style={styles.sectionTitle}>{t('userProfile.sectionTitle')}</Text>
+        <Text style={styles.sectionSubtitle}>{t('userProfile.sectionSubtitle')}</Text>
       </View>
     </View>
   );
 }
 
 export function UserProfileScreen({navigation, route}: RootStackScreenProps<'UserProfile'>) {
+  const {t} = useI18n();
   const {username} = route.params;
   const profileQuery = useQuery({
     queryKey: queryKeys.userProfile(username),
@@ -105,8 +111,8 @@ export function UserProfileScreen({navigation, route}: RootStackScreenProps<'Use
     return (
       <AppScreen>
         <AppLoadingState
-          label="Loading profile"
-          description="Fetching public profile details and published gists from GitHub."
+          label={t('userProfile.loadingTitle')}
+          description={t('userProfile.loadingDescription')}
         />
       </AppScreen>
     );
@@ -116,8 +122,8 @@ export function UserProfileScreen({navigation, route}: RootStackScreenProps<'Use
     return (
       <AppScreen>
         <AppErrorState
-          title="Could not load this profile"
-          description="Retry to fetch the latest profile card and public gist list."
+          title={t('userProfile.errorTitle')}
+          description={t('userProfile.errorDescription')}
           onRetry={handleRetry}
         />
       </AppScreen>
@@ -135,12 +141,12 @@ export function UserProfileScreen({navigation, route}: RootStackScreenProps<'Use
             onPress={() => navigation.navigate('GistDetail', {gistId: item.id})}
           />
         )}
-        ListHeaderComponent={<ProfileHero profile={profileQuery.data} username={username} />}
+        ListHeaderComponent={<ProfileHero profile={profileQuery.data} username={username} t={t} />}
         ListEmptyComponent={
           <AppEmptyState
-            badgeLabel="Public gists"
-            title="No public gists yet"
-            description="This user has not published any public gists yet."
+            badgeLabel={t('userProfile.sectionTitle')}
+            title={t('userProfile.emptyTitle')}
+            description={t('userProfile.emptyDescription')}
           />
         }
         contentContainerStyle={styles.content}
