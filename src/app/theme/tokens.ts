@@ -14,6 +14,18 @@ export const appTheme = {
     codeBg: '#0f172a',
     codeText: '#e2e8f0',
   },
+  overlay: {
+    backdrop: 'rgba(15, 23, 42, 0.48)',
+  },
+  shadow: {
+    card: {
+      shadowColor: '#0f172a',
+      shadowOffset: {width: 0, height: 12},
+      shadowOpacity: 0.1,
+      shadowRadius: 24,
+      elevation: 8,
+    },
+  },
   radius: {
     sm: 10,
     md: 14,
