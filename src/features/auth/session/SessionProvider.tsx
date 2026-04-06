@@ -1,6 +1,10 @@
 import React, {createContext, useContext, useEffect, useMemo, useState} from 'react';
 import {useQueryClient} from '@tanstack/react-query';
-import {startGitHubOAuth} from '../api/oauth';
+import {
+  pollGitHubDeviceAccessToken,
+  requestGitHubDeviceAuthorization,
+  type GitHubDeviceAuthorization,
+} from '../api/oauth';
 import {clearSession, readSession, saveSession, StoredSession} from '../storage/secureSessionStore';
 import {setApiAccessToken} from '../../../shared/api/client';
 
@@ -10,7 +14,7 @@ type SessionContextValue = {
   status: SessionStatus;
   user: StoredSession['user'] | null;
   accessToken: string | null;
-  signIn: () => Promise<void>;
+  signIn: (options?: {onVerification?: (authorization: GitHubDeviceAuthorization) => void}) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -79,8 +83,10 @@ export function SessionProvider({children}: {children: React.ReactNode}) {
       status,
       user,
       accessToken,
-      async signIn() {
-        const authState = await startGitHubOAuth();
+      async signIn(options) {
+        const authorization = await requestGitHubDeviceAuthorization();
+        options?.onVerification?.(authorization);
+        const authState = await pollGitHubDeviceAccessToken(authorization);
         const currentUser = await fetchCurrentUser(authState.accessToken);
         const nextSession = {
           accessToken: authState.accessToken,

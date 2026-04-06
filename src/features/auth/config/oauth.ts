@@ -1,9 +1,8 @@
 export const githubOAuthConfig = {
-  clientId: 'YOUR_GITHUB_OAUTH_CLIENT_ID',
-  redirectUrl: 'bgist://oauth/callback',
+  clientId: 'Ov23liaqY7CPrZQDh7fU',
   scopes: ['gist', 'read:user'],
   serviceConfiguration: {
-    authorizationEndpoint: 'https://github.com/login/oauth/authorize',
+    deviceCodeEndpoint: 'https://github.com/login/device/code',
     tokenEndpoint: 'https://github.com/login/oauth/access_token',
   },
 };

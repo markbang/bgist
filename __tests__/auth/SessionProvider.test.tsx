@@ -2,20 +2,21 @@ import React from 'react';
 import {act, render, screen, waitFor} from '@testing-library/react-native';
 import {Text} from 'react-native';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
-import * as AppAuth from 'react-native-app-auth';
 import * as Keychain from 'react-native-keychain';
 import {RootNavigator} from '../../src/app/navigation/RootNavigator';
+import * as GitHubOAuth from '../../src/features/auth/api/oauth';
 import {assertOAuthConfig, githubOAuthConfig} from '../../src/features/auth/config/oauth';
 import {SessionProvider, useSession} from '../../src/features/auth/session/SessionProvider';
 import {queryKeys} from '../../src/shared/api/queryKeys';
 
-jest.mock('react-native-app-auth', () => ({
-  authorize: jest.fn(),
-}));
 jest.mock('react-native-keychain', () => ({
   getGenericPassword: jest.fn(),
   setGenericPassword: jest.fn(),
   resetGenericPassword: jest.fn(),
+}));
+jest.mock('../../src/features/auth/api/oauth', () => ({
+  requestGitHubDeviceAuthorization: jest.fn(),
+  pollGitHubDeviceAccessToken: jest.fn(),
 }));
 jest.mock('@react-navigation/native', () => ({
   NavigationContainer: ({children}: {children: React.ReactNode}) => <>{children}</>,
@@ -135,7 +136,14 @@ test('assertOAuthConfig throws while the client id is still a placeholder', () =
 test('signIn stores the OAuth session', async () => {
   (Keychain.getGenericPassword as jest.Mock).mockResolvedValue(false);
   (Keychain.setGenericPassword as jest.Mock).mockResolvedValue(true);
-  (AppAuth.authorize as jest.Mock).mockResolvedValue({
+  (GitHubOAuth.requestGitHubDeviceAuthorization as jest.Mock).mockResolvedValue({
+    deviceCode: 'device-code-1',
+    userCode: 'WXYZ-1234',
+    verificationUri: 'https://github.com/login/device',
+    expiresAt: Date.now() + 900_000,
+    intervalSeconds: 5,
+  });
+  (GitHubOAuth.pollGitHubDeviceAccessToken as jest.Mock).mockResolvedValue({
     accessToken: 'token-456',
   });
   githubOAuthConfig.clientId = 'bgist-test-client-id';
@@ -162,6 +170,14 @@ test('signIn stores the OAuth session', async () => {
   });
 
   expect(Keychain.setGenericPassword).toHaveBeenCalled();
+  expect(GitHubOAuth.requestGitHubDeviceAuthorization).toHaveBeenCalled();
+  expect(GitHubOAuth.pollGitHubDeviceAccessToken).toHaveBeenCalledWith({
+    deviceCode: 'device-code-1',
+    expiresAt: expect.any(Number),
+    intervalSeconds: 5,
+    userCode: 'WXYZ-1234',
+    verificationUri: 'https://github.com/login/device',
+  });
 
   await waitFor(() => {
     expect(screen.getByText('signedIn:octocat')).toBeTruthy();
@@ -172,7 +188,14 @@ test('clears query cache on signIn and signOut transitions', async () => {
   (Keychain.getGenericPassword as jest.Mock).mockResolvedValue(false);
   (Keychain.setGenericPassword as jest.Mock).mockResolvedValue(true);
   (Keychain.resetGenericPassword as jest.Mock).mockResolvedValue(true);
-  (AppAuth.authorize as jest.Mock).mockResolvedValue({
+  (GitHubOAuth.requestGitHubDeviceAuthorization as jest.Mock).mockResolvedValue({
+    deviceCode: 'device-code-2',
+    userCode: 'ABCD-5678',
+    verificationUri: 'https://github.com/login/device',
+    expiresAt: Date.now() + 900_000,
+    intervalSeconds: 5,
+  });
+  (GitHubOAuth.pollGitHubDeviceAccessToken as jest.Mock).mockResolvedValue({
     accessToken: 'token-789',
   });
   githubOAuthConfig.clientId = 'bgist-test-client-id';
