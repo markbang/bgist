@@ -5,7 +5,8 @@ import {AppButton} from '../../../shared/ui/AppButton';
 import {AppCard} from '../../../shared/ui/AppCard';
 import {useSession} from '../session/SessionProvider';
 import {AppScreen} from '../../../shared/ui/AppScreen';
-import {appTheme} from '../../../app/theme/tokens';
+import {useAppTheme} from '../../../app/theme/context';
+import {createThemedStyles} from '../../../app/theme/tokens';
 
 type VerificationState = {
   userCode: string;
@@ -32,6 +33,8 @@ function getSignInErrorMessage(error: unknown) {
 }
 
 export default function LoginScreen() {
+  const {themeName} = useAppTheme();
+  const styles = getStyles(themeName);
   const {signIn} = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,9 +51,6 @@ export default function LoginScreen() {
     <AppScreen>
       <View style={styles.container}>
         <Text style={styles.title}>BGist</Text>
-        <Text style={styles.subtitle}>
-          Sign in with GitHub Device Flow to continue without storing a client secret in the app.
-        </Text>
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <AppButton
           disabled={isSubmitting}
@@ -70,7 +70,7 @@ export default function LoginScreen() {
             setError(null);
             setVerification(null);
             setIsSubmitting(true);
-            void (async () => {
+            (async () => {
               try {
                 await signIn({
                   onVerification: nextVerification => {
@@ -96,7 +96,7 @@ export default function LoginScreen() {
                   setIsSubmitting(false);
                 }
               }
-            })();
+            })().catch(() => {});
           }}
         />
 
@@ -127,7 +127,7 @@ export default function LoginScreen() {
                 fullWidth={false}
                 label="Open GitHub verification"
                 onPress={() => {
-                  void Linking.openURL(verification.verificationUri).catch(() => {
+                  Linking.openURL(verification.verificationUri).catch(() => {
                     setError('Could not open the GitHub verification page.');
                   });
                 }}
@@ -141,54 +141,51 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: appTheme.spacing.lg,
-    gap: appTheme.spacing.md,
-  },
-  title: {
-    fontSize: 36,
-    fontWeight: '800',
-    color: appTheme.colors.textPrimary,
-  },
-  subtitle: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: appTheme.colors.textSecondary,
-  },
-  error: {
-    color: appTheme.colors.danger,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  cardTitle: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  codeLabel: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  codeValue: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 30,
-    fontWeight: '900',
-    letterSpacing: 1.4,
-  },
-  helper: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 14,
-    lineHeight: 21,
-  },
-  actions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: appTheme.spacing.sm,
-  },
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.lg,
+      gap: theme.spacing.md,
+    },
+    title: {
+      fontSize: 36,
+      fontWeight: '800',
+      color: theme.colors.textPrimary,
+    },
+    error: {
+      color: theme.colors.danger,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    cardTitle: {
+      color: theme.colors.textPrimary,
+      fontSize: 18,
+      fontWeight: '800',
+    },
+    codeLabel: {
+      color: theme.colors.textSecondary,
+      fontSize: 13,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.6,
+    },
+    codeValue: {
+      color: theme.colors.textPrimary,
+      fontSize: 30,
+      fontWeight: '900',
+      letterSpacing: 1.4,
+    },
+    helper: {
+      color: theme.colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 21,
+    },
+    actions: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+    },
+  }),
+);

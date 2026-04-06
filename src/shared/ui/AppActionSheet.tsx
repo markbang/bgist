@@ -1,7 +1,8 @@
 import React from 'react';
 import {Modal, Pressable, StyleSheet, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {appTheme} from '../../app/theme/tokens';
+import {createThemedStyles} from '../../app/theme/tokens';
+import {useAppTheme} from '../../app/theme/context';
 import {AppButton} from './AppButton';
 
 type AppActionSheetTone = 'default' | 'danger';
@@ -25,6 +26,9 @@ export function AppActionSheet({
   actions,
   onClose,
 }: AppActionSheetProps) {
+  const {themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+
   return (
     <Modal
       transparent
@@ -72,57 +76,59 @@ export function AppActionSheet({
   );
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: appTheme.colors.overlay,
-  },
-  sheetWrap: {
-    paddingHorizontal: appTheme.spacing.md,
-    paddingBottom: appTheme.spacing.md,
-  },
-  sheet: {
-    borderRadius: 28,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: appTheme.colors.border,
-    backgroundColor: appTheme.colors.surface,
-    padding: appTheme.spacing.md,
-    gap: appTheme.spacing.md,
-    ...appTheme.shadow.card,
-  },
-  title: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  actions: {
-    gap: appTheme.spacing.xs,
-  },
-  action: {
-    minHeight: 52,
-    borderRadius: appTheme.radius.md,
-    borderCurve: 'continuous',
-    backgroundColor: appTheme.colors.surfaceMuted,
-    justifyContent: 'center',
-    paddingHorizontal: appTheme.spacing.md,
-  },
-  actionPressed: {
-    opacity: 0.88,
-  },
-  actionLabel: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  actionLabelDanger: {
-    color: appTheme.colors.danger,
-  },
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    root: {
+      flex: 1,
+    },
+    safeArea: {
+      flex: 1,
+      justifyContent: 'flex-end',
+    },
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: theme.colors.overlay,
+    },
+    sheetWrap: {
+      paddingHorizontal: theme.spacing.md,
+      paddingBottom: theme.spacing.md,
+    },
+    sheet: {
+      borderRadius: 28,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      padding: theme.spacing.md,
+      gap: theme.spacing.md,
+      ...theme.shadow.card,
+    },
+    title: {
+      color: theme.colors.textPrimary,
+      fontSize: 20,
+      fontWeight: '700',
+    },
+    actions: {
+      gap: theme.spacing.xs,
+    },
+    action: {
+      minHeight: 52,
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      backgroundColor: theme.colors.surfaceMuted,
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.md,
+    },
+    actionPressed: {
+      opacity: 0.88,
+    },
+    actionLabel: {
+      color: theme.colors.textPrimary,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    actionLabelDanger: {
+      color: theme.colors.danger,
+    },
+  }),
+);

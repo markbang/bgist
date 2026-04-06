@@ -149,6 +149,9 @@ test('uses icon-only viewer actions while preserving accessibility labels', () =
 
   expect(screen.queryByText('Copy content')).toBeNull();
   expect(screen.queryByText('Share link')).toBeNull();
+  expect(
+    screen.queryByText('Read the file content, toggle line numbers, and share the source link.'),
+  ).toBeNull();
   expect(screen.getByRole('button', {name: 'Copy content'})).toBeTruthy();
   expect(screen.getByRole('button', {name: 'Share link'})).toBeTruthy();
 });

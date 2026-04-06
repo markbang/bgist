@@ -1,7 +1,8 @@
 import React from 'react';
 import {Pressable, StyleSheet, Text, View} from 'react-native';
 import type {Gist} from '../../../types/gist';
-import {appTheme} from '../../../app/theme/tokens';
+import {useAppTheme} from '../../../app/theme/context';
+import {createThemedStyles} from '../../../app/theme/tokens';
 import {AppBadge} from '../../../shared/ui/AppBadge';
 import {AppCard} from '../../../shared/ui/AppCard';
 
@@ -25,6 +26,8 @@ function formatDate(value: string) {
 }
 
 export function GistCard({gist, onPress}: GistCardProps) {
+  const {themeName} = useAppTheme();
+  const styles = getStyles(themeName);
   const files = Object.values(gist.files);
   const owner = gist.owner?.login ?? gist.user?.login ?? 'Unknown';
   const description = gist.description?.trim() || 'Untitled gist';
@@ -70,55 +73,57 @@ export function GistCard({gist, onPress}: GistCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  pressed: {
-    opacity: 0.92,
-    transform: [{scale: 0.99}],
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: appTheme.spacing.sm,
-  },
-  headerContent: {
-    flex: 1,
-    gap: appTheme.spacing.xs,
-  },
-  title: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  owner: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: appTheme.spacing.xs,
-  },
-  metaText: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 13,
-  },
-  metaDot: {
-    color: appTheme.colors.border,
-    fontSize: 12,
-  },
-  files: {
-    gap: appTheme.spacing.xs,
-  },
-  fileName: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  moreFiles: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 13,
-  },
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    pressed: {
+      opacity: 0.92,
+      transform: [{scale: 0.99}],
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: theme.spacing.sm,
+    },
+    headerContent: {
+      flex: 1,
+      gap: theme.spacing.xs,
+    },
+    title: {
+      color: theme.colors.textPrimary,
+      fontSize: 17,
+      fontWeight: '800',
+    },
+    owner: {
+      color: theme.colors.textSecondary,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    metaRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
+    metaText: {
+      color: theme.colors.textSecondary,
+      fontSize: 13,
+    },
+    metaDot: {
+      color: theme.colors.border,
+      fontSize: 12,
+    },
+    files: {
+      gap: theme.spacing.xs,
+    },
+    fileName: {
+      color: theme.colors.textPrimary,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    moreFiles: {
+      color: theme.colors.textSecondary,
+      fontSize: 13,
+    },
+  }),
+);

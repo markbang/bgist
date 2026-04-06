@@ -1,6 +1,7 @@
 import React from 'react';
 import {StyleSheet, Text, View} from 'react-native';
-import {appTheme} from '../../app/theme/tokens';
+import {createThemedStyles} from '../../app/theme/tokens';
+import {useAppTheme} from '../../app/theme/context';
 
 type AppBannerTone = 'info' | 'warning' | 'danger';
 
@@ -9,29 +10,29 @@ interface AppBannerProps {
   tone?: AppBannerTone;
 }
 
-const BANNER_TONES = {
-  info: {
-    backgroundColor: '#eff6ff',
-    borderColor: '#bfdbfe',
-    accentColor: appTheme.colors.accent,
-  },
-  warning: {
-    backgroundColor: '#fffbeb',
-    borderColor: '#fde68a',
-    accentColor: appTheme.colors.warning,
-  },
-  danger: {
-    backgroundColor: '#fef2f2',
-    borderColor: '#fecaca',
-    accentColor: appTheme.colors.danger,
-  },
-} as const;
-
 export function AppBanner({
   message,
   tone = 'info',
 }: AppBannerProps) {
-  const colors = BANNER_TONES[tone];
+  const {theme, themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+  const colors = {
+    info: {
+      backgroundColor: theme.colors.infoSoft,
+      borderColor: theme.colors.infoBorder,
+      accentColor: theme.colors.accent,
+    },
+    warning: {
+      backgroundColor: theme.colors.warningSoft,
+      borderColor: theme.colors.warningBorder,
+      accentColor: theme.colors.warning,
+    },
+    danger: {
+      backgroundColor: theme.colors.dangerSoft,
+      borderColor: theme.colors.dangerBorder,
+      accentColor: theme.colors.danger,
+    },
+  }[tone];
 
   return (
     <View
@@ -50,27 +51,29 @@ export function AppBanner({
   );
 }
 
-const styles = StyleSheet.create({
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    borderRadius: appTheme.radius.lg,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    padding: appTheme.spacing.md,
-    gap: appTheme.spacing.md,
-  },
-  accent: {
-    width: 6,
-    alignSelf: 'stretch',
-    borderRadius: 999,
-  },
-  content: {
-    flex: 1,
-  },
-  message: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 15,
-    lineHeight: 20,
-  },
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    banner: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      borderRadius: theme.radius.lg,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      padding: theme.spacing.md,
+      gap: theme.spacing.md,
+    },
+    accent: {
+      width: 6,
+      alignSelf: 'stretch',
+      borderRadius: 999,
+    },
+    content: {
+      flex: 1,
+    },
+    message: {
+      color: theme.colors.textSecondary,
+      fontSize: 15,
+      lineHeight: 20,
+    },
+  }),
+);

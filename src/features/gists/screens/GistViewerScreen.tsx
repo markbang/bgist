@@ -1,14 +1,16 @@
 import React from 'react';
-import {Alert, Pressable, ScrollView, Share, StyleSheet, Text, View} from 'react-native';
+import {Alert, Pressable, ScrollView, Share, StyleSheet, View} from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {useQuery} from '@tanstack/react-query';
 import Svg, {Circle, Path} from 'react-native-svg';
 import {WebView} from 'react-native-webview';
-import {appTheme} from '../../../app/theme/tokens';
+import {useAppTheme} from '../../../app/theme/context';
+import {createThemedStyles, type AppTheme} from '../../../app/theme/tokens';
 import {AppCard} from '../../../shared/ui/AppCard';
 import {AppCodeBlock} from '../../../shared/ui/AppCodeBlock';
 import {AppErrorState} from '../../../shared/ui/AppErrorState';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
+import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
 import {AppScreen} from '../../../shared/ui/AppScreen';
 import type {RootStackScreenProps} from '../../../app/navigation/types';
 import {useI18n} from '../../../i18n/context';
@@ -137,7 +139,16 @@ function renderMarkdownDocument(markdown: string) {
   return blocks.join('');
 }
 
-function wrapPreviewDocument(title: string, body: string) {
+function wrapPreviewDocument(title: string, body: string, theme: AppTheme, isDark: boolean) {
+  const backgroundColor = theme.colors.surface;
+  const textColor = theme.colors.textPrimary;
+  const headingColor = theme.colors.textPrimary;
+  const linkColor = theme.colors.accent;
+  const inlineCodeBackground = theme.colors.accentSoft;
+  const inlineCodeColor = theme.colors.accent;
+  const preBackground = theme.colors.codeBg;
+  const preColor = theme.colors.codeText;
+
   return `<!DOCTYPE html>
 <html>
   <head>
@@ -146,7 +157,7 @@ function wrapPreviewDocument(title: string, body: string) {
     <title>${escapeHtml(title)}</title>
     <style>
       :root {
-        color-scheme: light;
+        color-scheme: ${isDark ? 'dark' : 'light'};
       }
       * {
         box-sizing: border-box;
@@ -154,14 +165,14 @@ function wrapPreviewDocument(title: string, body: string) {
       body {
         margin: 0;
         padding: 16px;
-        color: #111827;
-        background: #ffffff;
+        color: ${textColor};
+        background: ${backgroundColor};
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         line-height: 1.65;
         word-break: break-word;
       }
       h1, h2, h3, h4, h5, h6 {
-        color: #0f172a;
+        color: ${headingColor};
         line-height: 1.25;
         margin: 0 0 12px;
       }
@@ -172,19 +183,19 @@ function wrapPreviewDocument(title: string, body: string) {
         padding-left: 20px;
       }
       a {
-        color: #2563eb;
+        color: ${linkColor};
       }
       code {
         font-family: Menlo, monospace;
-        background: #eff6ff;
-        color: #1d4ed8;
+        background: ${inlineCodeBackground};
+        color: ${inlineCodeColor};
         border-radius: 6px;
         padding: 2px 5px;
       }
       pre {
         overflow: auto;
-        background: #0f172a;
-        color: #e2e8f0;
+        background: ${preBackground};
+        color: ${preColor};
         border-radius: 14px;
         padding: 14px;
       }
@@ -202,9 +213,9 @@ function wrapPreviewDocument(title: string, body: string) {
 </html>`;
 }
 
-function buildPreviewDocument(filename: string, content: string) {
+function buildPreviewDocument(filename: string, content: string, theme: AppTheme, isDark: boolean) {
   if (isMarkdownFile(filename)) {
-    return wrapPreviewDocument(filename, renderMarkdownDocument(content));
+    return wrapPreviewDocument(filename, renderMarkdownDocument(content), theme, isDark);
   }
 
   if (isHtmlFile(filename)) {
@@ -212,7 +223,7 @@ function buildPreviewDocument(filename: string, content: string) {
       return content;
     }
 
-    return wrapPreviewDocument(filename, content);
+    return wrapPreviewDocument(filename, content, theme, isDark);
   }
 
   return null;
@@ -295,6 +306,9 @@ function ViewerActionButton({
   icon: React.ReactNode;
   onPress: () => void;
 }) {
+  const {themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+
   return (
     <Pressable
       accessibilityLabel={accessibilityLabel}
@@ -314,7 +328,9 @@ function ViewerActionButton({
 }
 
 export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
+  const {theme, themeName, isDark} = useAppTheme();
   const {t} = useI18n();
+  const styles = getStyles(themeName);
   const {gistId, filename, content, gistUrl, rawUrl, truncated = false} = route.params;
   const [showLines, setShowLines] = React.useState(true);
   const renderMode = isMarkdownFile(filename) ? 'markdown' : isHtmlFile(filename) ? 'html' : null;
@@ -341,8 +357,8 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
       return null;
     }
 
-    return buildPreviewDocument(filename, resolvedContent);
-  }, [filename, renderMode, resolvedContent, showPreview]);
+    return buildPreviewDocument(filename, resolvedContent, theme, isDark);
+  }, [filename, isDark, renderMode, resolvedContent, showPreview, theme]);
   const canCopyContent = !needsRemoteContent || fileContentQuery.isSuccess;
 
   const copyValue = React.useCallback((value: string, label: string) => {
@@ -353,13 +369,7 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
   return (
     <AppScreen>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.eyebrow}>{t('viewer.eyebrow')}</Text>
-          <Text ellipsizeMode="middle" numberOfLines={2} style={styles.title}>
-            {filename}
-          </Text>
-          <Text style={styles.subtitle}>{t('viewer.subtitle')}</Text>
-        </View>
+        <AppPageHeader title={filename} />
 
         <ScrollView
           contentContainerStyle={styles.actions}
@@ -371,7 +381,7 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
               active={showPreview}
               icon={
                 <ActionIcon
-                  color={showPreview ? '#ffffff' : appTheme.colors.textPrimary}
+                  color={showPreview ? theme.colors.accentContrast : theme.colors.textPrimary}
                   name={showPreview ? 'source' : 'preview'}
                 />
               }
@@ -384,7 +394,7 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
               active={showLines}
               icon={
                 <ActionIcon
-                  color={showLines ? '#ffffff' : appTheme.colors.textPrimary}
+                  color={showLines ? theme.colors.accentContrast : theme.colors.textPrimary}
                   name="lines"
                 />
               }
@@ -394,7 +404,7 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
           <ViewerActionButton
             accessibilityLabel={t('viewer.copyContent')}
             disabled={!canCopyContent}
-            icon={<ActionIcon color={appTheme.colors.textPrimary} name="copy" />}
+            icon={<ActionIcon color={theme.colors.textPrimary} name="copy" />}
             onPress={() => {
               if (!canCopyContent) {
                 return;
@@ -405,17 +415,17 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
           />
           <ViewerActionButton
             accessibilityLabel={t('viewer.copyGistLink')}
-            icon={<ActionIcon color={appTheme.colors.textPrimary} name="gist-link" />}
+            icon={<ActionIcon color={theme.colors.textPrimary} name="gist-link" />}
             onPress={() => copyValue(resolvedGistUrl, t('viewer.copyGistLinkLabel'))}
           />
           <ViewerActionButton
             accessibilityLabel={t('viewer.copyFileLink')}
-            icon={<ActionIcon color={appTheme.colors.textPrimary} name="file-link" />}
+            icon={<ActionIcon color={theme.colors.textPrimary} name="file-link" />}
             onPress={() => copyValue(fileUrl, t('viewer.copyFileLinkLabel'))}
           />
           <ViewerActionButton
             accessibilityLabel={t('viewer.shareLink')}
-            icon={<ActionIcon color={appTheme.colors.textPrimary} name="share" />}
+            icon={<ActionIcon color={theme.colors.textPrimary} name="share" />}
             onPress={() => {
               Share.share({message: fileUrl}).catch(() => {
                 Alert.alert(t('viewer.shareErrorTitle'), t('viewer.shareErrorDescription'));
@@ -457,71 +467,51 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
 
 export default GistViewerScreen;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: appTheme.spacing.md,
-    paddingTop: appTheme.spacing.md,
-    paddingBottom: appTheme.spacing.xl,
-    gap: appTheme.spacing.md,
-  },
-  header: {
-    gap: appTheme.spacing.sm,
-  },
-  eyebrow: {
-    color: appTheme.colors.accent,
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-  },
-  title: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 28,
-    fontWeight: '800',
-    flexShrink: 1,
-    maxWidth: '100%',
-  },
-  subtitle: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  actions: {
-    alignItems: 'center',
-    gap: appTheme.spacing.sm,
-    paddingRight: appTheme.spacing.md,
-  },
-  actionButton: {
-    width: 48,
-    height: 48,
-    borderRadius: appTheme.radius.md,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: appTheme.colors.border,
-    backgroundColor: appTheme.colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionButtonActive: {
-    borderColor: appTheme.colors.accent,
-    backgroundColor: appTheme.colors.accent,
-  },
-  actionButtonDisabled: {
-    opacity: 0.45,
-  },
-  actionButtonPressed: {
-    opacity: 0.88,
-    transform: [{scale: 0.96}],
-  },
-  codeShell: {
-    flex: 1,
-    minHeight: 0,
-    padding: appTheme.spacing.sm,
-  },
-  preview: {
-    flex: 1,
-    minHeight: 0,
-    backgroundColor: appTheme.colors.surface,
-  },
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.spacing.md,
+      paddingBottom: theme.spacing.xl,
+      gap: theme.spacing.md,
+    },
+    actions: {
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      paddingRight: theme.spacing.md,
+    },
+    actionButton: {
+      width: 48,
+      height: 48,
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    actionButtonActive: {
+      borderColor: theme.colors.accent,
+      backgroundColor: theme.colors.accent,
+    },
+    actionButtonDisabled: {
+      opacity: 0.45,
+    },
+    actionButtonPressed: {
+      opacity: 0.88,
+      transform: [{scale: 0.96}],
+    },
+    codeShell: {
+      flex: 1,
+      minHeight: 0,
+      padding: theme.spacing.sm,
+    },
+    preview: {
+      flex: 1,
+      minHeight: 0,
+      backgroundColor: theme.colors.surface,
+    },
+  }),
+);

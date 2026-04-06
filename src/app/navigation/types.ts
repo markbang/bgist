@@ -13,6 +13,7 @@ export type RootStackParamList = {
   Auth: undefined;
   Loading: undefined;
   MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
+  Settings: undefined;
   GistDetail: {gistId: string};
   GistEditor: GistEditorCreateParams | GistEditorEditParams;
   GistViewer: {

@@ -1,8 +1,12 @@
 import React from 'react';
 import {StyleSheet, View, ViewProps} from 'react-native';
-import {appTheme} from '../../app/theme/tokens';
+import {createThemedStyles} from '../../app/theme/tokens';
+import {useAppTheme} from '../../app/theme/context';
 
 export function AppCard({children, style, ...props}: ViewProps) {
+  const {themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+
   return (
     <View {...props} style={[styles.card, style]}>
       {children}
@@ -10,15 +14,17 @@ export function AppCard({children, style, ...props}: ViewProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: appTheme.radius.lg,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: appTheme.colors.border,
-    backgroundColor: appTheme.colors.surface,
-    padding: appTheme.spacing.md,
-    gap: appTheme.spacing.md,
-    ...appTheme.shadow.card,
-  },
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    card: {
+      borderRadius: theme.radius.lg,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      padding: theme.spacing.md,
+      gap: theme.spacing.md,
+      ...theme.shadow.card,
+    },
+  }),
+);

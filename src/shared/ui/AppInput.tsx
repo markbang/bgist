@@ -8,7 +8,8 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import {appTheme} from '../../app/theme/tokens';
+import {createThemedStyles} from '../../app/theme/tokens';
+import {useAppTheme} from '../../app/theme/context';
 
 interface AppInputProps extends TextInputProps {
   label?: string;
@@ -31,6 +32,8 @@ export function AppInput({
   accessibilityHint,
   ...props
 }: AppInputProps) {
+  const {theme, themeName} = useAppTheme();
+  const styles = getStyles(themeName);
   const message = errorMessage ?? helperText;
   const inputAccessibilityLabel = accessibilityLabel ?? label ?? props.placeholder;
   const inputAccessibilityHint = accessibilityHint ?? message;
@@ -44,8 +47,8 @@ export function AppInput({
         accessibilityLabel={inputAccessibilityLabel}
         editable={editable}
         multiline={multiline}
-        placeholderTextColor={placeholderTextColor ?? appTheme.colors.textSecondary}
-        selectionColor={selectionColor ?? appTheme.colors.accent}
+        placeholderTextColor={placeholderTextColor ?? theme.colors.textSecondary}
+        selectionColor={selectionColor ?? theme.colors.accent}
         style={[
           styles.input,
           multiline ? styles.inputMultiline : null,
@@ -63,45 +66,47 @@ export function AppInput({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: appTheme.spacing.xs,
-  },
-  label: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  input: {
-    minHeight: 52,
-    borderRadius: appTheme.radius.md,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: appTheme.colors.border,
-    backgroundColor: appTheme.colors.surface,
-    color: appTheme.colors.textPrimary,
-    paddingHorizontal: appTheme.spacing.md,
-    paddingVertical: appTheme.spacing.sm + 2,
-    fontSize: 16,
-  },
-  inputMultiline: {
-    minHeight: 120,
-    paddingTop: appTheme.spacing.md,
-    textAlignVertical: 'top',
-  },
-  inputDisabled: {
-    backgroundColor: appTheme.colors.surfaceMuted,
-    color: appTheme.colors.textSecondary,
-  },
-  inputError: {
-    borderColor: appTheme.colors.danger,
-  },
-  message: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  messageError: {
-    color: appTheme.colors.danger,
-  },
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    container: {
+      gap: theme.spacing.xs,
+    },
+    label: {
+      color: theme.colors.textPrimary,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    input: {
+      minHeight: 52,
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      color: theme.colors.textPrimary,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm + 2,
+      fontSize: 16,
+    },
+    inputMultiline: {
+      minHeight: 120,
+      paddingTop: theme.spacing.md,
+      textAlignVertical: 'top',
+    },
+    inputDisabled: {
+      backgroundColor: theme.colors.surfaceMuted,
+      color: theme.colors.textSecondary,
+    },
+    inputError: {
+      borderColor: theme.colors.danger,
+    },
+    message: {
+      color: theme.colors.textSecondary,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    messageError: {
+      color: theme.colors.danger,
+    },
+  }),
+);

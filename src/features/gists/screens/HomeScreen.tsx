@@ -1,9 +1,11 @@
 import React from 'react';
-import {FlatList, StyleSheet, Text, View} from 'react-native';
-import {appTheme} from '../../../app/theme/tokens';
+import {FlatList, StyleSheet, View} from 'react-native';
+import {useAppTheme} from '../../../app/theme/context';
+import {createThemedStyles} from '../../../app/theme/tokens';
 import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
 import {AppErrorState} from '../../../shared/ui/AppErrorState';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
+import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
 import {AppScreen} from '../../../shared/ui/AppScreen';
 import {AppSegmentedControl} from '../../../shared/ui/AppSegmentedControl';
 import {useI18n} from '../../../i18n/context';
@@ -17,7 +19,9 @@ interface HomeScreenProps {
 }
 
 export function HomeScreen({navigation}: HomeScreenProps) {
+  const {themeName} = useAppTheme();
   const {t} = useI18n();
+  const styles = getStyles(themeName);
   const {segment, setSegment, items, isLoading, isError, refetch} = useHomeFeed();
   const segments = [
     {label: t('home.segmentMine'), value: 'my'},
@@ -39,7 +43,7 @@ export function HomeScreen({navigation}: HomeScreenProps) {
         title={t('home.errorTitle')}
         description={t('home.errorDescription')}
         onRetry={() => {
-          void refetch();
+          refetch();
         }}
       />
     );
@@ -76,9 +80,7 @@ export function HomeScreen({navigation}: HomeScreenProps) {
     <AppScreen>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>{t('home.eyebrow')}</Text>
-          <Text style={styles.title}>{t('home.title')}</Text>
-          <Text style={styles.subtitle}>{t('home.subtitle')}</Text>
+          <AppPageHeader title={t('home.title')} />
           <AppSegmentedControl options={segments} value={segment} onChange={setSegment} />
         </View>
 
@@ -90,38 +92,23 @@ export function HomeScreen({navigation}: HomeScreenProps) {
 
 export default HomeScreen;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: appTheme.spacing.md,
-    paddingTop: appTheme.spacing.md,
-    gap: appTheme.spacing.md,
-  },
-  header: {
-    gap: appTheme.spacing.sm,
-  },
-  eyebrow: {
-    color: appTheme.colors.accent,
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-  },
-  title: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 30,
-    fontWeight: '800',
-  },
-  subtitle: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  content: {
-    flex: 1,
-  },
-  listContent: {
-    paddingBottom: appTheme.spacing.xl,
-    gap: appTheme.spacing.md,
-  },
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.spacing.md,
+      gap: theme.spacing.md,
+    },
+    header: {
+      gap: theme.spacing.sm,
+    },
+    content: {
+      flex: 1,
+    },
+    listContent: {
+      paddingBottom: theme.spacing.xl,
+      gap: theme.spacing.md,
+    },
+  }),
+);

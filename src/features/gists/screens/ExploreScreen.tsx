@@ -1,12 +1,14 @@
 import React from 'react';
-import {FlatList, StyleSheet, Text, View} from 'react-native';
+import {FlatList, StyleSheet, View} from 'react-native';
 import {useQuery} from '@tanstack/react-query';
-import {appTheme} from '../../../app/theme/tokens';
+import {useAppTheme} from '../../../app/theme/context';
+import {createThemedStyles} from '../../../app/theme/tokens';
 import {queryKeys} from '../../../shared/api/queryKeys';
 import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
 import {AppErrorState} from '../../../shared/ui/AppErrorState';
 import {AppInput} from '../../../shared/ui/AppInput';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
+import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
 import {AppScreen} from '../../../shared/ui/AppScreen';
 import {useI18n} from '../../../i18n/context';
 import {GistCard} from '../components/GistCard';
@@ -20,7 +22,9 @@ interface ExploreScreenProps {
 }
 
 export function ExploreScreen({navigation}: ExploreScreenProps) {
+  const {themeName} = useAppTheme();
   const {t} = useI18n();
+  const styles = getStyles(themeName);
   const [query, setQuery] = React.useState('');
   const lastAutoNavigatedQueryRef = React.useRef<string | null>(null);
   const publicGistsQuery = useQuery({
@@ -84,7 +88,7 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
         title={t('explore.errorTitle')}
         description={t('explore.errorDescription')}
         onRetry={() => {
-          void publicGistsQuery.refetch();
+          publicGistsQuery.refetch();
         }}
       />
     );
@@ -117,9 +121,7 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
     <AppScreen>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>{t('explore.eyebrow')}</Text>
-          <Text style={styles.title}>{t('explore.title')}</Text>
-          <Text style={styles.subtitle}>{t('explore.subtitle')}</Text>
+          <AppPageHeader title={t('explore.title')} />
           <AppInput
             label={t('explore.inputLabel')}
             placeholder={t('explore.inputPlaceholder')}
@@ -138,38 +140,23 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
 
 export default ExploreScreen;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: appTheme.spacing.md,
-    paddingTop: appTheme.spacing.md,
-    gap: appTheme.spacing.md,
-  },
-  header: {
-    gap: appTheme.spacing.sm,
-  },
-  eyebrow: {
-    color: appTheme.colors.accent,
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-  },
-  title: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 30,
-    fontWeight: '800',
-  },
-  subtitle: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  content: {
-    flex: 1,
-  },
-  listContent: {
-    paddingBottom: appTheme.spacing.xl,
-    gap: appTheme.spacing.md,
-  },
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.spacing.md,
+      gap: theme.spacing.md,
+    },
+    header: {
+      gap: theme.spacing.sm,
+    },
+    content: {
+      flex: 1,
+    },
+    listContent: {
+      paddingBottom: theme.spacing.xl,
+      gap: theme.spacing.md,
+    },
+  }),
+);

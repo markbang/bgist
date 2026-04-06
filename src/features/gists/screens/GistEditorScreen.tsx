@@ -11,7 +11,8 @@ import {
   View,
 } from 'react-native';
 import {useQuery} from '@tanstack/react-query';
-import {appTheme} from '../../../app/theme/tokens';
+import {useAppTheme} from '../../../app/theme/context';
+import {createThemedStyles} from '../../../app/theme/tokens';
 import type {
   GistEditorDraftFile,
   RootStackScreenProps,
@@ -23,6 +24,7 @@ import {AppButton} from '../../../shared/ui/AppButton';
 import {AppCard} from '../../../shared/ui/AppCard';
 import {AppErrorState} from '../../../shared/ui/AppErrorState';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
+import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
 import {AppScreen} from '../../../shared/ui/AppScreen';
 import {useI18n} from '../../../i18n/context';
 import {getGist} from '../api/gists';
@@ -104,7 +106,9 @@ function buildEditFilesPayload(files: DraftFile[], deletedOriginalFilenames: str
 }
 
 export function GistEditorScreen({navigation, route}: RootStackScreenProps<'GistEditor'>) {
+  const {theme, themeName} = useAppTheme();
   const {t} = useI18n();
+  const styles = getStyles(themeName);
   const isEditMode = route.params.mode === 'edit';
   const editGistId = isEditMode ? route.params.gistId : null;
   const routeDraftFiles = route.params.files;
@@ -250,7 +254,7 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
           title={t('editor.errorDraftTitle')}
           description={t('editor.errorDraftDescription')}
           onRetry={() => {
-            void existingGistQuery.refetch();
+            existingGistQuery.refetch();
           }}
         />
       </AppScreen>
@@ -267,15 +271,7 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
             contentContainerStyle={styles.content}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
-            <View style={styles.header}>
-              <Text style={styles.eyebrow}>{isEditMode ? t('editor.editEyebrow') : t('editor.createEyebrow')}</Text>
-              <Text style={styles.title}>{isEditMode ? t('editor.editTitle') : t('editor.createTitle')}</Text>
-              <Text style={styles.subtitle}>
-                {isEditMode
-                  ? t('editor.editSubtitle')
-                  : t('editor.createSubtitle')}
-              </Text>
-            </View>
+            <AppPageHeader title={isEditMode ? t('editor.editTitle') : t('editor.createTitle')} />
 
             <AppCard>
               <Text style={styles.sectionTitle}>{t('editor.detailsTitle')}</Text>
@@ -283,7 +279,7 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
                 accessibilityLabel="Gist description"
                 onChangeText={setDescription}
                 placeholder={t('editor.descriptionPlaceholder')}
-                placeholderTextColor={appTheme.colors.textSecondary}
+                placeholderTextColor={theme.colors.textSecondary}
                 style={styles.descriptionInput}
                 value={description}
               />
@@ -347,7 +343,7 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
                   autoCorrect={false}
                   onChangeText={value => updateFile(file.id, {filename: value})}
                   placeholder={t('editor.filenamePlaceholder')}
-                  placeholderTextColor={appTheme.colors.textSecondary}
+                  placeholderTextColor={theme.colors.textSecondary}
                   style={styles.filenameInput}
                   value={file.filename}
                 />
@@ -358,7 +354,7 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
                   multiline
                   onChangeText={value => updateFile(file.id, {content: value})}
                   placeholder={t('editor.contentPlaceholder')}
-                  placeholderTextColor={appTheme.colors.textSecondary}
+                  placeholderTextColor={theme.colors.textSecondary}
                   spellCheck={false}
                   style={styles.contentInput}
                   textAlignVertical="top"
@@ -373,7 +369,7 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
               label={isEditMode ? t('editor.saveChanges') : t('gist.createGist')}
               loading={createGistMutation.isPending || editGistMutation.isPending}
               onPress={() => {
-                void handleSubmit();
+                handleSubmit().catch(() => {});
               }}
             />
           </View>
@@ -385,151 +381,133 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
 
 export default GistEditorScreen;
 
-const styles = StyleSheet.create({
-  keyboard: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: appTheme.spacing.md,
-    paddingTop: appTheme.spacing.md,
-    paddingBottom: 120,
-    gap: appTheme.spacing.md,
-  },
-  header: {
-    gap: appTheme.spacing.sm,
-  },
-  eyebrow: {
-    color: appTheme.colors.accent,
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-  },
-  title: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 28,
-    fontWeight: '800',
-  },
-  subtitle: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  sectionTitle: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  label: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  helperText: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 13,
-    lineHeight: 20,
-  },
-  descriptionInput: {
-    minHeight: 52,
-    borderRadius: appTheme.radius.md,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: appTheme.colors.border,
-    backgroundColor: appTheme.colors.canvas,
-    color: appTheme.colors.textPrimary,
-    fontSize: 15,
-    paddingHorizontal: appTheme.spacing.md,
-    paddingVertical: appTheme.spacing.sm + 2,
-  },
-  visibilityHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: appTheme.spacing.sm,
-  },
-  visibilityButtons: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: appTheme.spacing.sm,
-  },
-  fileSectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: appTheme.spacing.sm,
-  },
-  fileHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: appTheme.spacing.sm,
-  },
-  fileHeaderText: {
-    flex: 1,
-    gap: appTheme.spacing.xs,
-  },
-  fileTitle: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  fileMeta: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 13,
-  },
-  removeButton: {
-    borderRadius: appTheme.radius.md,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: '#fecaca',
-    backgroundColor: '#fef2f2',
-    paddingHorizontal: appTheme.spacing.sm + 2,
-    paddingVertical: appTheme.spacing.xs + 2,
-  },
-  removePressed: {
-    opacity: 0.85,
-  },
-  removeButtonText: {
-    color: appTheme.colors.danger,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  filenameInput: {
-    minHeight: 52,
-    borderRadius: appTheme.radius.md,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: appTheme.colors.border,
-    backgroundColor: appTheme.colors.canvas,
-    color: appTheme.colors.textPrimary,
-    fontSize: 15,
-    paddingHorizontal: appTheme.spacing.md,
-    paddingVertical: appTheme.spacing.sm + 2,
-  },
-  contentInput: {
-    minHeight: 220,
-    borderRadius: appTheme.radius.md,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: appTheme.colors.border,
-    backgroundColor: appTheme.colors.codeBg,
-    color: appTheme.colors.codeText,
-    fontFamily: Platform.select({ios: 'Menlo', android: 'monospace', default: 'monospace'}),
-    fontSize: 14,
-    lineHeight: 20,
-    paddingHorizontal: appTheme.spacing.md,
-    paddingVertical: appTheme.spacing.md,
-  },
-  footer: {
-    borderTopWidth: 1,
-    borderTopColor: appTheme.colors.border,
-    backgroundColor: 'rgba(245, 247, 251, 0.96)',
-    paddingHorizontal: appTheme.spacing.md,
-    paddingTop: appTheme.spacing.sm,
-    paddingBottom: appTheme.spacing.md,
-  },
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    keyboard: {
+      flex: 1,
+    },
+    container: {
+      flex: 1,
+    },
+    content: {
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.spacing.md,
+      paddingBottom: 120,
+      gap: theme.spacing.md,
+    },
+    sectionTitle: {
+      color: theme.colors.textPrimary,
+      fontSize: 18,
+      fontWeight: '800',
+    },
+    label: {
+      color: theme.colors.textPrimary,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    helperText: {
+      color: theme.colors.textSecondary,
+      fontSize: 13,
+      lineHeight: 20,
+    },
+    descriptionInput: {
+      minHeight: 52,
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.canvas,
+      color: theme.colors.textPrimary,
+      fontSize: 15,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm + 2,
+    },
+    visibilityHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: theme.spacing.sm,
+    },
+    visibilityButtons: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+    },
+    fileSectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: theme.spacing.sm,
+    },
+    fileHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    fileHeaderText: {
+      flex: 1,
+      gap: theme.spacing.xs,
+    },
+    fileTitle: {
+      color: theme.colors.textPrimary,
+      fontSize: 16,
+      fontWeight: '800',
+    },
+    fileMeta: {
+      color: theme.colors.textSecondary,
+      fontSize: 13,
+    },
+    removeButton: {
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.danger,
+      backgroundColor: theme.colors.dangerSoft,
+      paddingHorizontal: theme.spacing.sm + 2,
+      paddingVertical: theme.spacing.xs + 2,
+    },
+    removePressed: {
+      opacity: 0.85,
+    },
+    removeButtonText: {
+      color: theme.colors.danger,
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    filenameInput: {
+      minHeight: 52,
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.canvas,
+      color: theme.colors.textPrimary,
+      fontSize: 15,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm + 2,
+    },
+    contentInput: {
+      minHeight: 220,
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.codeBg,
+      color: theme.colors.codeText,
+      fontFamily: Platform.select({ios: 'Menlo', android: 'monospace', default: 'monospace'}),
+      fontSize: 14,
+      lineHeight: 20,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.md,
+    },
+    footer: {
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.spacing.sm,
+      paddingBottom: theme.spacing.md,
+    },
+  }),
+);

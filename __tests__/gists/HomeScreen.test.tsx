@@ -99,6 +99,24 @@ test('switches the home feed from My to Starred when the segment is pressed', ()
   expect(setSegment).toHaveBeenCalledWith('starred');
 });
 
+test('keeps the home header focused by omitting the old descriptive subtitle', () => {
+  (useHomeFeed as jest.Mock).mockReturnValue({
+    segment: 'my',
+    setSegment: jest.fn(),
+    items: [createGist({id: 'mine-1', description: 'My gist'})],
+    isLoading: false,
+    isError: false,
+    refetch: jest.fn(),
+  });
+
+  render(<HomeScreen navigation={{navigate: jest.fn()}} />);
+
+  expect(screen.getByText('Home')).toBeTruthy();
+  expect(
+    screen.queryByText('Switch between your own gists and the ones you have starred.'),
+  ).toBeNull();
+});
+
 test('parses gist ids from gist URLs and raw id input', () => {
   expect(parseGistReference('https://gist.github.com/octocat/aa5a315d61ae9438b18d')).toEqual({
     gistId: 'aa5a315d61ae9438b18d',

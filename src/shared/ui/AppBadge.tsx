@@ -1,6 +1,7 @@
 import React from 'react';
 import {StyleSheet, Text, View} from 'react-native';
-import {appTheme} from '../../app/theme/tokens';
+import {createThemedStyles} from '../../app/theme/tokens';
+import {useAppTheme} from '../../app/theme/context';
 
 type AppBadgeTone = 'public' | 'secret';
 
@@ -9,21 +10,21 @@ interface AppBadgeProps {
   tone?: AppBadgeTone;
 }
 
-const BADGE_TONES = {
-  public: {
-    backgroundColor: appTheme.colors.accentSoft,
-    borderColor: appTheme.colors.accentSoft,
-    textColor: appTheme.colors.accent,
-  },
-  secret: {
-    backgroundColor: '#f3f4f6',
-    borderColor: '#e5e7eb',
-    textColor: '#374151',
-  },
-} as const;
-
 export function AppBadge({label, tone = 'public'}: AppBadgeProps) {
-  const colors = BADGE_TONES[tone];
+  const {theme, themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+  const colors = {
+    public: {
+      backgroundColor: theme.colors.accentSoft,
+      borderColor: theme.colors.accentSoft,
+      textColor: theme.colors.accent,
+    },
+    secret: {
+      backgroundColor: theme.colors.secretSoft,
+      borderColor: theme.colors.secretBorder,
+      textColor: theme.colors.secretText,
+    },
+  }[tone];
 
   return (
     <View
@@ -39,18 +40,20 @@ export function AppBadge({label, tone = 'public'}: AppBadgeProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  badge: {
-    alignSelf: 'flex-start',
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-  },
-});
+const getStyles = createThemedStyles(() =>
+  StyleSheet.create({
+    badge: {
+      alignSelf: 'flex-start',
+      borderRadius: 999,
+      borderWidth: 1,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    label: {
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 0.3,
+      textTransform: 'uppercase',
+    },
+  }),
+);

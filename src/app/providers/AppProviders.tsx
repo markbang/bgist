@@ -6,6 +6,7 @@ import {createAppQueryClient} from '../../shared/api/queryClient';
 import {SessionProvider} from '../../features/auth/session/SessionProvider';
 import {useOnlineManager} from '../../shared/hooks/useOnlineManager';
 import {useAppStateFocus} from '../../shared/hooks/useAppStateFocus';
+import {ThemeProvider} from '../theme/context';
 
 export function AppProviders({children}: {children: React.ReactNode}) {
   useOnlineManager();
@@ -15,11 +16,13 @@ export function AppProviders({children}: {children: React.ReactNode}) {
 
   return (
     <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
-        <I18nProvider>
-          <SessionProvider>{children}</SessionProvider>
-        </I18nProvider>
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <I18nProvider>
+            <SessionProvider>{children}</SessionProvider>
+          </I18nProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

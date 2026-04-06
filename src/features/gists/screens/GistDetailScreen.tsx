@@ -10,7 +10,8 @@ import {
   View,
 } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
-import {appTheme} from '../../../app/theme/tokens';
+import {useAppTheme} from '../../../app/theme/context';
+import {createThemedStyles} from '../../../app/theme/tokens';
 import type {RootStackScreenProps} from '../../../app/navigation/types';
 import {useSession} from '../../auth/session/SessionProvider';
 import {AppActionSheet} from '../../../shared/ui/AppActionSheet';
@@ -21,6 +22,7 @@ import {AppCard} from '../../../shared/ui/AppCard';
 import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
 import {AppErrorState} from '../../../shared/ui/AppErrorState';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
+import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
 import {AppScreen} from '../../../shared/ui/AppScreen';
 import {useI18n} from '../../../i18n/context';
 import {useGistDetail} from '../hooks/useGistDetail';
@@ -53,6 +55,9 @@ function FilePreviewCard({
   onPress: () => void;
   openLabel: string;
 }) {
+  const {themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={filename} onPress={onPress}>
       <AppCard>
@@ -82,6 +87,9 @@ function CommentRow({
   dateLabel: string;
   onPressAuthor?: () => void;
 }) {
+  const {themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+
   return (
     <AppCard>
       {onPressAuthor ? (
@@ -98,7 +106,9 @@ function CommentRow({
 }
 
 export function GistDetailScreen({navigation, route}: RootStackScreenProps<'GistDetail'>) {
+  const {theme, themeName} = useAppTheme();
   const {language, t} = useI18n();
+  const styles = getStyles(themeName);
   const locale = language === 'zh' ? 'zh-CN' : 'en-US';
   const {gistId} = route.params;
   const {user} = useSession();
@@ -186,14 +196,14 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
         text: t('common.delete'),
         style: 'destructive',
         onPress: () => {
-          void (async () => {
+          (async () => {
             try {
               await deleteGistMutation.mutateAsync({gistId});
               navigation.goBack();
             } catch {
               Alert.alert(t('gistDetail.deleteErrorTitle'), t('gistDetail.shareErrorDescription'));
             }
-          })();
+          })().catch(() => {});
         },
       },
     ]);
@@ -217,7 +227,7 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
           title={t('gistDetail.errorTitle')}
           description={t('gistDetail.errorDescription')}
           onRetry={() => {
-            void gistQuery.refetch();
+            gistQuery.refetch();
           }}
         />
       </AppScreen>
@@ -232,7 +242,7 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
     {
       label: t('gistDetail.shareLink'),
       onPress: () => {
-        void openShare();
+        openShare().catch(() => {});
       },
     },
     ...(isOwner
@@ -258,11 +268,7 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
   return (
     <AppScreen>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.eyebrow}>{t('gistDetail.eyebrow')}</Text>
-          <Text style={styles.title}>{gist.description?.trim() || t('gistDetail.titleFallback')}</Text>
-          <Text style={styles.subtitle}>{t('gistDetail.subtitle')}</Text>
-        </View>
+        <AppPageHeader title={gist.description?.trim() || t('gistDetail.titleFallback')} />
 
         <AppCard>
           <View style={styles.metaHeader}>
@@ -307,7 +313,7 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
               }
               loading={starGistMutation.isPending || unstarGistMutation.isPending}
               onPress={() => {
-                void handleToggleStar();
+                handleToggleStar().catch(() => {});
               }}
               variant="secondary"
             />
@@ -316,14 +322,14 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
               label={t('gistDetail.fork')}
               loading={forkGistMutation.isPending}
               onPress={() => {
-                void (async () => {
+                (async () => {
                   try {
                     const nextGist = await forkGistMutation.mutateAsync({gistId});
                     navigation.navigate('GistDetail', {gistId: nextGist.id});
                   } catch {
                     Alert.alert(t('gistDetail.forkErrorTitle'), t('gistDetail.shareErrorDescription'));
                   }
-                })();
+                })().catch(() => {});
               }}
               variant="secondary"
             />
@@ -382,7 +388,7 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
                 fullWidth={false}
                 label={t('gistDetail.retryComments')}
                 onPress={() => {
-                  void supportQuery.refetch();
+                  supportQuery.refetch();
                 }}
                 variant="secondary"
               />
@@ -424,7 +430,7 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
             numberOfLines={4}
             onChangeText={setCommentBody}
             placeholder={t('gistDetail.commentPlaceholder')}
-            placeholderTextColor={appTheme.colors.textSecondary}
+            placeholderTextColor={theme.colors.textSecondary}
             style={styles.commentInput}
             textAlignVertical="top"
             value={commentBody}
@@ -434,7 +440,7 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
             label={t('gistDetail.postComment')}
             loading={addCommentMutation.isPending}
             onPress={() => {
-              void handleAddComment();
+              handleAddComment().catch(() => {});
             }}
           />
         </AppCard>
@@ -452,126 +458,108 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
 
 export default GistDetailScreen;
 
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: appTheme.spacing.md,
-    paddingTop: appTheme.spacing.md,
-    paddingBottom: appTheme.spacing.xl,
-    gap: appTheme.spacing.md,
-  },
-  header: {
-    gap: appTheme.spacing.sm,
-  },
-  eyebrow: {
-    color: appTheme.colors.accent,
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-  },
-  title: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 28,
-    fontWeight: '800',
-  },
-  subtitle: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  metaHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: appTheme.spacing.sm,
-  },
-  metaHeaderText: {
-    flex: 1,
-    gap: appTheme.spacing.xs,
-  },
-  owner: {
-    color: appTheme.colors.accent,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  metaText: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  actions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: appTheme.spacing.sm,
-  },
-  section: {
-    gap: appTheme.spacing.sm,
-  },
-  sectionTitle: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  sectionContent: {
-    gap: appTheme.spacing.md,
-  },
-  fileHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: appTheme.spacing.sm,
-  },
-  fileHeaderText: {
-    flex: 1,
-    gap: appTheme.spacing.xs,
-  },
-  fileName: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  fileLanguage: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  fileLink: {
-    color: appTheme.colors.accent,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  filePreview: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 13,
-    lineHeight: 20,
-    fontFamily: 'monospace',
-  },
-  commentsError: {
-    gap: appTheme.spacing.sm,
-  },
-  commentAuthor: {
-    color: appTheme.colors.accent,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  commentDate: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 12,
-  },
-  commentBody: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  commentInput: {
-    minHeight: 112,
-    borderRadius: appTheme.radius.md,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: appTheme.colors.border,
-    backgroundColor: appTheme.colors.surfaceMuted,
-    color: appTheme.colors.textPrimary,
-    paddingHorizontal: appTheme.spacing.md,
-    paddingVertical: appTheme.spacing.sm,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    container: {
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.spacing.md,
+      paddingBottom: theme.spacing.xl,
+      gap: theme.spacing.md,
+    },
+    metaHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: theme.spacing.sm,
+    },
+    metaHeaderText: {
+      flex: 1,
+      gap: theme.spacing.xs,
+    },
+    owner: {
+      color: theme.colors.accent,
+      fontSize: 15,
+      fontWeight: '700',
+    },
+    metaText: {
+      color: theme.colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    actions: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+    },
+    section: {
+      gap: theme.spacing.sm,
+    },
+    sectionTitle: {
+      color: theme.colors.textPrimary,
+      fontSize: 20,
+      fontWeight: '800',
+    },
+    sectionContent: {
+      gap: theme.spacing.md,
+    },
+    fileHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: theme.spacing.sm,
+    },
+    fileHeaderText: {
+      flex: 1,
+      gap: theme.spacing.xs,
+    },
+    fileName: {
+      color: theme.colors.textPrimary,
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    fileLanguage: {
+      color: theme.colors.textSecondary,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    fileLink: {
+      color: theme.colors.accent,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    filePreview: {
+      color: theme.colors.textSecondary,
+      fontSize: 13,
+      lineHeight: 20,
+      fontFamily: 'monospace',
+    },
+    commentsError: {
+      gap: theme.spacing.sm,
+    },
+    commentAuthor: {
+      color: theme.colors.accent,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    commentDate: {
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+    },
+    commentBody: {
+      color: theme.colors.textPrimary,
+      fontSize: 14,
+      lineHeight: 22,
+    },
+    commentInput: {
+      minHeight: 112,
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      color: theme.colors.textPrimary,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      fontSize: 15,
+      lineHeight: 22,
+    },
+  }),
+);

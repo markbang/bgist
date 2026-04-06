@@ -1,20 +1,25 @@
 import React from 'react';
-import {Image, Linking, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Image, Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {useQuery} from '@tanstack/react-query';
-import {appTheme} from '../../../app/theme/tokens';
+import type {MainTabScreenProps} from '../../../app/navigation/types';
+import {useAppTheme} from '../../../app/theme/context';
+import {createThemedStyles} from '../../../app/theme/tokens';
+import {SettingsIcon} from '../../../components/TabIcons';
 import {useSession} from '../../auth/session/SessionProvider';
 import {getUserInfo} from '../../gists/api/gists';
 import {useI18n} from '../../../i18n/context';
 import {queryKeys} from '../../../shared/api/queryKeys';
-import {AppButton} from '../../../shared/ui/AppButton';
 import {AppCard} from '../../../shared/ui/AppCard';
 import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
+import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
 import {AppScreen} from '../../../shared/ui/AppScreen';
 
-export function ProfileScreen() {
-  const {language, setLanguage, t} = useI18n();
-  const {status, user, signOut} = useSession();
+export function ProfileScreen({navigation}: MainTabScreenProps<'Profile'>) {
+  const {theme, themeName} = useAppTheme();
+  const {t} = useI18n();
+  const styles = getStyles(themeName);
+  const {status, user} = useSession();
   const userQuery = useQuery({
     queryKey: queryKeys.userProfile(user?.login ?? 'me'),
     queryFn: () => getUserInfo(),
@@ -23,7 +28,6 @@ export function ProfileScreen() {
 
   const profile = userQuery.data;
   const displayName = profile?.name ?? user?.name ?? user?.login ?? t('profile.defaultDisplayName');
-  const profileUrl = profile?.html_url ?? (user?.login ? `https://github.com/${user.login}` : null);
 
   if (status === 'loading' && !user) {
     return (
@@ -53,6 +57,22 @@ export function ProfileScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}>
+        <AppPageHeader
+          title={t('profile.title')}
+          accessory={
+            <Pressable
+              accessibilityLabel={t('profile.settings')}
+              accessibilityRole="button"
+              onPress={() => navigation.navigate('Settings')}
+              style={({pressed}) => [
+                styles.settingsButton,
+                pressed ? styles.settingsButtonPressed : null,
+              ]}>
+              <SettingsIcon color={theme.colors.textPrimary} size={18} />
+            </Pressable>
+          }
+        />
+
         <AppCard>
           <View style={styles.identity}>
             {user.avatar_url ? <Image source={{uri: user.avatar_url}} style={styles.avatar} /> : null}
@@ -79,40 +99,6 @@ export function ProfileScreen() {
           </View>
         </AppCard>
 
-        <AppCard>
-          <Text style={styles.sectionTitle}>{t('profile.preferences')}</Text>
-          <AppButton
-            label={t('profile.languageToggle', {
-              language: language === 'en' ? t('common.languageEnglish') : t('common.languageChinese'),
-            })}
-            onPress={() => {
-              void setLanguage(language === 'en' ? 'zh' : 'en');
-            }}
-            variant="secondary"
-          />
-        </AppCard>
-
-        <AppCard>
-          <Text style={styles.sectionTitle}>{t('profile.account')}</Text>
-          <AppButton
-            disabled={!profileUrl}
-            label={t('profile.openGitHubButton')}
-            onPress={() => {
-              if (profileUrl) {
-                void Linking.openURL(profileUrl);
-              }
-            }}
-            variant="secondary"
-          />
-          <AppButton
-            label={t('auth.signOut')}
-            onPress={() => {
-              void signOut();
-            }}
-            variant="danger"
-          />
-        </AppCard>
-
         {userQuery.isLoading ? (
           <AppLoadingState
             label={t('profile.refreshingTitle')}
@@ -126,69 +112,81 @@ export function ProfileScreen() {
 
 export default ProfileScreen;
 
-const styles = StyleSheet.create({
-  content: {
-    paddingHorizontal: appTheme.spacing.md,
-    paddingTop: appTheme.spacing.md,
-    paddingBottom: appTheme.spacing.xl,
-    gap: appTheme.spacing.md,
-  },
-  identity: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: appTheme.spacing.md,
-  },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-  },
-  identityText: {
-    flex: 1,
-    gap: appTheme.spacing.xs,
-  },
-  name: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  login: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  bio: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  stats: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: appTheme.spacing.sm,
-  },
-  stat: {
-    flex: 1,
-    borderRadius: appTheme.radius.md,
-    borderCurve: 'continuous',
-    backgroundColor: appTheme.colors.surfaceMuted,
-    paddingVertical: appTheme.spacing.sm,
-    paddingHorizontal: appTheme.spacing.sm,
-    gap: appTheme.spacing.xs,
-  },
-  statValue: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  statLabel: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  sectionTitle: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '800',
-  },
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    content: {
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.spacing.md,
+      paddingBottom: theme.spacing.xl,
+      gap: theme.spacing.md,
+    },
+    settingsButton: {
+      width: 42,
+      height: 42,
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    settingsButtonPressed: {
+      opacity: 0.88,
+      transform: [{scale: 0.96}],
+    },
+    identity: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.md,
+    },
+    avatar: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+    },
+    identityText: {
+      flex: 1,
+      gap: theme.spacing.xs,
+    },
+    name: {
+      color: theme.colors.textPrimary,
+      fontSize: 22,
+      fontWeight: '800',
+    },
+    login: {
+      color: theme.colors.textSecondary,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    bio: {
+      color: theme.colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    stats: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: theme.spacing.sm,
+    },
+    stat: {
+      flex: 1,
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingVertical: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.sm,
+      gap: theme.spacing.xs,
+    },
+    statValue: {
+      color: theme.colors.textPrimary,
+      fontSize: 20,
+      fontWeight: '800',
+    },
+    statLabel: {
+      color: theme.colors.textSecondary,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+  }),
+);

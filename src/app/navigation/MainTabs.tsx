@@ -1,6 +1,5 @@
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {appTheme} from '../theme/tokens';
 import type {MainTabParamList} from './types';
 import {HomeScreen} from '../../features/gists/screens/HomeScreen';
 import {ExploreScreen} from '../../features/gists/screens/ExploreScreen';
@@ -8,11 +7,13 @@ import {ComposeScreen} from '../../features/gists/screens/ComposeScreen';
 import {ProfileScreen} from '../../features/profile/screens/ProfileScreen';
 import {FileIcon, PlusIcon, SearchIcon, UserIcon} from '../../components/TabIcons';
 import {useI18n} from '../../i18n/context';
+import {useAppTheme} from '../theme/context';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export function MainTabs() {
   const {t} = useI18n();
+  const {theme} = useAppTheme();
 
   const tabConfig: Record<
     keyof MainTabParamList,
@@ -47,14 +48,14 @@ export function MainTabs() {
 
         return {
           headerShown: false,
-          tabBarActiveTintColor: appTheme.colors.accent,
-          tabBarInactiveTintColor: appTheme.colors.textSecondary,
+          tabBarActiveTintColor: theme.colors.accent,
+          tabBarInactiveTintColor: theme.colors.textSecondary,
           tabBarStyle: {
-            backgroundColor: appTheme.colors.surface,
-            borderTopColor: appTheme.colors.border,
+            backgroundColor: theme.colors.surface,
+            borderTopColor: theme.colors.border,
             height: 68,
-            paddingTop: appTheme.spacing.xs,
-            paddingBottom: appTheme.spacing.sm,
+            paddingTop: theme.spacing.xs,
+            paddingBottom: theme.spacing.sm,
           },
           tabBarLabelStyle: {
             fontSize: 12,
@@ -62,9 +63,9 @@ export function MainTabs() {
           },
           tabBarLabel: config.label,
           title: config.label,
-          tabBarIcon: ({color, size}) => <config.Icon color={color} size={size} />,
+          tabBarIcon: ({color, size}) => React.createElement(config.Icon, {color, size}),
           sceneStyle: {
-            backgroundColor: appTheme.colors.canvas,
+            backgroundColor: theme.colors.canvas,
           },
         };
       }}>

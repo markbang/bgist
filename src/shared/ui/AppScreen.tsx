@@ -1,9 +1,13 @@
 import React from 'react';
 import {StyleSheet, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {appTheme} from '../../app/theme/tokens';
+import {createThemedStyles} from '../../app/theme/tokens';
+import {useAppTheme} from '../../app/theme/context';
 
 export function AppScreen({children}: {children: React.ReactNode}) {
+  const {themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.content}>{children}</View>
@@ -11,7 +15,9 @@ export function AppScreen({children}: {children: React.ReactNode}) {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {flex: 1, backgroundColor: appTheme.colors.canvas},
-  content: {flex: 1, backgroundColor: appTheme.colors.canvas},
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    safeArea: {flex: 1, backgroundColor: theme.colors.canvas},
+    content: {flex: 1, backgroundColor: theme.colors.canvas},
+  }),
+);

@@ -1,22 +1,24 @@
 import React from 'react';
-import {StyleSheet, Text, View} from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import type {MainTabScreenProps} from '../../../app/navigation/types';
-import {appTheme} from '../../../app/theme/tokens';
+import {useAppTheme} from '../../../app/theme/context';
+import {createThemedStyles} from '../../../app/theme/tokens';
 import {AppButton} from '../../../shared/ui/AppButton';
 import {AppCard} from '../../../shared/ui/AppCard';
 import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
+import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
 import {AppScreen} from '../../../shared/ui/AppScreen';
 import {useI18n} from '../../../i18n/context';
 
 export function ComposeScreen({navigation}: MainTabScreenProps<'Compose'>) {
+  const {themeName} = useAppTheme();
   const {t} = useI18n();
+  const styles = getStyles(themeName);
 
   return (
     <AppScreen>
       <View style={styles.container}>
-        <Text style={styles.eyebrow}>{t('compose.eyebrow')}</Text>
-        <Text style={styles.title}>{t('compose.title')}</Text>
-        <Text style={styles.subtitle}>{t('compose.subtitle')}</Text>
+        <AppPageHeader title={t('compose.title')} />
 
         <AppButton
           label={t('compose.cta')}
@@ -37,28 +39,13 @@ export function ComposeScreen({navigation}: MainTabScreenProps<'Compose'>) {
 
 export default ComposeScreen;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: appTheme.spacing.md,
-    paddingTop: appTheme.spacing.md,
-    gap: appTheme.spacing.sm,
-  },
-  eyebrow: {
-    color: appTheme.colors.accent,
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-  },
-  title: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 30,
-    fontWeight: '800',
-  },
-  subtitle: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.spacing.md,
+      gap: theme.spacing.md,
+    },
+  }),
+);

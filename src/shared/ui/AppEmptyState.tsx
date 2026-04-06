@@ -1,6 +1,7 @@
 import React from 'react';
 import {StyleSheet, Text, View} from 'react-native';
-import {appTheme} from '../../app/theme/tokens';
+import {createThemedStyles} from '../../app/theme/tokens';
+import {useAppTheme} from '../../app/theme/context';
 import {AppBadge} from './AppBadge';
 import {AppButton} from './AppButton';
 
@@ -19,6 +20,9 @@ export function AppEmptyState({
   actionLabel,
   onAction,
 }: AppEmptyStateProps) {
+  const {themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+
   return (
     <View style={styles.container}>
       {badgeLabel ? <AppBadge label={badgeLabel} tone="public" /> : null}
@@ -31,24 +35,26 @@ export function AppEmptyState({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: appTheme.spacing.lg,
-    paddingVertical: appTheme.spacing.xl,
-    gap: appTheme.spacing.sm,
-  },
-  title: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 22,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  description: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 15,
-    lineHeight: 22,
-    textAlign: 'center',
-  },
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    container: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.xl,
+      gap: theme.spacing.sm,
+    },
+    title: {
+      color: theme.colors.textPrimary,
+      fontSize: 22,
+      fontWeight: '700',
+      textAlign: 'center',
+    },
+    description: {
+      color: theme.colors.textSecondary,
+      fontSize: 15,
+      lineHeight: 22,
+      textAlign: 'center',
+    },
+  }),
+);

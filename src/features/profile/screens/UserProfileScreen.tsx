@@ -2,7 +2,8 @@ import React from 'react';
 import {FlatList, Image, Linking, StyleSheet, Text, View} from 'react-native';
 import {useQuery} from '@tanstack/react-query';
 import type {RootStackScreenProps} from '../../../app/navigation/types';
-import {appTheme} from '../../../app/theme/tokens';
+import {useAppTheme} from '../../../app/theme/context';
+import {createThemedStyles} from '../../../app/theme/tokens';
 import {queryKeys} from '../../../shared/api/queryKeys';
 import {AppBadge} from '../../../shared/ui/AppBadge';
 import {AppButton} from '../../../shared/ui/AppButton';
@@ -10,6 +11,7 @@ import {AppCard} from '../../../shared/ui/AppCard';
 import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
 import {AppErrorState} from '../../../shared/ui/AppErrorState';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
+import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
 import {AppScreen} from '../../../shared/ui/AppScreen';
 import {useI18n} from '../../../i18n/context';
 import type {UserInfo} from '../../../types/gist';
@@ -17,6 +19,9 @@ import {GistCard} from '../../gists/components/GistCard';
 import {getUserGists, getUserInfo} from '../../gists/api/gists';
 
 function StatCard({label, value}: {label: string; value: number}) {
+  const {themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+
   return (
     <View style={styles.statCard}>
       <Text style={styles.statValue}>{value}</Text>
@@ -34,13 +39,13 @@ function ProfileHero({
   username: string;
   t: (key: string) => string;
 }) {
+  const {themeName} = useAppTheme();
+  const styles = getStyles(themeName);
   const metaItems = [profile.company, profile.location, profile.blog].filter(Boolean) as string[];
 
   return (
     <View style={styles.header}>
-      <Text style={styles.eyebrow}>{t('userProfile.eyebrow')}</Text>
-      <Text style={styles.title}>{profile.name ?? username}</Text>
-      <Text style={styles.subtitle}>{t('userProfile.subtitle')}</Text>
+      <AppPageHeader title={profile.name ?? username} />
 
       <AppCard>
         <View style={styles.identity}>
@@ -76,7 +81,7 @@ function ProfileHero({
           fullWidth={false}
           label={t('userProfile.openGitHub')}
           onPress={() => {
-            void Linking.openURL(profile.html_url);
+            Linking.openURL(profile.html_url).catch(() => {});
           }}
           variant="secondary"
         />
@@ -91,7 +96,9 @@ function ProfileHero({
 }
 
 export function UserProfileScreen({navigation, route}: RootStackScreenProps<'UserProfile'>) {
+  const {themeName} = useAppTheme();
   const {t} = useI18n();
+  const styles = getStyles(themeName);
   const {username} = route.params;
   const profileQuery = useQuery({
     queryKey: queryKeys.userProfile(username),
@@ -103,8 +110,8 @@ export function UserProfileScreen({navigation, route}: RootStackScreenProps<'Use
   });
 
   const handleRetry = React.useCallback(() => {
-    void profileQuery.refetch();
-    void gistsQuery.refetch();
+    profileQuery.refetch();
+    gistsQuery.refetch();
   }, [gistsQuery, profileQuery]);
 
   if ((profileQuery.isLoading && !profileQuery.data) || (gistsQuery.isLoading && !gistsQuery.data)) {
@@ -158,122 +165,107 @@ export function UserProfileScreen({navigation, route}: RootStackScreenProps<'Use
 
 export default UserProfileScreen;
 
-const styles = StyleSheet.create({
-  content: {
-    paddingHorizontal: appTheme.spacing.md,
-    paddingTop: appTheme.spacing.md,
-    paddingBottom: appTheme.spacing.xl,
-    gap: appTheme.spacing.md,
-  },
-  header: {
-    gap: appTheme.spacing.md,
-  },
-  eyebrow: {
-    color: appTheme.colors.accent,
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-  },
-  title: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 30,
-    fontWeight: '800',
-  },
-  subtitle: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  identity: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: appTheme.spacing.md,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: appTheme.colors.surfaceMuted,
-  },
-  identityCopy: {
-    flex: 1,
-    gap: appTheme.spacing.xs,
-  },
-  identityHeading: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: appTheme.spacing.sm,
-  },
-  name: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  login: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  bio: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: appTheme.spacing.sm,
-  },
-  metaPill: {
-    borderRadius: appTheme.radius.md,
-    borderCurve: 'continuous',
-    backgroundColor: appTheme.colors.surfaceMuted,
-    paddingHorizontal: appTheme.spacing.sm,
-    paddingVertical: appTheme.spacing.xs,
-  },
-  metaText: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: appTheme.spacing.sm,
-  },
-  statCard: {
-    flexGrow: 1,
-    minWidth: '47%',
-    borderRadius: appTheme.radius.md,
-    borderCurve: 'continuous',
-    backgroundColor: appTheme.colors.surfaceMuted,
-    paddingHorizontal: appTheme.spacing.sm,
-    paddingVertical: appTheme.spacing.sm,
-    gap: appTheme.spacing.xs,
-  },
-  statValue: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  statLabel: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  sectionHeader: {
-    gap: appTheme.spacing.xs,
-  },
-  sectionTitle: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  sectionSubtitle: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    content: {
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.spacing.md,
+      paddingBottom: theme.spacing.xl,
+      gap: theme.spacing.md,
+    },
+    header: {
+      gap: theme.spacing.md,
+    },
+    identity: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.md,
+    },
+    avatar: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: theme.colors.surfaceMuted,
+    },
+    identityCopy: {
+      flex: 1,
+      gap: theme.spacing.xs,
+    },
+    identityHeading: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    name: {
+      color: theme.colors.textPrimary,
+      fontSize: 22,
+      fontWeight: '800',
+    },
+    login: {
+      color: theme.colors.textSecondary,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    bio: {
+      color: theme.colors.textPrimary,
+      fontSize: 15,
+      lineHeight: 22,
+    },
+    metaRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+    },
+    metaPill: {
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+    },
+    metaText: {
+      color: theme.colors.textSecondary,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+    },
+    statCard: {
+      flexGrow: 1,
+      minWidth: '47%',
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.sm,
+      gap: theme.spacing.xs,
+    },
+    statValue: {
+      color: theme.colors.textPrimary,
+      fontSize: 22,
+      fontWeight: '800',
+    },
+    statLabel: {
+      color: theme.colors.textSecondary,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    sectionHeader: {
+      gap: theme.spacing.xs,
+    },
+    sectionTitle: {
+      color: theme.colors.textPrimary,
+      fontSize: 20,
+      fontWeight: '800',
+    },
+    sectionSubtitle: {
+      color: theme.colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+  }),
+);

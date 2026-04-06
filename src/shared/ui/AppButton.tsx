@@ -9,7 +9,8 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import {appTheme} from '../../app/theme/tokens';
+import {createThemedStyles} from '../../app/theme/tokens';
+import {useAppTheme} from '../../app/theme/context';
 
 type AppButtonVariant = 'primary' | 'secondary' | 'danger';
 
@@ -22,27 +23,6 @@ interface AppButtonProps extends Omit<PressableProps, 'children' | 'style'> {
   fullWidth?: boolean;
   style?: StyleProp<ViewStyle>;
 }
-
-const BUTTON_VARIANTS = {
-  primary: {
-    backgroundColor: appTheme.colors.accent,
-    borderColor: appTheme.colors.accent,
-    textColor: '#ffffff',
-    spinnerColor: '#ffffff',
-  },
-  secondary: {
-    backgroundColor: appTheme.colors.surface,
-    borderColor: appTheme.colors.border,
-    textColor: appTheme.colors.textPrimary,
-    spinnerColor: appTheme.colors.accent,
-  },
-  danger: {
-    backgroundColor: appTheme.colors.danger,
-    borderColor: appTheme.colors.danger,
-    textColor: '#ffffff',
-    spinnerColor: '#ffffff',
-  },
-} as const;
 
 export function AppButton({
   label,
@@ -57,8 +37,29 @@ export function AppButton({
   accessibilityState,
   ...pressableProps
 }: AppButtonProps) {
+  const {theme, themeName} = useAppTheme();
+  const styles = getStyles(themeName);
   const isDisabled = disabled || loading;
-  const buttonColors = BUTTON_VARIANTS[variant];
+  const buttonColors = {
+    primary: {
+      backgroundColor: theme.colors.accent,
+      borderColor: theme.colors.accent,
+      textColor: '#ffffff',
+      spinnerColor: '#ffffff',
+    },
+    secondary: {
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.border,
+      textColor: theme.colors.textPrimary,
+      spinnerColor: theme.colors.accent,
+    },
+    danger: {
+      backgroundColor: theme.colors.danger,
+      borderColor: theme.colors.danger,
+      textColor: '#ffffff',
+      spinnerColor: '#ffffff',
+    },
+  }[variant];
 
   return (
     <Pressable
@@ -93,39 +94,41 @@ export function AppButton({
   );
 }
 
-const styles = StyleSheet.create({
-  button: {
-    minHeight: 52,
-    borderWidth: 1,
-    borderRadius: appTheme.radius.md,
-    borderCurve: 'continuous',
-    paddingHorizontal: appTheme.spacing.md,
-    paddingVertical: appTheme.spacing.sm + 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fullWidth: {
-    alignSelf: 'stretch',
-  },
-  autoWidth: {
-    alignSelf: 'flex-start',
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: appTheme.spacing.sm,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0.1,
-  },
-  buttonPressed: {
-    opacity: 0.9,
-    transform: [{scale: 0.98}],
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    button: {
+      minHeight: 52,
+      borderWidth: 1,
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm + 2,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    fullWidth: {
+      alignSelf: 'stretch',
+    },
+    autoWidth: {
+      alignSelf: 'flex-start',
+    },
+    content: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: theme.spacing.sm,
+    },
+    label: {
+      fontSize: 16,
+      fontWeight: '700',
+      letterSpacing: 0.1,
+    },
+    buttonPressed: {
+      opacity: 0.9,
+      transform: [{scale: 0.98}],
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+    },
+  }),
+);

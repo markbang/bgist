@@ -1,6 +1,7 @@
 import React from 'react';
 import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
-import {appTheme} from '../../app/theme/tokens';
+import {createThemedStyles} from '../../app/theme/tokens';
+import {useAppTheme} from '../../app/theme/context';
 
 interface AppLoadingStateProps {
   label?: string;
@@ -11,32 +12,37 @@ export function AppLoadingState({
   label = 'Loading',
   description = 'Fetching the latest data for this screen.',
 }: AppLoadingStateProps) {
+  const {theme, themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+
   return (
     <View style={styles.container}>
-      <ActivityIndicator color={appTheme.colors.accent} size="large" />
+      <ActivityIndicator color={theme.colors.accent} size="large" />
       <Text style={styles.label}>{label}</Text>
       <Text style={styles.description}>{description}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: appTheme.spacing.lg,
-    paddingVertical: appTheme.spacing.xl,
-    gap: appTheme.spacing.xs,
-  },
-  label: {
-    color: appTheme.colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  description: {
-    color: appTheme.colors.textSecondary,
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-});
+const getStyles = createThemedStyles(theme =>
+  StyleSheet.create({
+    container: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.xl,
+      gap: theme.spacing.xs,
+    },
+    label: {
+      color: theme.colors.textPrimary,
+      fontSize: 18,
+      fontWeight: '700',
+    },
+    description: {
+      color: theme.colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 20,
+      textAlign: 'center',
+    },
+  }),
+);

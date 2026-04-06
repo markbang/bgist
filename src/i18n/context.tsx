@@ -6,7 +6,7 @@ type TranslationValues = Record<string, string | number>;
 
 interface I18nContextType {
   language: Language;
-  setLanguage: (lang: Language) => void;
+  setLanguage: (lang: Language) => Promise<void>;
   t: (key: string, values?: TranslationValues) => string;
 }
 
@@ -27,7 +27,7 @@ function translate(language: Language, key: string, values?: TranslationValues) 
 
 const I18nContext = createContext<I18nContextType>({
   language: 'en',
-  setLanguage: () => {},
+  setLanguage: async () => {},
   t: (key: string, values?: TranslationValues) => translate('en', key, values),
 });
 
@@ -59,3 +59,4 @@ export const I18nProvider: React.FC<{children: React.ReactNode}> = ({children}) 
 };
 
 export const useI18n = () => useContext(I18nContext);
+export type {Language};
