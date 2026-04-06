@@ -25,20 +25,28 @@ export function AppCodeBlock({
     <View style={styles.shell}>
       {filename ? (
         <View style={styles.header}>
-          <Text style={styles.filename}>{filename}</Text>
+          <Text ellipsizeMode="middle" numberOfLines={1} style={styles.filename}>
+            {filename}
+          </Text>
         </View>
       ) : null}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View style={styles.content}>
-          {lines.map((line, index) => (
-            <View key={`${index}-${line}`} style={styles.row}>
-              {showLines ? <Text style={styles.lineNumber}>{index + 1}</Text> : null}
-              <Text ellipsizeMode="clip" numberOfLines={1} style={styles.line}>
-                {line || ' '}
-              </Text>
-            </View>
-          ))}
-        </View>
+      <ScrollView
+        nestedScrollEnabled
+        showsVerticalScrollIndicator={false}
+        style={styles.viewport}
+        testID="app-code-block-vertical-scroll">
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.content}>
+            {lines.map((line, index) => (
+              <View key={`${index}-${line}`} style={styles.row}>
+                {showLines ? <Text style={styles.lineNumber}>{index + 1}</Text> : null}
+                <Text ellipsizeMode="clip" numberOfLines={1} style={styles.line}>
+                  {line || ' '}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       </ScrollView>
     </View>
   );
@@ -63,6 +71,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.3,
     textTransform: 'uppercase',
+  },
+  viewport: {
+    minHeight: 0,
   },
   content: {
     minWidth: '100%',

@@ -31,6 +31,21 @@ jest.mock('react-native-screens', () => {
     compatibilityFlags: {},
   };
 });
+jest.mock('react-native-webview', () => {
+  const React = require('react');
+  const {View} = require('react-native');
+
+  const MockWebView = React.forwardRef(
+    ({children, ...props}: {children?: ReactNode}, ref: ForwardedRef<unknown>) =>
+      React.createElement(View, {...props, ref}, children),
+  );
+
+  MockWebView.displayName = 'MockWebView';
+
+  return {
+    WebView: MockWebView,
+  };
+});
 jest.mock('react-native-safe-area-context', () => {
   const mock = require('react-native-safe-area-context/jest/mock');
   return mock.default ?? mock;

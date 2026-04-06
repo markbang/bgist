@@ -50,6 +50,7 @@ test('renders an empty file without treating it as missing remote content', () =
 
   expect(screen.getAllByText('empty.txt').length).toBeGreaterThan(0);
   expect(screen.queryByText('Loading full file')).toBeNull();
+  expect(screen.getByTestId('app-code-block-vertical-scroll')).toBeTruthy();
 });
 
 test('keeps copy content disabled while remote file content is still loading', () => {
@@ -122,4 +123,60 @@ test('keeps copy content disabled when remote file content fails to load', async
 
     expect(Clipboard.setString).not.toHaveBeenCalled();
   });
+});
+
+test('uses icon-only viewer actions while preserving accessibility labels', () => {
+  render(
+    <GistViewerScreen
+      navigation={{goBack: jest.fn(), navigate: jest.fn()} as never}
+      route={{
+        key: 'GistViewer-actions',
+        name: 'GistViewer',
+        params: {
+          gistId: 'gist-1',
+          filename: 'notes.txt',
+          content: 'hello world',
+          gistUrl: 'https://gist.github.com/octocat/gist-1',
+          rawUrl: 'https://gist.githubusercontent.com/raw/notes.txt',
+          truncated: false,
+        },
+      }}
+    />,
+    {
+      wrapper: createWrapper(),
+    },
+  );
+
+  expect(screen.queryByText('Copy content')).toBeNull();
+  expect(screen.queryByText('Share link')).toBeNull();
+  expect(screen.getByRole('button', {name: 'Copy content'})).toBeTruthy();
+  expect(screen.getByRole('button', {name: 'Share link'})).toBeTruthy();
+});
+
+test('renders markdown files in preview mode and allows switching back to source', () => {
+  render(
+    <GistViewerScreen
+      navigation={{goBack: jest.fn(), navigate: jest.fn()} as never}
+      route={{
+        key: 'GistViewer-markdown',
+        name: 'GistViewer',
+        params: {
+          gistId: 'gist-1',
+          filename: 'README.md',
+          content: '# Hello\n\nThis is **bold**.',
+          gistUrl: 'https://gist.github.com/octocat/gist-1',
+          rawUrl: 'https://gist.githubusercontent.com/raw/README.md',
+          truncated: false,
+        },
+      }}
+    />,
+    {
+      wrapper: createWrapper(),
+    },
+  );
+
+  expect(screen.getByTestId('gist-render-preview')).toBeTruthy();
+  fireEvent.press(screen.getByRole('button', {name: 'Show source'}));
+  expect(screen.queryByTestId('gist-render-preview')).toBeNull();
+  expect(screen.getByText('# Hello')).toBeTruthy();
 });
