@@ -1,5 +1,5 @@
 import React from 'react';
-import {render, screen, waitFor} from '@testing-library/react-native';
+import {act, render, screen, waitFor} from '@testing-library/react-native';
 import {Text} from 'react-native';
 import * as AppAuth from 'react-native-app-auth';
 import * as Keychain from 'react-native-keychain';
@@ -60,6 +60,22 @@ test('restores a stored session', async () => {
   });
 });
 
+test('falls back to signedOut when session restore fails', async () => {
+  (Keychain.getGenericPassword as jest.Mock).mockRejectedValue(
+    new Error('keychain unavailable'),
+  );
+
+  render(
+    <SessionProvider>
+      <Probe />
+    </SessionProvider>,
+  );
+
+  await waitFor(() => {
+    expect(screen.getByText('signedOut:none')).toBeTruthy();
+  });
+});
+
 test('waits for secure session restore before showing the login screen', async () => {
   let resolveReadSession: ((value: false) => void) | undefined;
 
@@ -108,7 +124,7 @@ test('signIn stores the OAuth session', async () => {
 
   function SignInProbe() {
     sessionApi = useSession();
-    return <Text>ready</Text>;
+    return <Text>{sessionApi.status}:{sessionApi.user?.login ?? 'none'}</Text>;
   }
 
   render(
@@ -117,8 +133,17 @@ test('signIn stores the OAuth session', async () => {
     </SessionProvider>,
   );
 
-  await waitFor(async () => {
+  await waitFor(() => {
+    expect(screen.getByText('signedOut:none')).toBeTruthy();
+  });
+
+  await act(async () => {
     await sessionApi?.signIn();
-    expect(Keychain.setGenericPassword).toHaveBeenCalled();
+  });
+
+  expect(Keychain.setGenericPassword).toHaveBeenCalled();
+
+  await waitFor(() => {
+    expect(screen.getByText('signedIn:octocat')).toBeTruthy();
   });
 });

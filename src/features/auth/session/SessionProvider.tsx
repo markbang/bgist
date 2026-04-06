@@ -40,20 +40,31 @@ export function SessionProvider({children}: {children: React.ReactNode}) {
     let mounted = true;
 
     (async () => {
-      const stored = await readSession();
-      if (!mounted) {
-        return;
-      }
+      try {
+        const stored = await readSession();
+        if (!mounted) {
+          return;
+        }
 
-      if (stored) {
-        setAccessToken(stored.accessToken);
-        setUser(stored.user);
-        setApiAccessToken(stored.accessToken);
-        setStatus('signedIn');
-        return;
-      }
+        if (stored) {
+          setAccessToken(stored.accessToken);
+          setUser(stored.user);
+          setApiAccessToken(stored.accessToken);
+          setStatus('signedIn');
+          return;
+        }
 
-      setStatus('signedOut');
+        setStatus('signedOut');
+      } catch {
+        if (!mounted) {
+          return;
+        }
+
+        setApiAccessToken(null);
+        setAccessToken(null);
+        setUser(null);
+        setStatus('signedOut');
+      }
     })();
 
     return () => {
