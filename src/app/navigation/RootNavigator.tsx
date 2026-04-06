@@ -12,8 +12,21 @@ function SignedInPlaceholder() {
   return <Text>Session ready</Text>;
 }
 
+function LoadingScreen() {
+  return <Text>Restoring session…</Text>;
+}
+
 export function RootNavigator() {
   const {status} = useSession();
+
+  const screen =
+    status === 'signedIn' ? (
+      <Stack.Screen name="Ready" component={SignedInPlaceholder} />
+    ) : status === 'signedOut' ? (
+      <Stack.Screen name="Auth" component={LoginScreen} />
+    ) : (
+      <Stack.Screen name="Loading" component={LoadingScreen} />
+    );
 
   return (
     <NavigationContainer
@@ -28,13 +41,7 @@ export function RootNavigator() {
           text: appTheme.colors.textPrimary,
         },
       }}>
-      <Stack.Navigator screenOptions={{headerShown: false}}>
-        {status === 'signedIn' ? (
-          <Stack.Screen name="Ready" component={SignedInPlaceholder} />
-        ) : (
-          <Stack.Screen name="Auth" component={LoginScreen} />
-        )}
-      </Stack.Navigator>
+      <Stack.Navigator screenOptions={{headerShown: false}}>{screen}</Stack.Navigator>
     </NavigationContainer>
   );
 }

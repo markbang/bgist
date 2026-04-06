@@ -9,7 +9,7 @@ export const githubOAuthConfig = {
 };
 
 export function assertOAuthConfig() {
-  if (process.env.NODE_ENV !== 'test' && githubOAuthConfig.clientId.startsWith('YOUR_')) {
+  if (githubOAuthConfig.clientId.startsWith('YOUR_')) {
     throw new Error('GITHUB_OAUTH_CLIENT_ID_MISSING');
   }
 }
