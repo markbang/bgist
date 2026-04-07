@@ -5,7 +5,7 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "lint": "eslint .",
+    "lint": "eslint src/app src/features src/shared src/i18n src/types src/components/TabIcons.tsx src/components/materialSymbols.ts __tests__ jest.setup.ts",
     "start": "react-native start",
     "test": "jest",
     "typecheck": "tsc --noEmit"

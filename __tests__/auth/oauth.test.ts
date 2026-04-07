@@ -18,10 +18,16 @@ test('stops polling once the device code lifetime has elapsed before another tok
     expiresAt: Date.now() + 100,
     intervalSeconds: 1,
   });
-  const rejection = expect(pollPromise).rejects.toThrow('GITHUB_DEVICE_CODE_EXPIRED');
+  const rejectionPromise = pollPromise.then(
+    () => {
+      throw new Error('EXPECTED_DEVICE_CODE_EXPIRY');
+    },
+    error => error,
+  );
 
   await jest.advanceTimersByTimeAsync(1000);
-
-  await rejection;
+  await expect(rejectionPromise).resolves.toMatchObject({
+    message: 'GITHUB_DEVICE_CODE_EXPIRED',
+  });
   expect(globalThis.fetch).not.toHaveBeenCalled();
 });
