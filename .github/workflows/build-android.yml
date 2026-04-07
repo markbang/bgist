@@ -53,17 +53,80 @@ jobs:
           if [ -n "$ANDROID_KEYSTORE_BASE64" ] && [ -n "$ANDROID_KEYSTORE_PASSWORD" ] && [ -n "$ANDROID_KEY_ALIAS" ] && [ -n "$ANDROID_KEY_PASSWORD" ]; then
             echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/bgist-release.keystore
             chmod 600 android/app/bgist-release.keystore
+
+            KEYSTORE_TYPE=$(keytool -list \
+              -keystore android/app/bgist-release.keystore \
+              -storepass "$ANDROID_KEYSTORE_PASSWORD" 2>/dev/null \
+              | sed -n 's/^Keystore type: //p' \
+              | head -n1)
+            EFFECTIVE_KEY_PASSWORD="$ANDROID_KEY_PASSWORD"
+            if [ "$KEYSTORE_TYPE" = "PKCS12" ]; then
+              EFFECTIVE_KEY_PASSWORD="$ANDROID_KEYSTORE_PASSWORD"
+              echo "Detected PKCS12 release keystore; using store password as the effective key password."
+            fi
+
             printf '%s\n' \
               'storeFile=app/bgist-release.keystore' \
               "storePassword=$ANDROID_KEYSTORE_PASSWORD" \
               "keyAlias=$ANDROID_KEY_ALIAS" \
-              "keyPassword=$ANDROID_KEY_PASSWORD" \
+              "keyPassword=$EFFECTIVE_KEY_PASSWORD" \
               > android/keystore.properties
             chmod 600 android/keystore.properties
             echo "signed=true" >> "$GITHUB_OUTPUT"
           else
             echo "signed=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Validate release signing configuration
+        if: steps.signing.outputs.signed == 'true'
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          KEYSTORE_PATH="android/app/bgist-release.keystore"
+          CHECK_FILE="/tmp/bgist-signing-check.csr"
+          EFFECTIVE_KEY_PASSWORD="$ANDROID_KEY_PASSWORD"
+
+          if ! keytool -list \
+            -keystore "$KEYSTORE_PATH" \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            >/tmp/bgist-keystore-store.log 2>&1; then
+            echo "::error::Invalid Android release keystore or store password. Check ANDROID_KEYSTORE_BASE64 and ANDROID_KEYSTORE_PASSWORD."
+            sed -n '1,20p' /tmp/bgist-keystore-store.log
+            exit 1
+          fi
+
+          KEYSTORE_TYPE=$(sed -n 's/^Keystore type: //p' /tmp/bgist-keystore-store.log | head -n1)
+          if [ "$KEYSTORE_TYPE" = "PKCS12" ]; then
+            EFFECTIVE_KEY_PASSWORD="$ANDROID_KEYSTORE_PASSWORD"
+          fi
+
+          if ! keytool -list \
+            -keystore "$KEYSTORE_PATH" \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            -alias "$ANDROID_KEY_ALIAS" \
+            >/tmp/bgist-keystore-alias.log 2>&1; then
+            echo "::error::Android release keystore alias was not found. Check ANDROID_KEY_ALIAS."
+            sed -n '1,20p' /tmp/bgist-keystore-alias.log
+            exit 1
+          fi
+
+          rm -f "$CHECK_FILE"
+          if ! keytool -certreq \
+            -alias "$ANDROID_KEY_ALIAS" \
+            -keystore "$KEYSTORE_PATH" \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            -keypass "$EFFECTIVE_KEY_PASSWORD" \
+            -file "$CHECK_FILE" \
+            >/tmp/bgist-keystore-key.log 2>&1; then
+            echo "::error::Android release key password does not match the configured alias. Check ANDROID_KEY_PASSWORD and ANDROID_KEY_ALIAS."
+            sed -n '1,20p' /tmp/bgist-keystore-key.log
+            exit 1
+          fi
+
+          rm -f "$CHECK_FILE"
+          echo "Release signing validation passed for alias $ANDROID_KEY_ALIAS"
 
       - name: Get version from package.json
         id: version
