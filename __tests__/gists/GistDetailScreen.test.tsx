@@ -1,11 +1,23 @@
 import React from 'react';
 import {fireEvent, render, screen} from '@testing-library/react-native';
+import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import type {RootStackScreenProps} from '../../src/app/navigation/types';
 import type {GistWithHistory} from '../../src/types/gist';
 import {GistDetailScreen} from '../../src/features/gists/screens/GistDetailScreen';
 import {useGistDetail} from '../../src/features/gists/hooks/useGistDetail';
 import {useGistMutations} from '../../src/features/gists/hooks/useGistMutations';
 import {useSession} from '../../src/features/auth/session/SessionProvider';
+
+jest.mock('../../src/features/gists/utils/renderCodePreview', () => {
+  const actual = jest.requireActual('../../src/features/gists/utils/renderCodePreview');
+
+  return {
+    ...actual,
+    renderCodePreviewDocument: jest.fn(async ({filename}: {filename: string}) => {
+      return `<html><body><pre data-filename="${filename}">highlighted</pre></body></html>`;
+    }),
+  };
+});
 
 jest.mock('@react-native-clipboard/clipboard', () => ({
   setString: jest.fn(),
@@ -95,6 +107,25 @@ function createMutationResult() {
   };
 }
 
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        gcTime: Infinity,
+        retry: false,
+      },
+    },
+  });
+
+  return function Wrapper({children}: {children: React.ReactNode}) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  };
+}
+
+function renderDetail(screenNode: React.ReactElement) {
+  return render(screenNode, {wrapper: createWrapper()});
+}
+
 beforeEach(() => {
   (useSession as jest.Mock).mockReturnValue({
     status: 'signedIn',
@@ -147,7 +178,7 @@ test('renders gist core content even when support data degrades', () => {
     },
   });
 
-  render(
+  renderDetail(
     <GistDetailScreen
       navigation={navigation}
       route={{key: 'GistDetail-gist-1', name: 'GistDetail', params: {gistId: 'gist-1'}}}
@@ -165,7 +196,7 @@ test('renders gist core content even when support data degrades', () => {
   expect(refetch).toHaveBeenCalled();
 });
 
-test('renders markdown files as a preview card instead of raw text in gist detail', () => {
+test('renders markdown files as a preview card instead of raw text in gist detail', async () => {
   (useGistDetail as jest.Mock).mockReturnValue({
     gist: createGist({
       files: {
@@ -202,7 +233,7 @@ test('renders markdown files as a preview card instead of raw text in gist detai
     },
   });
 
-  render(
+  renderDetail(
     <GistDetailScreen
       navigation={
         {
@@ -214,14 +245,16 @@ test('renders markdown files as a preview card instead of raw text in gist detai
     />,
   );
 
-  const preview = screen.getByTestId('gist-file-preview-README.md');
+  const preview = await screen.findByTestId('gist-file-preview-README.md');
+  const previewShell = screen.getByTestId('gist-file-preview-README.md-shell');
 
   expect(preview).toBeTruthy();
   expect(preview.props.source.html).toContain('<h1>Hello</h1>');
+  expect(previewShell.props.style.height).toBeUndefined();
   expect(screen.queryByText('# Hello')).toBeNull();
 });
 
-test('renders html files as a preview card instead of raw markup in gist detail', () => {
+test('renders html files as a preview card instead of raw markup in gist detail', async () => {
   (useGistDetail as jest.Mock).mockReturnValue({
     gist: createGist({
       files: {
@@ -258,7 +291,7 @@ test('renders html files as a preview card instead of raw markup in gist detail'
     },
   });
 
-  render(
+  renderDetail(
     <GistDetailScreen
       navigation={
         {
@@ -270,11 +303,57 @@ test('renders html files as a preview card instead of raw markup in gist detail'
     />,
   );
 
-  const preview = screen.getByTestId('gist-file-preview-index.html');
+  const preview = await screen.findByTestId('gist-file-preview-index.html');
+  const previewShell = screen.getByTestId('gist-file-preview-index.html-shell');
 
   expect(preview).toBeTruthy();
   expect(preview.props.source.html).toContain('<h1>Hello</h1><p>Rendered from html.</p>');
+  expect(previewShell.props.style.height).toBeUndefined();
   expect(screen.queryByText('<h1>Hello</h1><p>Rendered from html.</p>')).toBeNull();
+});
+
+test('renders code files as shiki-highlighted previews in gist detail', async () => {
+  (useGistDetail as jest.Mock).mockReturnValue({
+    gist: createGist(),
+    support: {
+      starred: false,
+      starredError: null,
+    },
+    comments: [],
+    gistQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    supportQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    commentsQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+  });
+
+  renderDetail(
+    <GistDetailScreen
+      navigation={
+        {
+          goBack: jest.fn(),
+          navigate: jest.fn(),
+        } as unknown as RootStackScreenProps<'GistDetail'>['navigation']
+      }
+      route={{key: 'GistDetail-gist-1', name: 'GistDetail', params: {gistId: 'gist-1'}}}
+    />,
+  );
+
+  const preview = await screen.findByTestId('gist-file-preview-hello.ts');
+
+  expect(preview).toBeTruthy();
+  expect(preview.props.source.html).toContain('highlighted');
+  expect(screen.queryByText('export const hello = "world";')).toBeNull();
 });
 
 test('renders icon actions with engagement counts in gist detail', () => {
@@ -313,7 +392,7 @@ test('renders icon actions with engagement counts in gist detail', () => {
     },
   });
 
-  render(
+  renderDetail(
     <GistDetailScreen
       navigation={
         {
@@ -329,6 +408,8 @@ test('renders icon actions with engagement counts in gist detail', () => {
   expect(screen.getByTestId('gist-action-fork-count')).toHaveTextContent('18');
   expect(screen.getByTestId('gist-action-history-count')).toHaveTextContent('2');
   expect(screen.getByTestId('gist-action-comments-count')).toHaveTextContent('24');
+  expect(screen.queryByText('History')).toBeNull();
+  expect(screen.queryByText('More')).toBeNull();
 });
 
 test('shows a page error when the gist itself cannot load', () => {
@@ -359,7 +440,7 @@ test('shows a page error when the gist itself cannot load', () => {
     },
   });
 
-  render(
+  renderDetail(
     <GistDetailScreen
       navigation={navigation}
       route={{key: 'GistDetail-gist-1', name: 'GistDetail', params: {gistId: 'gist-1'}}}
@@ -400,7 +481,7 @@ test('keeps hook order stable when the gist query transitions from loading to su
 
   (useGistDetail as jest.Mock).mockImplementation(() => detailState);
 
-  const {rerender} = render(
+  const {rerender} = renderDetail(
     <GistDetailScreen
       navigation={navigation}
       route={{key: 'GistDetail-gist-1', name: 'GistDetail', params: {gistId: 'gist-1'}}}
@@ -482,7 +563,7 @@ test('renders safely when the gist owner is missing', () => {
     },
   });
 
-  render(
+  renderDetail(
     <GistDetailScreen
       navigation={
         {
@@ -547,7 +628,7 @@ test('routes profile, history, viewer, and editor actions through the new stack 
     },
   }));
 
-  render(
+  renderDetail(
     <GistDetailScreen
       navigation={navigation}
       route={{key: 'GistDetail-gist-1', name: 'GistDetail', params: {gistId: 'gist-1'}}}
@@ -629,7 +710,7 @@ test('keeps comments lazy until the user explicitly loads them', () => {
     },
   }));
 
-  render(
+  renderDetail(
     <GistDetailScreen
       navigation={navigation}
       route={{key: 'GistDetail-gist-1', name: 'GistDetail', params: {gistId: 'gist-1'}}}
@@ -686,7 +767,7 @@ test('passes truncated inline content into the viewer route for immediate previe
     },
   });
 
-  render(
+  renderDetail(
     <GistDetailScreen
       navigation={navigation}
       route={{key: 'GistDetail-gist-1', name: 'GistDetail', params: {gistId: 'gist-1'}}}
@@ -743,7 +824,7 @@ test('shows the viewer preview hint when a file has no inline content yet', () =
     },
   });
 
-  render(
+  renderDetail(
     <GistDetailScreen
       navigation={
         {
@@ -798,7 +879,7 @@ test('renders GitHub-style preview cards when rendered html is available', () =>
     },
   });
 
-  render(
+  renderDetail(
     <GistDetailScreen
       navigation={
         {

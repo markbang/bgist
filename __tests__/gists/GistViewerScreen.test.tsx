@@ -36,7 +36,7 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-test('renders an empty file in rendered mode without treating it as missing remote content', async () => {
+test('renders an empty file in raw mode without treating it as missing remote content', async () => {
   globalThis.fetch = jest.fn(() => new Promise(() => {})) as jest.Mock;
 
   render(
@@ -62,9 +62,8 @@ test('renders an empty file in rendered mode without treating it as missing remo
 
   expect(screen.getAllByText('empty.txt').length).toBeGreaterThan(0);
   expect(screen.queryByText('Loading full file')).toBeNull();
-  expect(await screen.findByTestId('gist-render-preview')).toBeTruthy();
-  fireEvent.press(screen.getByRole('button', {name: 'View raw'}));
-  expect(screen.getByTestId('app-code-block-vertical-scroll')).toBeTruthy();
+  expect(await screen.findByTestId('gist-raw-code-view')).toBeTruthy();
+  expect(screen.queryByTestId('gist-render-preview')).toBeNull();
 });
 
 test('keeps copy content disabled while remote file content is still loading', () => {
@@ -161,7 +160,7 @@ test('uses icon-only viewer actions while preserving accessibility labels', asyn
     },
   );
 
-  expect(await screen.findByTestId('gist-render-preview')).toBeTruthy();
+  expect(await screen.findByTestId('gist-raw-code-view')).toBeTruthy();
   expect(screen.queryByText('Copy content')).toBeNull();
   expect(screen.queryByText('Share link')).toBeNull();
   expect(
@@ -171,7 +170,7 @@ test('uses icon-only viewer actions while preserving accessibility labels', asyn
   expect(screen.getByRole('button', {name: 'Share link'})).toBeTruthy();
 });
 
-test('defaults code files to rendered mode and lets people switch to raw', async () => {
+test('defaults code files to raw shiki highlighting', async () => {
   render(
     <GistViewerScreen
       navigation={{goBack: jest.fn(), navigate: jest.fn()} as never}
@@ -193,12 +192,9 @@ test('defaults code files to rendered mode and lets people switch to raw', async
     },
   );
 
-  expect(await screen.findByTestId('gist-render-preview')).toBeTruthy();
-  expect(screen.queryByTestId('app-code-block-vertical-scroll')).toBeNull();
-  fireEvent.press(screen.getByRole('button', {name: 'View raw'}));
+  expect(await screen.findByTestId('gist-raw-code-view')).toBeTruthy();
   expect(screen.queryByTestId('gist-render-preview')).toBeNull();
-  expect(screen.getByTestId('app-code-block-vertical-scroll')).toBeTruthy();
-  expect(screen.getByRole('button', {name: 'View rendered'})).toBeTruthy();
+  expect(screen.queryByRole('button', {name: 'View rendered'})).toBeNull();
 });
 
 test('renders truncated markdown from inline content before the full raw file finishes loading', async () => {
@@ -225,14 +221,13 @@ test('renders truncated markdown from inline content before the full raw file fi
     },
   );
 
-  expect(await screen.findByTestId('gist-render-preview')).toBeTruthy();
+  expect(screen.getByTestId('app-code-block-vertical-scroll')).toBeTruthy();
   expect(screen.queryByText('Loading full file')).toBeNull();
 
   const copyButton = screen.getByRole('button', {name: 'Copy content'});
   expect(copyButton.props.accessibilityState.disabled).toBe(true);
 
-  fireEvent.press(screen.getByRole('button', {name: 'View raw'}));
-  expect(screen.getByText('# Partial heading')).toBeTruthy();
+  expect(screen.getByText(/# Partial heading/)).toBeTruthy();
 });
 
 test('renders provided GitHub preview html before the raw source finishes loading', async () => {
@@ -259,11 +254,10 @@ test('renders provided GitHub preview html before the raw source finishes loadin
     },
   );
 
+  expect(screen.getByText('Loading full file')).toBeTruthy();
+  fireEvent.press(screen.getByRole('button', {name: 'View rendered'}));
   const preview = await screen.findByTestId('gist-render-preview');
-
-  expect(preview).toBeTruthy();
   expect(preview.props.source.html).toContain('Rendered preview');
-  expect(screen.queryByText('Loading full file')).toBeNull();
 });
 
 test('renders markdown files in preview mode and allows switching back to raw', async () => {
@@ -288,11 +282,11 @@ test('renders markdown files in preview mode and allows switching back to raw', 
     },
   );
 
-  expect(await screen.findByTestId('gist-render-preview')).toBeTruthy();
-  fireEvent.press(screen.getByRole('button', {name: 'View raw'}));
   expect(screen.queryByTestId('gist-render-preview')).toBeNull();
-  expect(screen.getByText('# Hello')).toBeTruthy();
-  expect(screen.getByRole('button', {name: 'View rendered'})).toBeTruthy();
+  expect(screen.getByText(/# Hello/)).toBeTruthy();
+  fireEvent.press(screen.getByRole('button', {name: 'View rendered'}));
+  expect(await screen.findByTestId('gist-render-preview')).toBeTruthy();
+  expect(screen.getByRole('button', {name: 'View raw'})).toBeTruthy();
 });
 
 test('shows an error instead of loading forever when remote file content never resolves', async () => {

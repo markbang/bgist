@@ -13,6 +13,7 @@ import {
 import Clipboard from '@react-native-clipboard/clipboard';
 import Svg, {Circle, Path} from 'react-native-svg';
 import {WebView} from 'react-native-webview';
+import {useQuery} from '@tanstack/react-query';
 import {useAppTheme} from '../../../app/theme/context';
 import {createThemedStyles} from '../../../app/theme/tokens';
 import type {RootStackScreenProps} from '../../../app/navigation/types';
@@ -30,6 +31,7 @@ import {AppScreen} from '../../../shared/ui/AppScreen';
 import {useI18n} from '../../../i18n/context';
 import {useGistDetail} from '../hooks/useGistDetail';
 import {useGistMutations} from '../hooks/useGistMutations';
+import {renderCodePreviewDocument} from '../utils/renderCodePreview';
 import {buildRichTextPreviewDocument} from '../utils/renderRichTextPreview';
 
 function formatDate(value: string, locale: string, fallback: string) {
@@ -57,6 +59,36 @@ function formatCompactCount(value: number | null | undefined) {
 
   return String(value);
 }
+
+function estimateDocumentHeight(content?: string, renderedHtml?: string) {
+  const source = renderedHtml ?? content ?? '';
+  const lineCount = source.length > 0 ? source.split('\n').length : 1;
+
+  return Math.min(Math.max(120, lineCount * 22 + 40), 1600);
+}
+
+const webViewHeightScript = `
+  (function() {
+    function postHeight() {
+      var body = document.body;
+      var html = document.documentElement;
+      var height = Math.max(
+        body ? body.scrollHeight : 0,
+        body ? body.offsetHeight : 0,
+        html ? html.clientHeight : 0,
+        html ? html.scrollHeight : 0,
+        html ? html.offsetHeight : 0
+      );
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(String(height));
+      }
+    }
+    postHeight();
+    setTimeout(postHeight, 80);
+    setTimeout(postHeight, 240);
+    true;
+  })();
+`;
 
 function GistActionGlyph({
   color,
@@ -158,23 +190,59 @@ function GistActionButton({
         pressed && !disabled ? styles.actionIconButtonPressed : null,
       ]}
       testID={testID}>
-      <View style={styles.actionIconShell}>
-        {loading ? <ActivityIndicator size="small" /> : icon}
+      <View style={styles.actionIconRow}>
+        <View style={styles.actionIconShell}>
+          {loading ? <ActivityIndicator size="small" /> : icon}
+        </View>
+        {count ? (
+          <Text
+            numberOfLines={1}
+            style={[styles.actionIconCount, active ? styles.actionIconCountActive : null]}
+            testID={testID ? `${testID}-count` : undefined}>
+            {count}
+          </Text>
+        ) : null}
       </View>
-      <Text
-        numberOfLines={1}
-        style={[styles.actionIconLabel, active ? styles.actionIconLabelActive : null]}>
-        {label}
-      </Text>
-      {count ? (
-        <Text
-          numberOfLines={1}
-          style={[styles.actionIconCount, active ? styles.actionIconCountActive : null]}
-          testID={testID ? `${testID}-count` : undefined}>
-          {count}
-        </Text>
-      ) : null}
     </Pressable>
+  );
+}
+
+function AutoHeightDocument({
+  baseUrl,
+  content,
+  renderedHtml,
+  testID,
+}: {
+  baseUrl?: string;
+  content: string;
+  renderedHtml?: string;
+  testID: string;
+}) {
+  const {themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+  const [height, setHeight] = React.useState(() => estimateDocumentHeight(content, renderedHtml));
+
+  const handleMessage = React.useCallback((event: {nativeEvent: {data: string}}) => {
+    const nextHeight = Number.parseInt(event.nativeEvent.data, 10);
+
+    if (Number.isFinite(nextHeight) && nextHeight > 0) {
+      setHeight(Math.max(120, nextHeight));
+    }
+  }, []);
+
+  return (
+    <View style={styles.filePreviewWebViewShell} testID={`${testID}-shell`}>
+      <WebView
+        injectedJavaScript={webViewHeightScript}
+        nestedScrollEnabled={false}
+        onMessage={handleMessage}
+        originWhitelist={['*']}
+        scrollEnabled={false}
+        source={{html: content, baseUrl}}
+        style={[styles.filePreviewWebView, {height}]}
+        testID={testID}
+      />
+    </View>
   );
 }
 
@@ -183,7 +251,7 @@ function FilePreviewCard({
   filename,
   language,
   content,
-  preview,
+  emptyPreviewText,
   renderedHtml,
   onPress,
   openLabel,
@@ -192,14 +260,14 @@ function FilePreviewCard({
   filename: string;
   language: string | null;
   content?: string;
-  preview: string;
+  emptyPreviewText: string;
   renderedHtml?: string;
   onPress: () => void;
   openLabel: string;
 }) {
   const {theme, themeName, isDark} = useAppTheme();
   const styles = getStyles(themeName);
-  const previewDocument = React.useMemo(
+  const richPreviewDocument = React.useMemo(
     () =>
       buildRichTextPreviewDocument({
         filename,
@@ -210,6 +278,28 @@ function FilePreviewCard({
       }),
     [content, filename, isDark, renderedHtml, theme],
   );
+  const codePreviewQuery = useQuery({
+    queryKey: [
+      'gists',
+      'detail-preview',
+      filename,
+      language ?? '',
+      content?.length ?? 0,
+      content?.slice(0, 120) ?? '',
+      themeName,
+    ],
+    queryFn: () =>
+      renderCodePreviewDocument({
+        filename,
+        language,
+        content: content ?? '',
+        theme,
+        isDark,
+      }),
+    enabled: !richPreviewDocument && typeof content === 'string',
+    staleTime: Infinity,
+  });
+  const previewDocument = richPreviewDocument ?? codePreviewQuery.data ?? null;
 
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={filename} onPress={onPress}>
@@ -222,19 +312,15 @@ function FilePreviewCard({
           <Text style={styles.fileLink}>{openLabel}</Text>
         </View>
         {previewDocument ? (
-          <View style={styles.filePreviewWebViewShell}>
-            <WebView
-              nestedScrollEnabled={false}
-              originWhitelist={['*']}
-              scrollEnabled={false}
-              source={{html: previewDocument, baseUrl}}
-              style={styles.filePreviewWebView}
-              testID={`gist-file-preview-${filename}`}
-            />
-          </View>
+          <AutoHeightDocument
+            baseUrl={baseUrl}
+            content={previewDocument}
+            renderedHtml={renderedHtml}
+            testID={`gist-file-preview-${filename}`}
+          />
         ) : (
-          <Text numberOfLines={6} style={styles.filePreview}>
-            {preview || ' '}
+          <Text style={styles.filePreview}>
+            {typeof content === 'string' ? ' ' : emptyPreviewText}
           </Text>
         )}
       </AppCard>
@@ -553,15 +639,9 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
                 filename={file.filename}
                 language={file.language}
                 content={file.content}
+                emptyPreviewText={t('gistDetail.largePreview')}
                 openLabel={t('common.open')}
                 renderedHtml={file.renderedHtml}
-                preview={
-                  file.renderedHtml
-                    ? ''
-                    : file.truncated || !file.content
-                    ? t('gistDetail.largePreview')
-                    : file.content
-                }
                 onPress={() =>
                   navigation.navigate('GistViewer', {
                     gistId: gist.id,
@@ -699,22 +779,20 @@ const getStyles = createThemedStyles(theme =>
       paddingRight: theme.spacing.md,
     },
     actionIconButton: {
-      width: 84,
-      minHeight: 90,
-      borderRadius: theme.radius.lg,
+      minHeight: 40,
+      borderRadius: 999,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surfaceMuted,
+      backgroundColor: theme.colors.surface,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: theme.spacing.xs,
-      paddingVertical: theme.spacing.sm,
-      gap: 4,
+      paddingHorizontal: theme.spacing.sm + 2,
+      paddingVertical: theme.spacing.xs + 2,
     },
     actionIconButtonActive: {
       borderColor: theme.colors.accent,
-      backgroundColor: theme.colors.accent,
+      backgroundColor: theme.colors.accentSoft,
     },
     actionIconButtonDisabled: {
       opacity: 0.55,
@@ -723,31 +801,26 @@ const getStyles = createThemedStyles(theme =>
       opacity: 0.9,
       transform: [{scale: 0.98}],
     },
+    actionIconRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
     actionIconShell: {
-      width: 34,
-      height: 34,
-      borderRadius: 17,
+      width: 18,
+      height: 18,
+      borderRadius: 9,
       borderCurve: 'continuous',
       alignItems: 'center',
       justifyContent: 'center',
     },
-    actionIconLabel: {
-      color: theme.colors.textSecondary,
-      fontSize: 11,
-      fontWeight: '700',
-      textAlign: 'center',
-    },
-    actionIconLabelActive: {
-      color: theme.colors.accentContrast,
-    },
     actionIconCount: {
       color: theme.colors.textPrimary,
-      fontSize: 15,
+      fontSize: 13,
       fontWeight: '800',
-      textAlign: 'center',
     },
     actionIconCountActive: {
-      color: theme.colors.accentContrast,
+      color: theme.colors.accent,
     },
     section: {
       gap: theme.spacing.sm,
@@ -791,7 +864,6 @@ const getStyles = createThemedStyles(theme =>
       fontFamily: 'monospace',
     },
     filePreviewWebViewShell: {
-      height: 180,
       overflow: 'hidden',
       borderRadius: theme.radius.md,
       borderCurve: 'continuous',
@@ -800,7 +872,6 @@ const getStyles = createThemedStyles(theme =>
       backgroundColor: theme.colors.surfaceMuted,
     },
     filePreviewWebView: {
-      flex: 1,
       backgroundColor: theme.colors.surface,
     },
     commentsError: {
