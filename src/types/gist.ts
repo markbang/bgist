@@ -5,7 +5,8 @@ export interface GistFile {
   raw_url: string;
   size: number;
   truncated: boolean;
-  content: string;
+  content?: string;
+  renderedHtml?: string;
 }
 
 export interface GistComment {

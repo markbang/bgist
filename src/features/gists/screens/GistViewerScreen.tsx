@@ -14,7 +14,10 @@ import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
 import {AppScreen} from '../../../shared/ui/AppScreen';
 import type {RootStackScreenProps} from '../../../app/navigation/types';
 import {useI18n} from '../../../i18n/context';
-import {renderCodePreviewDocument, wrapPreviewDocument} from '../utils/renderCodePreview';
+import {renderCodePreviewDocument} from '../utils/renderCodePreview';
+import {buildRichTextPreviewDocument} from '../utils/renderRichTextPreview';
+
+const FULL_FILE_REQUEST_TIMEOUT_MS = 12000;
 
 function createFileAnchor(filename: string) {
   return filename
@@ -24,139 +27,24 @@ function createFileAnchor(filename: string) {
     .replace(/^-+|-+$/g, '');
 }
 
-function isMarkdownFile(filename: string) {
-  return /\.(md|markdown|mdown|mkd|mkdn)$/i.test(filename);
-}
-
-function isHtmlFile(filename: string) {
-  return /\.(html?|xhtml)$/i.test(filename);
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
-}
-
-function renderInlineMarkdown(value: string) {
-  let result = escapeHtml(value);
-
-  result = result.replace(/`([^`]+)`/g, '<code>$1</code>');
-  result = result.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>');
-  result = result.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  result = result.replace(/__([^_]+)__/g, '<strong>$1</strong>');
-  result = result.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-  result = result.replace(/_([^_]+)_/g, '<em>$1</em>');
-
-  return result;
-}
-
-function renderMarkdownDocument(markdown: string) {
-  const lines = markdown.replace(/\r\n/g, '\n').split('\n');
-  const blocks: string[] = [];
-  const paragraphBuffer: string[] = [];
-  const listBuffer: string[] = [];
-  const codeBuffer: string[] = [];
-  let inCodeBlock = false;
-
-  const flushParagraph = () => {
-    if (paragraphBuffer.length === 0) {
-      return;
-    }
-
-    blocks.push(`<p>${renderInlineMarkdown(paragraphBuffer.join('<br />'))}</p>`);
-    paragraphBuffer.length = 0;
-  };
-
-  const flushList = () => {
-    if (listBuffer.length === 0) {
-      return;
-    }
-
-    blocks.push(`<ul>${listBuffer.map(item => `<li>${renderInlineMarkdown(item)}</li>`).join('')}</ul>`);
-    listBuffer.length = 0;
-  };
-
-  const flushCode = () => {
-    if (codeBuffer.length === 0) {
-      return;
-    }
-
-    blocks.push(`<pre><code>${escapeHtml(codeBuffer.join('\n'))}</code></pre>`);
-    codeBuffer.length = 0;
-  };
-
-  lines.forEach(line => {
-    const headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
-    const listMatch = line.match(/^\s*[-*+]\s+(.+)$/);
-
-    if (line.startsWith('```')) {
-      if (inCodeBlock) {
-        flushCode();
-      } else {
-        flushParagraph();
-        flushList();
-      }
-
-      inCodeBlock = !inCodeBlock;
-      return;
-    }
-
-    if (inCodeBlock) {
-      codeBuffer.push(line);
-      return;
-    }
-
-    if (line.trim().length === 0) {
-      flushParagraph();
-      flushList();
-      return;
-    }
-
-    if (headingMatch) {
-      flushParagraph();
-      flushList();
-      const level = headingMatch[1].length;
-      blocks.push(`<h${level}>${renderInlineMarkdown(headingMatch[2])}</h${level}>`);
-      return;
-    }
-
-    if (listMatch) {
-      flushParagraph();
-      listBuffer.push(listMatch[1]);
-      return;
-    }
-
-    paragraphBuffer.push(line);
-  });
-
-  flushParagraph();
-  flushList();
-  flushCode();
-
-  return blocks.join('');
-}
-
 async function buildPreviewDocument(
   filename: string,
   language: string | null | undefined,
   content: string,
   theme: ReturnType<typeof useAppTheme>['theme'],
   isDark: boolean,
+  renderedHtml?: string,
 ) {
-  if (isMarkdownFile(filename)) {
-    return wrapPreviewDocument(filename, renderMarkdownDocument(content), theme, isDark);
-  }
+  const richTextPreviewDocument = buildRichTextPreviewDocument({
+    filename,
+    content,
+    renderedHtml,
+    theme,
+    isDark,
+  });
 
-  if (isHtmlFile(filename)) {
-    if (/<html[\s>]/i.test(content) || /<!doctype/i.test(content)) {
-      return content;
-    }
-
-    return wrapPreviewDocument(filename, content, theme, isDark);
+  if (richTextPreviewDocument) {
+    return richTextPreviewDocument;
   }
 
   return renderCodePreviewDocument({
@@ -166,6 +54,33 @@ async function buildPreviewDocument(
     theme,
     isDark,
   });
+}
+
+async function loadRawFileContent(rawUrl: string) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, FULL_FILE_REQUEST_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(rawUrl, {
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error('GIST_FILE_FETCH_FAILED');
+    }
+
+    return await response.text();
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('GIST_FILE_FETCH_TIMEOUT');
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 function ActionIcon({
@@ -270,30 +185,38 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
   const {theme, themeName, isDark} = useAppTheme();
   const {t} = useI18n();
   const styles = getStyles(themeName);
-  const {gistId, filename, language, content, gistUrl, rawUrl, truncated = false} = route.params;
+  const {gistId, filename, language, content, renderedHtml, gistUrl, rawUrl, truncated = false} =
+    route.params;
   const [showLines, setShowLines] = React.useState(true);
   const [showPreview, setShowPreview] = React.useState(true);
   const resolvedGistUrl = gistUrl ?? `https://gist.github.com/${gistId}`;
   const fileUrl = `${resolvedGistUrl}#file-${createFileAnchor(filename)}`;
-  const needsRemoteContent = truncated || typeof content !== 'string';
+  const hasInlineContent = typeof content === 'string';
+  const hasRenderedHtml = typeof renderedHtml === 'string' && renderedHtml.length > 0;
+  const needsRemoteContent = truncated || !hasInlineContent;
   const fileContentQuery = useQuery({
     queryKey: ['gists', 'file', gistId, filename, rawUrl],
-    queryFn: async () => {
-      const response = await fetch(rawUrl);
-
-      if (!response.ok) {
-        throw new Error('GIST_FILE_FETCH_FAILED');
-      }
-
-      return response.text();
-    },
+    queryFn: () => loadRawFileContent(rawUrl),
     enabled: needsRemoteContent,
   });
   const resolvedContent = fileContentQuery.data ?? content ?? '';
+  const hasResolvedContent =
+    typeof fileContentQuery.data === 'string' || hasInlineContent || hasRenderedHtml;
+  const shouldBlockOnRemoteContent =
+    needsRemoteContent && !hasInlineContent && (!showPreview || !hasRenderedHtml);
   const previewDocumentQuery = useQuery({
-    queryKey: ['gists', 'viewer-preview', filename, language ?? '', resolvedContent, themeName],
-    queryFn: () => buildPreviewDocument(filename, language, resolvedContent, theme, isDark),
-    enabled: showPreview && (!needsRemoteContent || fileContentQuery.isSuccess),
+    queryKey: [
+      'gists',
+      'viewer-preview',
+      filename,
+      language ?? '',
+      resolvedContent,
+      renderedHtml ?? '',
+      themeName,
+    ],
+    queryFn: () =>
+      buildPreviewDocument(filename, language, resolvedContent, theme, isDark, renderedHtml),
+    enabled: showPreview && hasResolvedContent,
     staleTime: Infinity,
   });
   const previewDocument = previewDocumentQuery.data ?? null;
@@ -378,12 +301,12 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
         </ScrollView>
 
         <AppCard style={styles.codeShell}>
-          {needsRemoteContent && fileContentQuery.isLoading ? (
+          {shouldBlockOnRemoteContent && fileContentQuery.isLoading ? (
             <AppLoadingState
               label={t('viewer.loadingTitle')}
               description={t('viewer.loadingDescription')}
             />
-          ) : needsRemoteContent && fileContentQuery.isError ? (
+          ) : shouldBlockOnRemoteContent && fileContentQuery.isError ? (
             <AppErrorState
               title={t('viewer.errorTitle')}
               description={t('viewer.errorDescription')}

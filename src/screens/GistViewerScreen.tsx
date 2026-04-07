@@ -21,7 +21,7 @@ export default function GistViewerScreen({route}: Props) {
   const theme = scheme === 'dark' ? darkTheme : lightTheme;
   const {colors} = theme;
   const {t} = useI18n();
-  const {filename, content} = route.params;
+  const {filename, content = ''} = route.params;
 
   const [showLines, setShowLines] = useState(true);
   const lines = content.split('\n');

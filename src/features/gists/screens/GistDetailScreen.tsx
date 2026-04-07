@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
+import {WebView} from 'react-native-webview';
 import {useAppTheme} from '../../../app/theme/context';
 import {createThemedStyles} from '../../../app/theme/tokens';
 import type {RootStackScreenProps} from '../../../app/navigation/types';
@@ -27,6 +28,7 @@ import {AppScreen} from '../../../shared/ui/AppScreen';
 import {useI18n} from '../../../i18n/context';
 import {useGistDetail} from '../hooks/useGistDetail';
 import {useGistMutations} from '../hooks/useGistMutations';
+import {buildRichTextPreviewDocument} from '../utils/renderRichTextPreview';
 
 function formatDate(value: string, locale: string, fallback: string) {
   const date = new Date(value);
@@ -43,20 +45,37 @@ function formatDate(value: string, locale: string, fallback: string) {
 }
 
 function FilePreviewCard({
+  baseUrl,
   filename,
   language,
+  content,
   preview,
+  renderedHtml,
   onPress,
   openLabel,
 }: {
+  baseUrl?: string;
   filename: string;
   language: string | null;
+  content?: string;
   preview: string;
+  renderedHtml?: string;
   onPress: () => void;
   openLabel: string;
 }) {
-  const {themeName} = useAppTheme();
+  const {theme, themeName, isDark} = useAppTheme();
   const styles = getStyles(themeName);
+  const previewDocument = React.useMemo(
+    () =>
+      buildRichTextPreviewDocument({
+        filename,
+        content,
+        renderedHtml,
+        theme,
+        isDark,
+      }),
+    [content, filename, isDark, renderedHtml, theme],
+  );
 
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={filename} onPress={onPress}>
@@ -68,9 +87,22 @@ function FilePreviewCard({
           </View>
           <Text style={styles.fileLink}>{openLabel}</Text>
         </View>
-        <Text numberOfLines={6} style={styles.filePreview}>
-          {preview || ' '}
-        </Text>
+        {previewDocument ? (
+          <View style={styles.filePreviewWebViewShell}>
+            <WebView
+              nestedScrollEnabled={false}
+              originWhitelist={['*']}
+              scrollEnabled={false}
+              source={{html: previewDocument, baseUrl}}
+              style={styles.filePreviewWebView}
+              testID={`gist-file-preview-${filename}`}
+            />
+          </View>
+        ) : (
+          <Text numberOfLines={6} style={styles.filePreview}>
+            {preview || ' '}
+          </Text>
+        )}
       </AppCard>
     </Pressable>
   );
@@ -359,20 +391,26 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
             {files.map(file => (
               <FilePreviewCard
                 key={file.filename}
+                baseUrl={gist.html_url}
                 filename={file.filename}
                 language={file.language}
+                content={file.content}
                 openLabel={t('common.open')}
+                renderedHtml={file.renderedHtml}
                 preview={
-                  file.truncated
+                  file.renderedHtml
+                    ? ''
+                    : file.truncated || !file.content
                     ? t('gistDetail.largePreview')
-                    : file.content ?? ''
+                    : file.content
                 }
                 onPress={() =>
                   navigation.navigate('GistViewer', {
                     gistId: gist.id,
                     filename: file.filename,
                     language: file.language,
-                    content: file.truncated ? undefined : file.content,
+                    content: file.content,
+                    renderedHtml: file.renderedHtml,
                     gistUrl: gist.html_url,
                     rawUrl: file.raw_url,
                     truncated: file.truncated,
@@ -542,6 +580,19 @@ const getStyles = createThemedStyles(theme =>
       fontSize: 13,
       lineHeight: 20,
       fontFamily: 'monospace',
+    },
+    filePreviewWebViewShell: {
+      height: 180,
+      overflow: 'hidden',
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+    },
+    filePreviewWebView: {
+      flex: 1,
+      backgroundColor: theme.colors.surface,
     },
     commentsError: {
       gap: theme.spacing.sm,

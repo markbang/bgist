@@ -21,6 +21,7 @@ export type RootStackParamList = {
     filename: string;
     language?: string | null;
     content?: string;
+    renderedHtml?: string;
     gistUrl?: string;
     rawUrl: string;
     truncated?: boolean;

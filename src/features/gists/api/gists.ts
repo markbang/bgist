@@ -8,6 +8,14 @@ import type {
 } from '../../../types/gist';
 import {githubClient} from '../../../shared/api/client';
 import {GitHubApiError} from '../../../shared/api/errors';
+import {parsePublicGistPage} from './parsePublicGistPage';
+
+function canFallbackToPublicPage(error: unknown) {
+  return (
+    error instanceof GitHubApiError &&
+    (error.status === null || error.status >= 500)
+  );
+}
 
 export async function getMyGists(page = 1, perPage = 30) {
   const {data} = await githubClient.get<Gist[]>('/gists', {
@@ -43,8 +51,28 @@ export async function getUserInfo(username?: string) {
 }
 
 export async function getGist(gistId: string) {
-  const {data} = await githubClient.get<GistWithHistory>(`/gists/${gistId}`);
-  return data;
+  try {
+    const {data} = await githubClient.get<GistWithHistory>(`/gists/${gistId}`);
+    return data;
+  } catch (error) {
+    if (!canFallbackToPublicPage(error)) {
+      throw error;
+    }
+
+    const response = await fetch(`https://gist.github.com/${gistId}`);
+
+    if (!response.ok) {
+      throw error;
+    }
+
+    const fallbackGist = parsePublicGistPage(await response.text(), gistId);
+
+    if (!fallbackGist) {
+      throw error;
+    }
+
+    return fallbackGist;
+  }
 }
 
 export async function isGistStarred(gistId: string) {

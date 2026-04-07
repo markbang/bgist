@@ -165,6 +165,62 @@ test('renders gist core content even when support data degrades', () => {
   expect(refetch).toHaveBeenCalled();
 });
 
+test('renders markdown files as a preview card instead of raw text in gist detail', () => {
+  (useGistDetail as jest.Mock).mockReturnValue({
+    gist: createGist({
+      files: {
+        'README.md': {
+          filename: 'README.md',
+          type: 'text/markdown',
+          language: 'Markdown',
+          raw_url: 'https://gist.githubusercontent.com/raw/README.md',
+          size: 128,
+          truncated: false,
+          content: '# Hello\n\nThis is **bold**.',
+        },
+      },
+    }),
+    support: {
+      starred: false,
+      starredError: null,
+    },
+    comments: [],
+    gistQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    supportQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    commentsQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+  });
+
+  render(
+    <GistDetailScreen
+      navigation={
+        {
+          goBack: jest.fn(),
+          navigate: jest.fn(),
+        } as unknown as RootStackScreenProps<'GistDetail'>['navigation']
+      }
+      route={{key: 'GistDetail-gist-1', name: 'GistDetail', params: {gistId: 'gist-1'}}}
+    />,
+  );
+
+  const preview = screen.getByTestId('gist-file-preview-README.md');
+
+  expect(preview).toBeTruthy();
+  expect(preview.props.source.html).toContain('<h1>Hello</h1>');
+  expect(screen.queryByText('# Hello')).toBeNull();
+});
+
 test('shows a page error when the gist itself cannot load', () => {
   const refetch = jest.fn();
   const navigation = {
@@ -476,4 +532,176 @@ test('keeps comments lazy until the user explicitly loads them', () => {
   fireEvent.press(screen.getByRole('button', {name: 'Load comments'}));
 
   expect(screen.getByText('Nice gist')).toBeTruthy();
+});
+
+test('passes truncated inline content into the viewer route for immediate preview', () => {
+  const navigation = {
+    goBack: jest.fn(),
+    navigate: jest.fn(),
+  } as unknown as RootStackScreenProps<'GistDetail'>['navigation'];
+
+  (useGistDetail as jest.Mock).mockReturnValue({
+    gist: createGist({
+      files: {
+        'README.md': {
+          filename: 'README.md',
+          type: 'text/markdown',
+          language: 'Markdown',
+          raw_url: 'https://gist.githubusercontent.com/raw/README.md',
+          size: 12000,
+          truncated: true,
+          content: '# Partial heading\n\nRendered first.',
+        },
+      },
+    }),
+    support: {
+      starred: false,
+      starredError: null,
+    },
+    comments: [],
+    gistQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    supportQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    commentsQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+  });
+
+  render(
+    <GistDetailScreen
+      navigation={navigation}
+      route={{key: 'GistDetail-gist-1', name: 'GistDetail', params: {gistId: 'gist-1'}}}
+    />,
+  );
+
+  fireEvent.press(screen.getByLabelText('README.md'));
+
+  expect(navigation.navigate).toHaveBeenCalledWith('GistViewer', {
+    gistId: 'gist-1',
+    filename: 'README.md',
+    language: 'Markdown',
+    content: '# Partial heading\n\nRendered first.',
+    gistUrl: 'https://gist.github.com/octocat/gist-1',
+    rawUrl: 'https://gist.githubusercontent.com/raw/README.md',
+    truncated: true,
+  });
+});
+
+test('shows the viewer preview hint when a file has no inline content yet', () => {
+  (useGistDetail as jest.Mock).mockReturnValue({
+    gist: createGist({
+      files: {
+        'notes.txt': {
+          filename: 'notes.txt',
+          type: 'text/plain',
+          language: 'Plain Text',
+          raw_url: 'https://gist.githubusercontent.com/raw/notes.txt',
+          size: 512,
+          truncated: false,
+          content: undefined,
+        },
+      },
+    }),
+    support: {
+      starred: false,
+      starredError: null,
+    },
+    comments: [],
+    gistQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    supportQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    commentsQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+  });
+
+  render(
+    <GistDetailScreen
+      navigation={
+        {
+          goBack: jest.fn(),
+          navigate: jest.fn(),
+        } as unknown as RootStackScreenProps<'GistDetail'>['navigation']
+      }
+      route={{key: 'GistDetail-gist-1', name: 'GistDetail', params: {gistId: 'gist-1'}}}
+    />,
+  );
+
+  expect(
+    screen.getByText('Preview unavailable for large files. Open the viewer to load the full content.'),
+  ).toBeTruthy();
+});
+
+test('renders GitHub-style preview cards when rendered html is available', () => {
+  (useGistDetail as jest.Mock).mockReturnValue({
+    gist: createGist({
+      files: {
+        'README.md': {
+          filename: 'README.md',
+          type: 'text/markdown',
+          language: 'Markdown',
+          raw_url: 'https://gist.githubusercontent.com/raw/README.md',
+          size: 12000,
+          truncated: false,
+          content: undefined,
+          renderedHtml: '<h1>LLM Wiki</h1><p>Rendered preview</p>',
+        },
+      },
+    }),
+    support: {
+      starred: false,
+      starredError: null,
+    },
+    comments: [],
+    gistQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    supportQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    commentsQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+  });
+
+  render(
+    <GistDetailScreen
+      navigation={
+        {
+          goBack: jest.fn(),
+          navigate: jest.fn(),
+        } as unknown as RootStackScreenProps<'GistDetail'>['navigation']
+      }
+      route={{key: 'GistDetail-gist-1', name: 'GistDetail', params: {gistId: 'gist-1'}}}
+    />,
+  );
+
+  expect(screen.getByTestId('gist-file-preview-README.md')).toBeTruthy();
+  expect(
+    screen.queryByText('Preview unavailable for large files. Open the viewer to load the full content.'),
+  ).toBeNull();
 });
