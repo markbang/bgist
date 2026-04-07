@@ -22,7 +22,10 @@ export function AppCodeBlock({
 }: AppCodeBlockProps) {
   const {themeName} = useAppTheme();
   const styles = getStyles(themeName);
-  const lines = content.length > 0 ? content.split('\n') : [''];
+  const lines = React.useMemo(
+    () => (showLines ? (content.length > 0 ? content.split('\n') : ['']) : null),
+    [content, showLines],
+  );
 
   return (
     <View style={styles.shell}>
@@ -39,16 +42,27 @@ export function AppCodeBlock({
         style={styles.viewport}
         testID="app-code-block-vertical-scroll">
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.content}>
-            {lines.map((line, index) => (
-              <View key={`${index}-${line}`} style={styles.row}>
-                {showLines ? <Text style={styles.lineNumber}>{index + 1}</Text> : null}
-                <Text ellipsizeMode="clip" numberOfLines={1} style={styles.line}>
-                  {line || ' '}
-                </Text>
-              </View>
-            ))}
-          </View>
+          {lines ? (
+            <View style={styles.content}>
+              {lines.map((line, index) => (
+                <View key={`${index}-${line}`} style={styles.row}>
+                  <Text style={styles.lineNumber}>{index + 1}</Text>
+                  <Text ellipsizeMode="clip" numberOfLines={1} style={styles.line}>
+                    {line || ' '}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.content}>
+              <Text
+                selectable
+                numberOfLines={content.includes('\n') ? undefined : 1}
+                style={styles.block}>
+                {content || ' '}
+              </Text>
+            </View>
+          )}
         </ScrollView>
       </ScrollView>
     </View>
@@ -100,6 +114,12 @@ const getStyles = createThemedStyles(theme =>
     },
     line: {
       flexShrink: 0,
+      color: theme.colors.codeText,
+      fontFamily: monoFont,
+      fontSize: 13,
+      lineHeight: 20,
+    },
+    block: {
       color: theme.colors.codeText,
       fontFamily: monoFont,
       fontSize: 13,

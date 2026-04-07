@@ -18,6 +18,42 @@ import {renderCodePreviewDocument} from '../utils/renderCodePreview';
 import {buildRichTextPreviewDocument} from '../utils/renderRichTextPreview';
 
 const FULL_FILE_REQUEST_TIMEOUT_MS = 12000;
+const CODE_PREVIEW_MAX_BYTES = 24_000;
+const CODE_PREVIEW_MAX_LINES = 500;
+
+function isMarkdownFile(filename: string) {
+  return /\.(md|markdown|mdown|mkd|mkdn)$/i.test(filename);
+}
+
+function isHtmlFile(filename: string) {
+  return /\.(html?|xhtml)$/i.test(filename);
+}
+
+function countLines(value: string) {
+  if (!value) {
+    return 1;
+  }
+
+  let lines = 1;
+
+  for (let index = 0; index < value.length; index += 1) {
+    if (value[index] === '\n') {
+      lines += 1;
+    }
+  }
+
+  return lines;
+}
+
+function createPreviewSourceKey(content: string, renderedHtml?: string) {
+  return [
+    content.length,
+    countLines(content),
+    content.slice(0, 120),
+    renderedHtml?.length ?? 0,
+    renderedHtml?.slice(0, 120) ?? '',
+  ].join(':');
+}
 
 function createFileAnchor(filename: string) {
   return filename
@@ -56,13 +92,18 @@ async function buildPreviewDocument(
   });
 }
 
-async function loadRawFileContent(rawUrl: string) {
+async function loadRawFileContent(rawUrl: string, signal?: AbortSignal) {
   const controller = new AbortController();
+  const abortRequest = () => {
+    controller.abort();
+  };
   const timeoutId = setTimeout(() => {
     controller.abort();
   }, FULL_FILE_REQUEST_TIMEOUT_MS);
 
   try {
+    signal?.addEventListener('abort', abortRequest);
+
     const response = await fetch(rawUrl, {
       signal: controller.signal,
     });
@@ -79,6 +120,7 @@ async function loadRawFileContent(rawUrl: string) {
 
     throw error;
   } finally {
+    signal?.removeEventListener('abort', abortRequest);
     clearTimeout(timeoutId);
   }
 }
@@ -188,18 +230,27 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
   const {gistId, filename, language, content, renderedHtml, gistUrl, rawUrl, truncated = false} =
     route.params;
   const [showLines, setShowLines] = React.useState(true);
-  const [showPreview, setShowPreview] = React.useState(true);
   const resolvedGistUrl = gistUrl ?? `https://gist.github.com/${gistId}`;
   const fileUrl = `${resolvedGistUrl}#file-${createFileAnchor(filename)}`;
   const hasInlineContent = typeof content === 'string';
   const hasRenderedHtml = typeof renderedHtml === 'string' && renderedHtml.length > 0;
   const needsRemoteContent = truncated || !hasInlineContent;
+  const prefersRichTextPreview = hasRenderedHtml || isMarkdownFile(filename) || isHtmlFile(filename);
   const fileContentQuery = useQuery({
     queryKey: ['gists', 'file', gistId, filename, rawUrl],
-    queryFn: () => loadRawFileContent(rawUrl),
+    queryFn: ({signal}) => loadRawFileContent(rawUrl, signal),
     enabled: needsRemoteContent,
   });
   const resolvedContent = fileContentQuery.data ?? content ?? '';
+  const previewSourceKey = React.useMemo(
+    () => createPreviewSourceKey(resolvedContent, renderedHtml),
+    [renderedHtml, resolvedContent],
+  );
+  const resolvedLineCount = React.useMemo(() => countLines(resolvedContent), [resolvedContent]);
+  const canRenderHighlightedPreview =
+    resolvedContent.length <= CODE_PREVIEW_MAX_BYTES && resolvedLineCount <= CODE_PREVIEW_MAX_LINES;
+  const canRenderPreview = prefersRichTextPreview || canRenderHighlightedPreview;
+  const [showPreview, setShowPreview] = React.useState(() => canRenderPreview);
   const hasResolvedContent =
     typeof fileContentQuery.data === 'string' || hasInlineContent || hasRenderedHtml;
   const shouldBlockOnRemoteContent =
@@ -208,20 +259,26 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
     queryKey: [
       'gists',
       'viewer-preview',
+      gistId,
       filename,
       language ?? '',
-      resolvedContent,
-      renderedHtml ?? '',
+      previewSourceKey,
       themeName,
     ],
     queryFn: () =>
       buildPreviewDocument(filename, language, resolvedContent, theme, isDark, renderedHtml),
-    enabled: showPreview && hasResolvedContent,
+    enabled: showPreview && hasResolvedContent && canRenderPreview,
     staleTime: Infinity,
   });
   const previewDocument = previewDocumentQuery.data ?? null;
   const canCopyContent = !needsRemoteContent || fileContentQuery.isSuccess;
   const isShowingPreview = showPreview && Boolean(previewDocument);
+
+  React.useEffect(() => {
+    if (showPreview && !canRenderPreview) {
+      setShowPreview(false);
+    }
+  }, [canRenderPreview, showPreview]);
 
   React.useEffect(() => {
     if (showPreview && previewDocumentQuery.isError) {
@@ -246,6 +303,7 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
           <ViewerActionButton
             accessibilityLabel={showPreview ? t('viewer.showSource') : t('viewer.showPreview')}
             active={showPreview}
+            disabled={!showPreview && !canRenderPreview}
             icon={
               <ActionIcon
                 color={showPreview ? theme.colors.accentContrast : theme.colors.textPrimary}

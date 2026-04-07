@@ -186,8 +186,8 @@ test('renders profile details, stats, public gists, and opens gist detail', asyn
   fireEvent.press(screen.getByRole('button', {name: 'Useful gist'}));
 
   expect(navigation.navigate).toHaveBeenCalledWith('GistDetail', {gistId: 'gist-1'});
-  expect(getUserInfo).toHaveBeenCalledWith('octocat');
-  expect(getUserGists).toHaveBeenCalledWith('octocat', 1, 30);
+  expect(getUserInfo).toHaveBeenCalledWith('octocat', expect.any(Object));
+  expect(getUserGists).toHaveBeenCalledWith('octocat', 1, 30, expect.any(Object));
 });
 
 test('shows an error state when the profile request fails', async () => {
