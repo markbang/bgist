@@ -1,6 +1,5 @@
 import React from 'react';
 import {render} from '@testing-library/react-native';
-import {StyleSheet} from 'react-native';
 import type {BottomTabBarProps} from '@react-navigation/bottom-tabs';
 import type {MainTabParamList} from '../../src/app/navigation/types';
 
@@ -144,13 +143,18 @@ describe('MainTabs', () => {
     expect(tabBar.getByTestId('main-tab-compose').props.accessibilityState).toEqual({
       selected: true,
     });
-    expect(tabBar.getByText('首页')).toBeTruthy();
-    expect(tabBar.getByText('探索')).toBeTruthy();
-    expect(tabBar.getByText('创作')).toBeTruthy();
-    expect(tabBar.getByText('我的')).toBeTruthy();
+    expect(tabBar.queryByText('首页')).toBeNull();
+    expect(tabBar.queryByText('探索')).toBeNull();
+    expect(tabBar.queryByText('创作')).toBeNull();
+    expect(tabBar.queryByText('我的')).toBeNull();
+    expect(tabBar.getByRole('tab', {name: '首页'})).toBeTruthy();
+    expect(tabBar.getByRole('tab', {name: '探索'})).toBeTruthy();
+    expect(tabBar.getByRole('tab', {name: '创作'})).toBeTruthy();
+    expect(tabBar.getByRole('tab', {name: '我的'})).toBeTruthy();
+    expect(tabBar.getByTestId('main-tab-compose-indicator')).toBeTruthy();
   });
 
-  test('keeps the compose tab visually neutral when it is not focused', () => {
+  test('renders icon-only tab items without decorative icon backgrounds', () => {
     const {MainTabs} = require('../../src/app/navigation/MainTabs') as typeof import('../../src/app/navigation/MainTabs');
 
     render(<MainTabs />);
@@ -192,8 +196,8 @@ describe('MainTabs', () => {
 
     const tabBar = render(tabBarElement);
     const composeIconSlot = tabBar.getByTestId('main-tab-compose-icon-slot');
-    const flattenedStyle = StyleSheet.flatten(composeIconSlot.props.style);
 
-    expect(flattenedStyle.backgroundColor).toBeUndefined();
+    expect(composeIconSlot.props.style.backgroundColor).toBeUndefined();
+    expect(tabBar.getByTestId('main-tab-compose-indicator')).toBeTruthy();
   });
 });

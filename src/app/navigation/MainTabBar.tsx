@@ -1,17 +1,15 @@
 import React from 'react';
 import type {BottomTabBarProps} from '@react-navigation/bottom-tabs';
-import {Pressable, StyleSheet, Text, View} from 'react-native';
+import {Animated, Pressable, StyleSheet, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAppTheme} from '../theme/context';
 import {createThemedStyles} from '../theme/tokens';
 import type {MainTabParamList} from './types';
-import {MaterialSymbolIcon, type MaterialSymbolName} from '../../components/TabIcons';
+import {TabBarIcon, type AppTabGlyphName} from '../../components/TabIcons';
 
 export type MainTabBarItemConfig = {
   label: string;
-  activeIcon: MaterialSymbolName;
-  inactiveIcon: MaterialSymbolName;
-  tone?: 'default' | 'accent';
+  icon: AppTabGlyphName;
 };
 
 type MainTabBarProps = BottomTabBarProps & {
@@ -29,7 +27,7 @@ export function MainTabBar({state, descriptors, navigation, config}: MainTabBarP
       style={[
         styles.outer,
         {
-          paddingBottom: Math.max(insets.bottom, theme.spacing.sm),
+          paddingBottom: Math.max(insets.bottom, theme.spacing.xs + 2),
         },
       ]}>
       <View style={styles.inner} testID="main-tab-bar">
@@ -37,14 +35,6 @@ export function MainTabBar({state, descriptors, navigation, config}: MainTabBarP
           const isFocused = state.index === index;
           const options = descriptors[route.key]?.options;
           const itemConfig = config[route.name as keyof MainTabParamList];
-          const isAccent = itemConfig.tone === 'accent';
-          const iconColor = isFocused
-            ? isAccent
-              ? theme.colors.accentContrast
-              : theme.colors.textPrimary
-            : isAccent
-              ? theme.colors.accent
-              : theme.colors.textSecondary;
 
           const onPress = () => {
             const event = navigation.emit({
@@ -66,54 +56,115 @@ export function MainTabBar({state, descriptors, navigation, config}: MainTabBarP
           };
 
           return (
-            <Pressable
+            <MainTabBarItem
               key={route.key}
-              accessibilityLabel={options?.tabBarAccessibilityLabel ?? itemConfig.label}
-              accessibilityRole="tab"
-              accessibilityState={isFocused ? {selected: true} : {}}
+              icon={itemConfig.icon}
+              isFocused={isFocused}
+              label={itemConfig.label}
               onLongPress={onLongPress}
               onPress={onPress}
-              style={({pressed}) => [
-                styles.item,
-                isFocused ? styles.itemFocused : null,
-                pressed ? styles.itemPressed : null,
-              ]}
-              testID={options?.tabBarButtonTestID ?? `main-tab-${route.name.toLowerCase()}`}>
-              <View
-                style={[
-                  styles.focusIndicator,
-                  isFocused ? (isAccent ? styles.focusIndicatorAccent : styles.focusIndicatorShown) : null,
-                ]}
-              />
-              <View
-                testID={`main-tab-${route.name.toLowerCase()}-icon-slot`}
-                style={[
-                  styles.iconSlot,
-                  isFocused ? (isAccent ? styles.iconSlotAccentFocused : styles.iconSlotFocused) : null,
-                ]}>
-                <MaterialSymbolIcon
-                  color={iconColor}
-                  icon={isFocused ? itemConfig.activeIcon : itemConfig.inactiveIcon}
-                  size={route.name === 'Compose' ? 24 : 23}
-                />
-              </View>
-              <Text
-                numberOfLines={1}
-                style={[
-                  styles.label,
-                  isFocused
-                    ? isAccent
-                      ? styles.labelAccentFocused
-                      : styles.labelFocused
-                    : null,
-                ]}>
-                {itemConfig.label}
-              </Text>
-            </Pressable>
+              options={options}
+              testID={options?.tabBarButtonTestID ?? `main-tab-${route.name.toLowerCase()}`}
+            />
           );
         })}
       </View>
     </View>
+  );
+}
+
+function MainTabBarItem({
+  icon,
+  isFocused,
+  label,
+  onLongPress,
+  onPress,
+  options,
+  testID,
+}: {
+  icon: AppTabGlyphName;
+  isFocused: boolean;
+  label: string;
+  onLongPress: () => void;
+  onPress: () => void;
+  options: BottomTabBarProps['descriptors'][string]['options'];
+  testID: string;
+}) {
+  const {theme, themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+  const progress = React.useRef(new Animated.Value(isFocused ? 1 : 0)).current;
+
+  React.useEffect(() => {
+    const animation = Animated.spring(progress, {
+      toValue: isFocused ? 1 : 0,
+      damping: 16,
+      stiffness: 220,
+      mass: 0.85,
+      useNativeDriver: true,
+    });
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+    };
+  }, [isFocused, progress]);
+
+  const iconColor = isFocused ? theme.colors.accent : theme.colors.textSecondary;
+  const iconAnimatedStyle = {
+    transform: [
+      {
+        translateY: progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, -1.5],
+        }),
+      },
+      {
+        scale: progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [1, 1.08],
+        }),
+      },
+    ],
+  };
+  const indicatorAnimatedStyle = {
+    opacity: progress,
+    transform: [
+      {
+        scaleX: progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.4, 1],
+        }),
+      },
+    ],
+  };
+
+  return (
+    <Pressable
+      accessibilityLabel={options?.tabBarAccessibilityLabel ?? label}
+      accessibilityRole="tab"
+      accessibilityState={isFocused ? {selected: true} : {}}
+      onLongPress={onLongPress}
+      onPress={onPress}
+      style={({pressed}) => [
+        styles.item,
+        pressed ? styles.itemPressed : null,
+      ]}
+      testID={testID}>
+      <Animated.View
+        style={[styles.iconWrap, iconAnimatedStyle]}
+        testID={`${testID}-icon-wrap`}>
+        <View
+          testID={`${testID}-icon-slot`}
+          style={styles.iconSlot}>
+          <TabBarIcon active={isFocused} color={iconColor} icon={icon} size={23} />
+        </View>
+      </Animated.View>
+      <Animated.View
+        style={[styles.indicator, indicatorAnimatedStyle]}
+        testID={`${testID}-indicator`}
+      />
+    </Pressable>
   );
 }
 
@@ -123,84 +174,45 @@ const getStyles = createThemedStyles(theme =>
       backgroundColor: theme.colors.canvas,
       paddingHorizontal: theme.spacing.md,
       paddingTop: theme.spacing.xs,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: theme.colors.border,
     },
     inner: {
       flexDirection: 'row',
-      alignItems: 'stretch',
+      alignItems: 'center',
+      justifyContent: 'space-between',
       gap: theme.spacing.xs,
-      borderRadius: 24,
-      borderCurve: 'continuous',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surface,
-      padding: theme.spacing.xs,
-      ...theme.shadow.card,
-      shadowOpacity: theme.colors.canvas === lightCanvas ? 0.08 : 0.26,
-      shadowRadius: theme.colors.canvas === lightCanvas ? 18 : 24,
-      elevation: theme.colors.canvas === lightCanvas ? 8 : 12,
+      paddingTop: theme.spacing.xs,
     },
     item: {
       flex: 1,
-      position: 'relative',
-      minHeight: 56,
-      borderRadius: 18,
-      borderCurve: 'continuous',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 3,
-      paddingHorizontal: theme.spacing.xs,
-      paddingVertical: theme.spacing.xs,
-    },
-    itemFocused: {
-      backgroundColor: theme.colors.surfaceMuted,
-    },
-    itemPressed: {
-      opacity: 0.9,
-      transform: [{scale: 0.98}],
-    },
-    focusIndicator: {
-      position: 'absolute',
-      top: 0,
-      width: 18,
-      height: 3,
-      borderRadius: 999,
-      opacity: 0,
-      backgroundColor: theme.colors.border,
-    },
-    focusIndicatorShown: {
-      opacity: 1,
-      backgroundColor: theme.colors.textPrimary,
-    },
-    focusIndicatorAccent: {
-      opacity: 1,
-      backgroundColor: theme.colors.accent,
-    },
-    iconSlot: {
-      width: 32,
-      height: 32,
+      minHeight: 48,
       borderRadius: 16,
       borderCurve: 'continuous',
       alignItems: 'center',
       justifyContent: 'center',
+      gap: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.xs,
+      paddingVertical: theme.spacing.xs,
     },
-    iconSlotFocused: {
-      backgroundColor: theme.colors.surface,
+    itemPressed: {
+      opacity: 0.88,
     },
-    iconSlotAccentFocused: {
+    iconWrap: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    iconSlot: {
+      width: 28,
+      height: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    indicator: {
+      width: 16,
+      height: 3,
+      borderRadius: 999,
       backgroundColor: theme.colors.accent,
-    },
-    label: {
-      color: theme.colors.textSecondary,
-      fontSize: 10,
-      fontWeight: '700',
-    },
-    labelFocused: {
-      color: theme.colors.textPrimary,
-    },
-    labelAccentFocused: {
-      color: theme.colors.accent,
     },
   }),
 );
-
-const lightCanvas = '#f5f7fb';
