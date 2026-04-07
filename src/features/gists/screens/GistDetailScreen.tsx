@@ -112,7 +112,10 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
   const locale = language === 'zh' ? 'zh-CN' : 'en-US';
   const {gistId} = route.params;
   const {user} = useSession();
-  const {gistQuery, supportQuery, gist, support} = useGistDetail(gistId);
+  const [commentsEnabled, setCommentsEnabled] = React.useState(false);
+  const {gistQuery, supportQuery, commentsQuery, gist, support, comments} = useGistDetail(gistId, {
+    loadComments: commentsEnabled,
+  });
   const {
     addCommentMutation,
     deleteGistMutation,
@@ -126,13 +129,11 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
   const ownerLogin = owner?.login ?? t('common.unknown').toLowerCase();
   const isOwner = user?.login === owner?.login;
   const files = gist ? Object.values(gist.files) : [];
-  const comments = support?.comments ?? [];
   const isSupportLoading = supportQuery.isLoading && !support;
   const starredErrorMessage =
     support?.starredError ??
     (supportQuery.isError ? 'Star status is unavailable right now.' : null);
-  const commentsErrorMessage =
-    support?.commentsError ?? (supportQuery.isError ? t('gistDetail.commentsUnavailable') : null);
+  const commentsErrorMessage = commentsQuery.isError ? t('gistDetail.commentsUnavailable') : null;
   const canToggleStar = typeof support?.starred === 'boolean';
   const gistUrl = gist?.html_url ?? '';
 
@@ -184,10 +185,12 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
 
       await addCommentMutation.mutateAsync({gistId, body: trimmed});
       setCommentBody('');
+      setCommentsEnabled(true);
+      commentsQuery.refetch();
     } catch {
       Alert.alert(t('gistDetail.commentErrorTitle'), t('gistDetail.shareErrorDescription'));
     }
-  }, [addCommentMutation, commentBody, gistId, t]);
+  }, [addCommentMutation, commentBody, commentsQuery, gistId, t]);
 
   const handleDelete = React.useCallback(() => {
     Alert.alert(t('gistDetail.deleteTitle'), t('gistDetail.deleteDescription'), [
@@ -368,6 +371,7 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
                   navigation.navigate('GistViewer', {
                     gistId: gist.id,
                     filename: file.filename,
+                    language: file.language,
                     content: file.truncated ? undefined : file.content,
                     gistUrl: gist.html_url,
                     rawUrl: file.raw_url,
@@ -388,12 +392,20 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
                 fullWidth={false}
                 label={t('gistDetail.retryComments')}
                 onPress={() => {
-                  supportQuery.refetch();
+                  setCommentsEnabled(true);
+                  commentsQuery.refetch();
                 }}
                 variant="secondary"
               />
             </View>
-          ) : isSupportLoading ? (
+          ) : !commentsEnabled && (gist.comments ?? 0) > 0 ? (
+            <AppButton
+              fullWidth={false}
+              label={t('gistDetail.loadComments')}
+              onPress={() => setCommentsEnabled(true)}
+              variant="secondary"
+            />
+          ) : commentsQuery.isLoading ? (
             <AppLoadingState
               label={t('gistDetail.commentsLoadingTitle')}
               description={t('gistDetail.commentsLoadingDescription')}

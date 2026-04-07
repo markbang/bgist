@@ -5,7 +5,7 @@ import {useQuery} from '@tanstack/react-query';
 import Svg, {Circle, Path} from 'react-native-svg';
 import {WebView} from 'react-native-webview';
 import {useAppTheme} from '../../../app/theme/context';
-import {createThemedStyles, type AppTheme} from '../../../app/theme/tokens';
+import {createThemedStyles} from '../../../app/theme/tokens';
 import {AppCard} from '../../../shared/ui/AppCard';
 import {AppCodeBlock} from '../../../shared/ui/AppCodeBlock';
 import {AppErrorState} from '../../../shared/ui/AppErrorState';
@@ -14,6 +14,7 @@ import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
 import {AppScreen} from '../../../shared/ui/AppScreen';
 import type {RootStackScreenProps} from '../../../app/navigation/types';
 import {useI18n} from '../../../i18n/context';
+import {renderCodePreviewDocument, wrapPreviewDocument} from '../utils/renderCodePreview';
 
 function createFileAnchor(filename: string) {
   return filename
@@ -139,81 +140,13 @@ function renderMarkdownDocument(markdown: string) {
   return blocks.join('');
 }
 
-function wrapPreviewDocument(title: string, body: string, theme: AppTheme, isDark: boolean) {
-  const backgroundColor = theme.colors.surface;
-  const textColor = theme.colors.textPrimary;
-  const headingColor = theme.colors.textPrimary;
-  const linkColor = theme.colors.accent;
-  const inlineCodeBackground = theme.colors.accentSoft;
-  const inlineCodeColor = theme.colors.accent;
-  const preBackground = theme.colors.codeBg;
-  const preColor = theme.colors.codeText;
-
-  return `<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-    <title>${escapeHtml(title)}</title>
-    <style>
-      :root {
-        color-scheme: ${isDark ? 'dark' : 'light'};
-      }
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        margin: 0;
-        padding: 16px;
-        color: ${textColor};
-        background: ${backgroundColor};
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        line-height: 1.65;
-        word-break: break-word;
-      }
-      h1, h2, h3, h4, h5, h6 {
-        color: ${headingColor};
-        line-height: 1.25;
-        margin: 0 0 12px;
-      }
-      p, ul, ol, pre, blockquote {
-        margin: 0 0 14px;
-      }
-      ul, ol {
-        padding-left: 20px;
-      }
-      a {
-        color: ${linkColor};
-      }
-      code {
-        font-family: Menlo, monospace;
-        background: ${inlineCodeBackground};
-        color: ${inlineCodeColor};
-        border-radius: 6px;
-        padding: 2px 5px;
-      }
-      pre {
-        overflow: auto;
-        background: ${preBackground};
-        color: ${preColor};
-        border-radius: 14px;
-        padding: 14px;
-      }
-      pre code {
-        padding: 0;
-        background: transparent;
-        color: inherit;
-      }
-      img, iframe, table {
-        max-width: 100%;
-      }
-    </style>
-  </head>
-  <body>${body}</body>
-</html>`;
-}
-
-function buildPreviewDocument(filename: string, content: string, theme: AppTheme, isDark: boolean) {
+async function buildPreviewDocument(
+  filename: string,
+  language: string | null | undefined,
+  content: string,
+  theme: ReturnType<typeof useAppTheme>['theme'],
+  isDark: boolean,
+) {
   if (isMarkdownFile(filename)) {
     return wrapPreviewDocument(filename, renderMarkdownDocument(content), theme, isDark);
   }
@@ -226,7 +159,13 @@ function buildPreviewDocument(filename: string, content: string, theme: AppTheme
     return wrapPreviewDocument(filename, content, theme, isDark);
   }
 
-  return null;
+  return renderCodePreviewDocument({
+    filename,
+    language,
+    content,
+    theme,
+    isDark,
+  });
 }
 
 function ActionIcon({
@@ -331,10 +270,9 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
   const {theme, themeName, isDark} = useAppTheme();
   const {t} = useI18n();
   const styles = getStyles(themeName);
-  const {gistId, filename, content, gistUrl, rawUrl, truncated = false} = route.params;
+  const {gistId, filename, language, content, gistUrl, rawUrl, truncated = false} = route.params;
   const [showLines, setShowLines] = React.useState(true);
-  const renderMode = isMarkdownFile(filename) ? 'markdown' : isHtmlFile(filename) ? 'html' : null;
-  const [showPreview, setShowPreview] = React.useState(Boolean(renderMode));
+  const [showPreview, setShowPreview] = React.useState(true);
   const resolvedGistUrl = gistUrl ?? `https://gist.github.com/${gistId}`;
   const fileUrl = `${resolvedGistUrl}#file-${createFileAnchor(filename)}`;
   const needsRemoteContent = truncated || typeof content !== 'string';
@@ -352,14 +290,21 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
     enabled: needsRemoteContent,
   });
   const resolvedContent = fileContentQuery.data ?? content ?? '';
-  const previewDocument = React.useMemo(() => {
-    if (!showPreview || !renderMode) {
-      return null;
-    }
-
-    return buildPreviewDocument(filename, resolvedContent, theme, isDark);
-  }, [filename, isDark, renderMode, resolvedContent, showPreview, theme]);
+  const previewDocumentQuery = useQuery({
+    queryKey: ['gists', 'viewer-preview', filename, language ?? '', resolvedContent, themeName],
+    queryFn: () => buildPreviewDocument(filename, language, resolvedContent, theme, isDark),
+    enabled: showPreview && (!needsRemoteContent || fileContentQuery.isSuccess),
+    staleTime: Infinity,
+  });
+  const previewDocument = previewDocumentQuery.data ?? null;
   const canCopyContent = !needsRemoteContent || fileContentQuery.isSuccess;
+  const isShowingPreview = showPreview && Boolean(previewDocument);
+
+  React.useEffect(() => {
+    if (showPreview && previewDocumentQuery.isError) {
+      setShowPreview(false);
+    }
+  }, [previewDocumentQuery.isError, showPreview]);
 
   const copyValue = React.useCallback((value: string, label: string) => {
     Clipboard.setString(value);
@@ -375,19 +320,17 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
           contentContainerStyle={styles.actions}
           horizontal
           showsHorizontalScrollIndicator={false}>
-          {renderMode ? (
-            <ViewerActionButton
-              accessibilityLabel={showPreview ? t('viewer.showSource') : t('viewer.showPreview')}
-              active={showPreview}
-              icon={
-                <ActionIcon
-                  color={showPreview ? theme.colors.accentContrast : theme.colors.textPrimary}
-                  name={showPreview ? 'source' : 'preview'}
-                />
-              }
-              onPress={() => setShowPreview(current => !current)}
-            />
-          ) : null}
+          <ViewerActionButton
+            accessibilityLabel={showPreview ? t('viewer.showSource') : t('viewer.showPreview')}
+            active={showPreview}
+            icon={
+              <ActionIcon
+                color={showPreview ? theme.colors.accentContrast : theme.colors.textPrimary}
+                name={showPreview ? 'source' : 'preview'}
+              />
+            }
+            onPress={() => setShowPreview(current => !current)}
+          />
           {!showPreview ? (
             <ViewerActionButton
               accessibilityLabel={showLines ? t('viewer.hideLines') : t('viewer.showLines')}
@@ -448,11 +391,16 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
                 fileContentQuery.refetch();
               }}
             />
-          ) : showPreview && previewDocument ? (
+          ) : showPreview && previewDocumentQuery.isLoading ? (
+            <AppLoadingState
+              label={t('viewer.renderingTitle')}
+              description={t('viewer.renderingDescription')}
+            />
+          ) : isShowingPreview ? (
             <WebView
               nestedScrollEnabled
               originWhitelist={['*']}
-              source={{html: previewDocument, baseUrl: resolvedGistUrl}}
+              source={{html: previewDocument ?? '', baseUrl: resolvedGistUrl}}
               style={styles.preview}
               testID="gist-render-preview"
             />

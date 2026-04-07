@@ -19,6 +19,7 @@ export type RootStackParamList = {
   GistViewer: {
     gistId: string;
     filename: string;
+    language?: string | null;
     content?: string;
     gistUrl?: string;
     rawUrl: string;

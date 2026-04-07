@@ -4,6 +4,17 @@ import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {GistViewerScreen} from '../../src/features/gists/screens/GistViewerScreen';
 
+jest.mock('../../src/features/gists/utils/renderCodePreview', () => {
+  const actual = jest.requireActual('../../src/features/gists/utils/renderCodePreview');
+
+  return {
+    ...actual,
+    renderCodePreviewDocument: jest.fn(async ({filename}: {filename: string}) => {
+      return `<html><body><pre data-filename="${filename}">highlighted</pre></body></html>`;
+    }),
+  };
+});
+
 function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -24,7 +35,7 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-test('renders an empty file without treating it as missing remote content', () => {
+test('renders an empty file in rendered mode without treating it as missing remote content', async () => {
   globalThis.fetch = jest.fn(() => new Promise(() => {})) as jest.Mock;
 
   render(
@@ -50,6 +61,8 @@ test('renders an empty file without treating it as missing remote content', () =
 
   expect(screen.getAllByText('empty.txt').length).toBeGreaterThan(0);
   expect(screen.queryByText('Loading full file')).toBeNull();
+  expect(await screen.findByTestId('gist-render-preview')).toBeTruthy();
+  fireEvent.press(screen.getByRole('button', {name: 'View raw'}));
   expect(screen.getByTestId('app-code-block-vertical-scroll')).toBeTruthy();
 });
 
@@ -125,7 +138,7 @@ test('keeps copy content disabled when remote file content fails to load', async
   });
 });
 
-test('uses icon-only viewer actions while preserving accessibility labels', () => {
+test('uses icon-only viewer actions while preserving accessibility labels', async () => {
   render(
     <GistViewerScreen
       navigation={{goBack: jest.fn(), navigate: jest.fn()} as never}
@@ -147,6 +160,7 @@ test('uses icon-only viewer actions while preserving accessibility labels', () =
     },
   );
 
+  expect(await screen.findByTestId('gist-render-preview')).toBeTruthy();
   expect(screen.queryByText('Copy content')).toBeNull();
   expect(screen.queryByText('Share link')).toBeNull();
   expect(
@@ -156,7 +170,37 @@ test('uses icon-only viewer actions while preserving accessibility labels', () =
   expect(screen.getByRole('button', {name: 'Share link'})).toBeTruthy();
 });
 
-test('renders markdown files in preview mode and allows switching back to source', () => {
+test('defaults code files to rendered mode and lets people switch to raw', async () => {
+  render(
+    <GistViewerScreen
+      navigation={{goBack: jest.fn(), navigate: jest.fn()} as never}
+      route={{
+        key: 'GistViewer-typescript',
+        name: 'GistViewer',
+        params: {
+          gistId: 'gist-1',
+          filename: 'hello.ts',
+          content: 'export const hello = "world";',
+          gistUrl: 'https://gist.github.com/octocat/gist-1',
+          rawUrl: 'https://gist.githubusercontent.com/raw/hello.ts',
+          truncated: false,
+        },
+      }}
+    />,
+    {
+      wrapper: createWrapper(),
+    },
+  );
+
+  expect(await screen.findByTestId('gist-render-preview')).toBeTruthy();
+  expect(screen.queryByTestId('app-code-block-vertical-scroll')).toBeNull();
+  fireEvent.press(screen.getByRole('button', {name: 'View raw'}));
+  expect(screen.queryByTestId('gist-render-preview')).toBeNull();
+  expect(screen.getByTestId('app-code-block-vertical-scroll')).toBeTruthy();
+  expect(screen.getByRole('button', {name: 'View rendered'})).toBeTruthy();
+});
+
+test('renders markdown files in preview mode and allows switching back to raw', async () => {
   render(
     <GistViewerScreen
       navigation={{goBack: jest.fn(), navigate: jest.fn()} as never}
@@ -178,8 +222,9 @@ test('renders markdown files in preview mode and allows switching back to source
     },
   );
 
-  expect(screen.getByTestId('gist-render-preview')).toBeTruthy();
-  fireEvent.press(screen.getByRole('button', {name: 'Show source'}));
+  expect(await screen.findByTestId('gist-render-preview')).toBeTruthy();
+  fireEvent.press(screen.getByRole('button', {name: 'View raw'}));
   expect(screen.queryByTestId('gist-render-preview')).toBeNull();
   expect(screen.getByText('# Hello')).toBeTruthy();
+  expect(screen.getByRole('button', {name: 'View rendered'})).toBeTruthy();
 });

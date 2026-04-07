@@ -1,11 +1,8 @@
-import type {GistComment} from '../../../types/gist';
-import {getGistComments, isGistStarred} from './gists';
+import {isGistStarred} from './gists';
 
 export type GistSupportData = {
   starred: boolean | null;
   starredError: string | null;
-  comments: GistComment[];
-  commentsError: string | null;
 };
 
 function getErrorMessage(error: unknown) {
@@ -17,17 +14,11 @@ function getErrorMessage(error: unknown) {
 }
 
 export async function loadGistSupport(gistId: string): Promise<GistSupportData> {
-  const [starredResult, commentsResult] = await Promise.allSettled([
-    isGistStarred(gistId),
-    getGistComments(gistId),
-  ]);
+  const [starredResult] = await Promise.allSettled([isGistStarred(gistId)]);
 
   return {
     starred: starredResult.status === 'fulfilled' ? starredResult.value : null,
     starredError:
       starredResult.status === 'rejected' ? getErrorMessage(starredResult.reason) : null,
-    comments: commentsResult.status === 'fulfilled' ? commentsResult.value : [],
-    commentsError:
-      commentsResult.status === 'rejected' ? getErrorMessage(commentsResult.reason) : null,
   };
 }

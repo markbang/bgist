@@ -3,11 +3,12 @@ import {renderHook, waitFor} from '@testing-library/react-native';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {queryKeys} from '../../src/shared/api/queryKeys';
 import {useGistDetail} from '../../src/features/gists/hooks/useGistDetail';
-import {getGist} from '../../src/features/gists/api/gists';
+import {getGist, getGistComments} from '../../src/features/gists/api/gists';
 import {loadGistSupport} from '../../src/features/gists/api/loadGistSupport';
 
 jest.mock('../../src/features/gists/api/gists', () => ({
   getGist: jest.fn(),
+  getGistComments: jest.fn(),
 }));
 
 jest.mock('../../src/features/gists/api/loadGistSupport', () => ({
@@ -50,6 +51,7 @@ test('defines the shared query keys for session and gist queries', () => {
   expect(queryKeys.publicGists).toEqual(['gists', 'public']);
   expect(queryKeys.gistDetail('gist-123')).toEqual(['gists', 'detail', 'gist-123']);
   expect(queryKeys.gistSupport('gist-123')).toEqual(['gists', 'support', 'gist-123']);
+  expect(queryKeys.gistComments('gist-123')).toEqual(['gists', 'comments', 'gist-123']);
   expect(queryKeys.gistHistory('gist-123')).toEqual(['gists', 'history', 'gist-123']);
   expect(queryKeys.userProfile('octocat')).toEqual(['users', 'profile', 'octocat']);
   expect(queryKeys.userGists('octocat')).toEqual(['users', 'gists', 'octocat']);
@@ -61,8 +63,6 @@ test('waits for gist detail success before loading support data', async () => {
   (loadGistSupport as jest.Mock).mockResolvedValue({
     starred: false,
     starredError: null,
-    comments: [],
-    commentsError: null,
   });
 
   renderHook(() => useGistDetail('gist-123'), {
@@ -76,5 +76,36 @@ test('waits for gist detail success before loading support data', async () => {
 
   await waitFor(() => {
     expect(loadGistSupport).toHaveBeenCalledWith('gist-123');
+  });
+});
+
+test('does not load gist comments until comments are explicitly enabled', async () => {
+  const gistDeferred = createDeferred<{id: string}>();
+  (getGist as jest.Mock).mockReturnValue(gistDeferred.promise);
+  (loadGistSupport as jest.Mock).mockResolvedValue({
+    starred: false,
+    starredError: null,
+  });
+  (getGistComments as jest.Mock).mockResolvedValue([]);
+
+  let loadComments = false;
+
+  const {rerender} = renderHook(() => useGistDetail('gist-123', {loadComments}), {
+    wrapper: createWrapper(),
+  });
+
+  gistDeferred.resolve({id: 'gist-123'});
+
+  await waitFor(() => {
+    expect(loadGistSupport).toHaveBeenCalledWith('gist-123');
+  });
+
+  expect(getGistComments).not.toHaveBeenCalled();
+
+  loadComments = true;
+  rerender({});
+
+  await waitFor(() => {
+    expect(getGistComments).toHaveBeenCalledWith('gist-123');
   });
 });

@@ -128,9 +128,8 @@ test('renders gist core content even when support data degrades', () => {
     support: {
       starred: null,
       starredError: 'Star status is unavailable right now.',
-      comments: [],
-      commentsError: 'Comments failed to load.',
     },
+    comments: [],
     gistQuery: {
       isLoading: false,
       isError: false,
@@ -139,6 +138,11 @@ test('renders gist core content even when support data degrades', () => {
     supportQuery: {
       isLoading: false,
       isError: false,
+      refetch,
+    },
+    commentsQuery: {
+      isLoading: false,
+      isError: true,
       refetch,
     },
   });
@@ -171,12 +175,18 @@ test('shows a page error when the gist itself cannot load', () => {
   (useGistDetail as jest.Mock).mockReturnValue({
     gist: null,
     support: null,
+    comments: [],
     gistQuery: {
       isLoading: false,
       isError: true,
       refetch,
     },
     supportQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    commentsQuery: {
       isLoading: false,
       isError: false,
       refetch: jest.fn(),
@@ -204,12 +214,18 @@ test('keeps hook order stable when the gist query transitions from loading to su
   let detailState: any = {
     gist: null,
     support: null,
+    comments: [],
     gistQuery: {
       isLoading: true,
       isError: false,
       refetch: jest.fn(),
     },
     supportQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    commentsQuery: {
       isLoading: false,
       isError: false,
       refetch: jest.fn(),
@@ -232,15 +248,19 @@ test('keeps hook order stable when the gist query transitions from loading to su
     support: {
       starred: false,
       starredError: null,
-      comments: [],
-      commentsError: null,
     },
+    comments: [],
     gistQuery: {
       isLoading: false,
       isError: false,
       refetch: jest.fn(),
     },
     supportQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    commentsQuery: {
       isLoading: false,
       isError: false,
       refetch: jest.fn(),
@@ -277,15 +297,19 @@ test('renders safely when the gist owner is missing', () => {
     support: {
       starred: false,
       starredError: null,
-      comments: [],
-      commentsError: null,
     },
+    comments: [],
     gistQuery: {
       isLoading: false,
       isError: false,
       refetch: jest.fn(),
     },
     supportQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    commentsQuery: {
       isLoading: false,
       isError: false,
       refetch: jest.fn(),
@@ -314,31 +338,32 @@ test('routes profile, history, viewer, and editor actions through the new stack 
     navigate: jest.fn(),
   } as unknown as RootStackScreenProps<'GistDetail'>['navigation'];
 
-  (useGistDetail as jest.Mock).mockReturnValue({
+  (useGistDetail as jest.Mock).mockImplementation((_gistId: string, options?: {loadComments?: boolean}) => ({
     gist: createGist(),
     support: {
       starred: false,
       starredError: null,
-      comments: [
-        {
-          id: 7,
-          body: 'Nice gist',
-          created_at: '2026-04-06T00:00:00Z',
-          updated_at: '2026-04-06T00:00:00Z',
-          user: {
-            login: 'friend',
-            id: 2,
-            avatar_url: 'https://example.com/friend.png',
-            gravatar_id: '',
-            url: 'https://api.github.com/users/friend',
-            html_url: 'https://github.com/friend',
-            type: 'User',
-            site_admin: false,
-          },
-        },
-      ],
-      commentsError: null,
     },
+    comments: options?.loadComments
+      ? [
+          {
+            id: 7,
+            body: 'Nice gist',
+            created_at: '2026-04-06T00:00:00Z',
+            updated_at: '2026-04-06T00:00:00Z',
+            user: {
+              login: 'friend',
+              id: 2,
+              avatar_url: 'https://example.com/friend.png',
+              gravatar_id: '',
+              url: 'https://api.github.com/users/friend',
+              html_url: 'https://github.com/friend',
+              type: 'User',
+              site_admin: false,
+            },
+          },
+        ]
+      : [],
     gistQuery: {
       isLoading: false,
       isError: false,
@@ -349,7 +374,12 @@ test('routes profile, history, viewer, and editor actions through the new stack 
       isError: false,
       refetch: jest.fn(),
     },
-  });
+    commentsQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+  }));
 
   render(
     <GistDetailScreen
@@ -361,6 +391,7 @@ test('routes profile, history, viewer, and editor actions through the new stack 
   fireEvent.press(screen.getByLabelText('Open octocat profile'));
   fireEvent.press(screen.getByRole('button', {name: 'History'}));
   fireEvent.press(screen.getByLabelText('hello.ts'));
+  fireEvent.press(screen.getByRole('button', {name: 'Load comments'}));
   fireEvent.press(screen.getByRole('button', {name: 'Open friend profile'}));
   fireEvent.press(screen.getByRole('button', {name: 'More'}));
   fireEvent.press(screen.getByRole('button', {name: 'Edit gist'}));
@@ -370,6 +401,7 @@ test('routes profile, history, viewer, and editor actions through the new stack 
   expect(navigation.navigate).toHaveBeenCalledWith('GistViewer', {
     gistId: 'gist-1',
     filename: 'hello.ts',
+    language: 'TypeScript',
     content: 'export const hello = "world";',
     gistUrl: 'https://gist.github.com/octocat/gist-1',
     rawUrl: 'https://gist.githubusercontent.com/raw/hello.ts',
@@ -380,4 +412,68 @@ test('routes profile, history, viewer, and editor actions through the new stack 
     mode: 'edit',
     gistId: 'gist-1',
   });
+});
+
+test('keeps comments lazy until the user explicitly loads them', () => {
+  const navigation = {
+    goBack: jest.fn(),
+    navigate: jest.fn(),
+  } as unknown as RootStackScreenProps<'GistDetail'>['navigation'];
+
+  (useGistDetail as jest.Mock).mockImplementation((_gistId: string, options?: {loadComments?: boolean}) => ({
+    gist: createGist({comments: 1}),
+    support: {
+      starred: false,
+      starredError: null,
+    },
+    comments: options?.loadComments
+      ? [
+          {
+            id: 7,
+            body: 'Nice gist',
+            created_at: '2026-04-06T00:00:00Z',
+            updated_at: '2026-04-06T00:00:00Z',
+            user: {
+              login: 'friend',
+              id: 2,
+              avatar_url: 'https://example.com/friend.png',
+              gravatar_id: '',
+              url: 'https://api.github.com/users/friend',
+              html_url: 'https://github.com/friend',
+              type: 'User',
+              site_admin: false,
+            },
+          },
+        ]
+      : [],
+    gistQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    supportQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    commentsQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+  }));
+
+  render(
+    <GistDetailScreen
+      navigation={navigation}
+      route={{key: 'GistDetail-gist-1', name: 'GistDetail', params: {gistId: 'gist-1'}}}
+    />,
+  );
+
+  expect(screen.getByRole('button', {name: 'Load comments'})).toBeTruthy();
+  expect(screen.queryByText('Nice gist')).toBeNull();
+
+  fireEvent.press(screen.getByRole('button', {name: 'Load comments'}));
+
+  expect(screen.getByText('Nice gist')).toBeTruthy();
 });
