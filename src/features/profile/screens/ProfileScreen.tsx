@@ -1,5 +1,5 @@
 import React from 'react';
-import {Image, Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {useQuery} from '@tanstack/react-query';
 import type {MainTabScreenProps} from '../../../app/navigation/types';
 import {useAppTheme} from '../../../app/theme/context';
@@ -22,12 +22,15 @@ export function ProfileScreen({navigation}: MainTabScreenProps<'Profile'>) {
   const {status, user} = useSession();
   const userQuery = useQuery({
     queryKey: queryKeys.userProfile(user?.login ?? 'me'),
-    queryFn: () => getUserInfo(),
+    queryFn: ({signal}) => getUserInfo(undefined, signal),
     enabled: status === 'signedIn' && Boolean(user?.login),
   });
 
   const profile = userQuery.data;
   const displayName = profile?.name ?? user?.name ?? user?.login ?? t('profile.defaultDisplayName');
+  const handleRefreshProfile = React.useCallback(() => {
+    userQuery.refetch();
+  }, [userQuery]);
 
   if (status === 'loading' && !user) {
     return (
@@ -56,6 +59,14 @@ export function ProfileScreen({navigation}: MainTabScreenProps<'Profile'>) {
     <AppScreen>
       <ScrollView
         contentContainerStyle={styles.content}
+        refreshControl={
+          user ? (
+            <RefreshControl
+              refreshing={userQuery.isRefetching}
+              onRefresh={handleRefreshProfile}
+            />
+          ) : undefined
+        }
         showsVerticalScrollIndicator={false}>
         <AppPageHeader
           title={t('profile.title')}

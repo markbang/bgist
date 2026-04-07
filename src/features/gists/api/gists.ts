@@ -17,49 +17,62 @@ function canFallbackToPublicPage(error: unknown) {
   );
 }
 
-export async function getMyGists(page = 1, perPage = 30) {
+export async function getMyGists(page = 1, perPage = 30, signal?: AbortSignal) {
   const {data} = await githubClient.get<Gist[]>('/gists', {
     params: {page, per_page: perPage},
+    signal,
   });
   return data;
 }
 
-export async function getStarredGists(page = 1, perPage = 30) {
+export async function getStarredGists(page = 1, perPage = 30, signal?: AbortSignal) {
   const {data} = await githubClient.get<Gist[]>('/gists/starred', {
     params: {page, per_page: perPage},
+    signal,
   });
   return data;
 }
 
-export async function getPublicGists(page = 1, perPage = 30) {
+export async function getPublicGists(page = 1, perPage = 30, signal?: AbortSignal) {
   const {data} = await githubClient.get<Gist[]>('/gists/public', {
     params: {page, per_page: perPage},
+    signal,
   });
   return data;
 }
 
-export async function getUserGists(username: string, page = 1, perPage = 30) {
+export async function getUserGists(
+  username: string,
+  page = 1,
+  perPage = 30,
+  signal?: AbortSignal,
+) {
   const {data} = await githubClient.get<Gist[]>(`/users/${username}/gists`, {
     params: {page, per_page: perPage},
+    signal,
   });
   return data;
 }
 
-export async function getUserInfo(username?: string) {
-  const {data} = await githubClient.get<UserInfo>(username ? `/users/${username}` : '/user');
+export async function getUserInfo(username?: string, signal?: AbortSignal) {
+  const {data} = await githubClient.get<UserInfo>(username ? `/users/${username}` : '/user', {
+    signal,
+  });
   return data;
 }
 
-export async function getGist(gistId: string) {
+export async function getGist(gistId: string, signal?: AbortSignal) {
   try {
-    const {data} = await githubClient.get<GistWithHistory>(`/gists/${gistId}`);
+    const {data} = await githubClient.get<GistWithHistory>(`/gists/${gistId}`, {
+      signal,
+    });
     return data;
   } catch (error) {
     if (!canFallbackToPublicPage(error)) {
       throw error;
     }
 
-    const response = await fetch(`https://gist.github.com/${gistId}`);
+    const response = await fetch(`https://gist.github.com/${gistId}`, {signal});
 
     if (!response.ok) {
       throw error;
@@ -75,9 +88,9 @@ export async function getGist(gistId: string) {
   }
 }
 
-export async function isGistStarred(gistId: string) {
+export async function isGistStarred(gistId: string, signal?: AbortSignal) {
   try {
-    const {status} = await githubClient.get(`/gists/${gistId}/star`);
+    const {status} = await githubClient.get(`/gists/${gistId}/star`, {signal});
     return status === 204;
   } catch (error) {
     if (error instanceof GitHubApiError && error.status === 404) {
@@ -88,8 +101,10 @@ export async function isGistStarred(gistId: string) {
   }
 }
 
-export async function getGistComments(gistId: string) {
-  const {data} = await githubClient.get<GistComment[]>(`/gists/${gistId}/comments`);
+export async function getGistComments(gistId: string, signal?: AbortSignal) {
+  const {data} = await githubClient.get<GistComment[]>(`/gists/${gistId}/comments`, {
+    signal,
+  });
   return data;
 }
 

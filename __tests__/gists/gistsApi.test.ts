@@ -1,4 +1,4 @@
-import {getGist} from '../../src/features/gists/api/gists';
+import {getGist, getPublicGists} from '../../src/features/gists/api/gists';
 import {githubClient} from '../../src/shared/api/client';
 import {GitHubApiError} from '../../src/shared/api/errors';
 
@@ -91,4 +91,16 @@ test('does not hide non-retryable gist detail errors behind the public-page fall
 
   await expect(getGist('missing-gist')).rejects.toBe(error);
   expect(globalThis.fetch).not.toHaveBeenCalled();
+});
+
+test('forwards abort signals into public gist list requests', async () => {
+  const signal = new AbortController().signal;
+  (githubClient.get as jest.Mock).mockResolvedValue({data: []});
+
+  await getPublicGists(2, 15, signal);
+
+  expect(githubClient.get).toHaveBeenCalledWith('/gists/public', {
+    params: {page: 2, per_page: 15},
+    signal,
+  });
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import {FlatList, Image, Linking, StyleSheet, Text, View} from 'react-native';
+import {FlatList, Image, Linking, StyleSheet, type ListRenderItem, Text, View} from 'react-native';
 import {useQuery} from '@tanstack/react-query';
 import type {RootStackScreenProps} from '../../../app/navigation/types';
 import {useAppTheme} from '../../../app/theme/context';
@@ -13,12 +13,13 @@ import {AppErrorState} from '../../../shared/ui/AppErrorState';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
 import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
 import {AppScreen} from '../../../shared/ui/AppScreen';
+import {appFeedListProps} from '../../../shared/ui/listPresets';
 import {useI18n} from '../../../i18n/context';
-import type {UserInfo} from '../../../types/gist';
+import type {Gist, UserInfo} from '../../../types/gist';
 import {GistCard} from '../../gists/components/GistCard';
 import {getUserGists, getUserInfo} from '../../gists/api/gists';
 
-function StatCard({label, value}: {label: string; value: number}) {
+const StatCard = React.memo(function StatCard({label, value}: {label: string; value: number}) {
   const {themeName} = useAppTheme();
   const styles = getStyles(themeName);
 
@@ -28,9 +29,9 @@ function StatCard({label, value}: {label: string; value: number}) {
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
-}
+});
 
-function ProfileHero({
+const ProfileHero = React.memo(function ProfileHero({
   profile,
   username,
   t,
@@ -93,7 +94,7 @@ function ProfileHero({
       </View>
     </View>
   );
-}
+});
 
 export function UserProfileScreen({navigation, route}: RootStackScreenProps<'UserProfile'>) {
   const {themeName} = useAppTheme();
@@ -102,17 +103,45 @@ export function UserProfileScreen({navigation, route}: RootStackScreenProps<'Use
   const {username} = route.params;
   const profileQuery = useQuery({
     queryKey: queryKeys.userProfile(username),
-    queryFn: () => getUserInfo(username),
+    queryFn: ({signal}) => getUserInfo(username, signal),
   });
   const gistsQuery = useQuery({
     queryKey: queryKeys.userGists(username),
-    queryFn: () => getUserGists(username, 1, 30),
+    queryFn: ({signal}) => getUserGists(username, 1, 30, signal),
   });
 
   const handleRetry = React.useCallback(() => {
     profileQuery.refetch();
     gistsQuery.refetch();
   }, [gistsQuery, profileQuery]);
+  const handleOpenGist = React.useCallback(
+    (gistId: string) => {
+      navigation.navigate('GistDetail', {gistId});
+    },
+    [navigation],
+  );
+  const keyExtractor = React.useCallback((item: Gist) => item.id, []);
+  const renderItem = React.useCallback<ListRenderItem<Gist>>(
+    ({item}) => <GistCard gist={item} onPressGist={handleOpenGist} />,
+    [handleOpenGist],
+  );
+  const listHeader = React.useMemo(
+    () =>
+      profileQuery.data ? (
+        <ProfileHero profile={profileQuery.data} username={username} t={t} />
+      ) : null,
+    [profileQuery.data, t, username],
+  );
+  const listEmpty = React.useMemo(
+    () => (
+      <AppEmptyState
+        badgeLabel={t('userProfile.sectionTitle')}
+        title={t('userProfile.emptyTitle')}
+        description={t('userProfile.emptyDescription')}
+      />
+    ),
+    [t],
+  );
 
   if ((profileQuery.isLoading && !profileQuery.data) || (gistsQuery.isLoading && !gistsQuery.data)) {
     return (
@@ -141,21 +170,13 @@ export function UserProfileScreen({navigation, route}: RootStackScreenProps<'Use
     <AppScreen>
       <FlatList
         data={gistsQuery.data}
-        keyExtractor={item => item.id}
-        renderItem={({item}) => (
-          <GistCard
-            gist={item}
-            onPress={() => navigation.navigate('GistDetail', {gistId: item.id})}
-          />
-        )}
-        ListHeaderComponent={<ProfileHero profile={profileQuery.data} username={username} t={t} />}
-        ListEmptyComponent={
-          <AppEmptyState
-            badgeLabel={t('userProfile.sectionTitle')}
-            title={t('userProfile.emptyTitle')}
-            description={t('userProfile.emptyDescription')}
-          />
-        }
+        {...appFeedListProps}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        ListHeaderComponent={listHeader}
+        ListEmptyComponent={listEmpty}
+        refreshing={profileQuery.isRefetching || gistsQuery.isRefetching}
+        onRefresh={handleRetry}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       />

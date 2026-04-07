@@ -182,7 +182,7 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
 
   const existingGistQuery = useQuery({
     queryKey: editGistId ? queryKeys.gistDetail(editGistId) : ['gists', 'detail', 'create'],
-    queryFn: () => getGist(editGistId as string),
+    queryFn: ({signal}) => getGist(editGistId as string, signal),
     enabled: Boolean(editGistId) && !hasHydratedEditState,
   });
 

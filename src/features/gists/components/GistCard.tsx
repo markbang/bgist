@@ -8,7 +8,7 @@ import {AppCard} from '../../../shared/ui/AppCard';
 
 interface GistCardProps {
   gist: Gist;
-  onPress?: () => void;
+  onPressGist?: (gistId: string) => void;
 }
 
 function formatDate(value: string) {
@@ -25,20 +25,23 @@ function formatDate(value: string) {
   });
 }
 
-export function GistCard({gist, onPress}: GistCardProps) {
+function GistCardComponent({gist, onPressGist}: GistCardProps) {
   const {themeName} = useAppTheme();
   const styles = getStyles(themeName);
   const files = Object.values(gist.files);
   const owner = gist.owner?.login ?? gist.user?.login ?? 'Unknown';
   const description = gist.description?.trim() || 'Untitled gist';
   const fileNames = files.map(file => file.filename).filter(Boolean);
+  const handlePress = React.useCallback(() => {
+    onPressGist?.(gist.id);
+  }, [gist.id, onPressGist]);
 
   return (
     <Pressable
-      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityRole={onPressGist ? 'button' : undefined}
       accessibilityLabel={description}
-      onPress={onPress}
-      style={({pressed}) => [pressed && onPress ? styles.pressed : null]}>
+      onPress={onPressGist ? handlePress : undefined}
+      style={({pressed}) => [pressed && onPressGist ? styles.pressed : null]}>
       <AppCard>
         <View style={styles.header}>
           <View style={styles.headerContent}>
@@ -72,6 +75,8 @@ export function GistCard({gist, onPress}: GistCardProps) {
     </Pressable>
   );
 }
+
+export const GistCard = React.memo(GistCardComponent);
 
 const getStyles = createThemedStyles(theme =>
   StyleSheet.create({

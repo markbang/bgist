@@ -13,23 +13,25 @@ export function useGistDetail(
 
   const gistQuery = useQuery({
     queryKey: queryKeys.gistDetail(gistId),
-    queryFn: () => getGist(gistId),
+    queryFn: ({signal}) => getGist(gistId, signal),
     enabled,
   });
 
   const supportQuery = useQuery({
     queryKey: queryKeys.gistSupport(gistId),
-    queryFn: () =>
+    queryFn: ({signal}) =>
       loadGistSupport(gistId, {
         gistUrl: gistQuery.data?.html_url,
         isPublic: gistQuery.data?.public,
-      }),
+      }, signal),
     enabled: gistQuery.isSuccess,
+    staleTime: 5 * 60_000,
+    refetchOnReconnect: false,
   });
 
   const commentsQuery = useQuery({
     queryKey: queryKeys.gistComments(gistId),
-    queryFn: () => getGistComments(gistId),
+    queryFn: ({signal}) => getGistComments(gistId, signal),
     enabled: gistQuery.isSuccess && options?.loadComments === true,
   });
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import {FlatList, StyleSheet, View} from 'react-native';
+import {FlatList, StyleSheet, type ListRenderItem, View} from 'react-native';
 import {useAppTheme} from '../../../app/theme/context';
 import {createThemedStyles} from '../../../app/theme/tokens';
 import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
@@ -8,7 +8,9 @@ import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
 import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
 import {AppScreen} from '../../../shared/ui/AppScreen';
 import {AppSegmentedControl} from '../../../shared/ui/AppSegmentedControl';
+import {appFeedListProps} from '../../../shared/ui/listPresets';
 import {useI18n} from '../../../i18n/context';
+import type {Gist} from '../../../types/gist';
 import {GistCard} from '../components/GistCard';
 import {type HomeFeedSegment, useHomeFeed} from '../hooks/useHomeFeed';
 
@@ -22,11 +24,38 @@ export function HomeScreen({navigation}: HomeScreenProps) {
   const {themeName} = useAppTheme();
   const {t} = useI18n();
   const styles = getStyles(themeName);
-  const {segment, setSegment, items, isLoading, isError, refetch} = useHomeFeed();
-  const segments = [
-    {label: t('home.segmentMine'), value: 'my'},
-    {label: t('home.segmentStarred'), value: 'starred'},
-  ] satisfies {label: string; value: HomeFeedSegment}[];
+  const [isSegmentPending, startSegmentTransition] = React.useTransition();
+  const {segment, setSegment, items, isLoading, isRefreshing, isError, refetch} = useHomeFeed();
+  const segments = React.useMemo(
+    () =>
+      [
+        {label: t('home.segmentMine'), value: 'my'},
+        {label: t('home.segmentStarred'), value: 'starred'},
+      ] satisfies {label: string; value: HomeFeedSegment}[],
+    [t],
+  );
+  const keyExtractor = React.useCallback((item: Gist) => item.id, []);
+  const handleOpenGist = React.useCallback(
+    (gistId: string) => {
+      navigation.navigate('GistDetail', {gistId});
+    },
+    [navigation],
+  );
+  const renderItem = React.useCallback<ListRenderItem<Gist>>(
+    ({item}) => <GistCard gist={item} onPressGist={handleOpenGist} />,
+    [handleOpenGist],
+  );
+  const handleRefresh = React.useCallback(() => {
+    refetch();
+  }, [refetch]);
+  const handleSegmentChange = React.useCallback(
+    (nextSegment: HomeFeedSegment) => {
+      startSegmentTransition(() => {
+        setSegment(nextSegment);
+      });
+    },
+    [setSegment],
+  );
 
   let content: React.ReactNode;
 
@@ -63,13 +92,12 @@ export function HomeScreen({navigation}: HomeScreenProps) {
     content = (
       <FlatList
         data={items}
-        keyExtractor={item => item.id}
-        renderItem={({item}) => (
-          <GistCard
-            gist={item}
-            onPress={() => navigation.navigate('GistDetail', {gistId: item.id})}
-          />
-        )}
+        {...appFeedListProps}
+        testID="home-feed-list"
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        refreshing={isRefreshing}
+        onRefresh={handleRefresh}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />
@@ -81,7 +109,12 @@ export function HomeScreen({navigation}: HomeScreenProps) {
       <View style={styles.container}>
         <View style={styles.header}>
           <AppPageHeader title={t('home.title')} />
-          <AppSegmentedControl options={segments} value={segment} onChange={setSegment} />
+          <AppSegmentedControl
+            options={segments}
+            value={segment}
+            onChange={handleSegmentChange}
+            disabled={isSegmentPending}
+          />
         </View>
 
         <View style={styles.content}>{content}</View>

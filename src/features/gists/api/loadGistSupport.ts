@@ -1,5 +1,5 @@
 import {isGistStarred} from './gists';
-import {githubClient} from '../../../shared/api/client';
+import {getApiAccessToken, githubClient} from '../../../shared/api/client';
 
 export type GistSupportData = {
   starred: boolean | null;
@@ -38,12 +38,13 @@ function parseLastPage(linkHeader: string | null | undefined) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-async function getGistForkCount(gistId: string) {
+async function getGistForkCount(gistId: string, signal?: AbortSignal) {
   const response = await githubClient.get<unknown[]>(`/gists/${gistId}/forks`, {
     params: {
       per_page: 1,
       page: 1,
     },
+    signal,
   });
 
   return parseLastPage(response.headers.link) ?? response.data.length;
@@ -59,8 +60,8 @@ function parsePublicCount(html: string, pathPattern: string) {
   return match?.[1] ? parseCountLabel(match[1]) : null;
 }
 
-async function getPublicGistCounts(gistUrl: string) {
-  const response = await fetch(gistUrl);
+async function getPublicGistCounts(gistUrl: string, signal?: AbortSignal) {
+  const response = await fetch(gistUrl, {signal});
 
   if (!response.ok) {
     throw new Error('GIST_PUBLIC_COUNTS_FAILED');
@@ -80,23 +81,31 @@ export async function loadGistSupport(
     gistUrl?: string;
     isPublic?: boolean;
   },
+  signal?: AbortSignal,
 ): Promise<GistSupportData> {
+  const shouldLoadPublicCounts = Boolean(options?.isPublic && options.gistUrl);
+  const shouldCheckStarred = Boolean(getApiAccessToken());
   const [starredResult, forkCountResult, publicCountsResult] = await Promise.allSettled([
-    isGistStarred(gistId),
-    getGistForkCount(gistId),
-    options?.isPublic && options.gistUrl ? getPublicGistCounts(options.gistUrl) : Promise.resolve(null),
+    shouldCheckStarred ? isGistStarred(gistId, signal) : Promise.resolve(null),
+    shouldLoadPublicCounts ? Promise.resolve(null) : getGistForkCount(gistId, signal),
+    shouldLoadPublicCounts && options?.gistUrl
+      ? getPublicGistCounts(options.gistUrl, signal)
+      : Promise.resolve(null),
   ]);
 
   const publicCounts =
     publicCountsResult.status === 'fulfilled' ? publicCountsResult.value : null;
 
   return {
-    starred: starredResult.status === 'fulfilled' ? starredResult.value : null,
+    starred:
+      starredResult.status === 'fulfilled' && typeof starredResult.value === 'boolean'
+        ? starredResult.value
+        : null,
     starredError:
       starredResult.status === 'rejected' ? getErrorMessage(starredResult.reason) : null,
     starCount: publicCounts?.starCount ?? null,
     forkCount:
-      forkCountResult.status === 'fulfilled'
+      forkCountResult.status === 'fulfilled' && typeof forkCountResult.value === 'number'
         ? forkCountResult.value
         : publicCounts?.forkCount ?? null,
   };

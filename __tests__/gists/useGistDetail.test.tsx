@@ -1,5 +1,5 @@
 import React from 'react';
-import {renderHook, waitFor} from '@testing-library/react-native';
+import {act, renderHook, waitFor} from '@testing-library/react-native';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {queryKeys} from '../../src/shared/api/queryKeys';
 import {useGistDetail} from '../../src/features/gists/hooks/useGistDetail';
@@ -69,16 +69,22 @@ test('waits for gist detail success before loading support data', async () => {
     wrapper: createWrapper(),
   });
 
-  expect(getGist).toHaveBeenCalledWith('gist-123');
+  expect(getGist).toHaveBeenCalledWith('gist-123', expect.any(Object));
   expect(loadGistSupport).not.toHaveBeenCalled();
 
-  gistDeferred.resolve({id: 'gist-123'});
+  await act(async () => {
+    gistDeferred.resolve({id: 'gist-123'});
+  });
 
   await waitFor(() => {
-    expect(loadGistSupport).toHaveBeenCalledWith('gist-123', {
-      gistUrl: undefined,
-      isPublic: undefined,
-    });
+    expect(loadGistSupport).toHaveBeenCalledWith(
+      'gist-123',
+      {
+        gistUrl: undefined,
+        isPublic: undefined,
+      },
+      expect.any(Object),
+    );
   });
 });
 
@@ -97,13 +103,19 @@ test('does not load gist comments until comments are explicitly enabled', async 
     wrapper: createWrapper(),
   });
 
-  gistDeferred.resolve({id: 'gist-123'});
+  await act(async () => {
+    gistDeferred.resolve({id: 'gist-123'});
+  });
 
   await waitFor(() => {
-    expect(loadGistSupport).toHaveBeenCalledWith('gist-123', {
-      gistUrl: undefined,
-      isPublic: undefined,
-    });
+    expect(loadGistSupport).toHaveBeenCalledWith(
+      'gist-123',
+      {
+        gistUrl: undefined,
+        isPublic: undefined,
+      },
+      expect.any(Object),
+    );
   });
 
   expect(getGistComments).not.toHaveBeenCalled();
@@ -112,6 +124,6 @@ test('does not load gist comments until comments are explicitly enabled', async 
   rerender({});
 
   await waitFor(() => {
-    expect(getGistComments).toHaveBeenCalledWith('gist-123');
+    expect(getGistComments).toHaveBeenCalledWith('gist-123', expect.any(Object));
   });
 });

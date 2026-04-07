@@ -86,6 +86,7 @@ test('switches the home feed from My to Starred when the segment is pressed', ()
     setSegment,
     items: [createGist({id: 'mine-1', description: 'My gist'})],
     isLoading: false,
+    isRefreshing: false,
     isError: false,
     refetch: jest.fn(),
   });
@@ -99,12 +100,33 @@ test('switches the home feed from My to Starred when the segment is pressed', ()
   expect(setSegment).toHaveBeenCalledWith('starred');
 });
 
+test('supports native pull-to-refresh on the home feed list', () => {
+  const refetch = jest.fn();
+
+  (useHomeFeed as jest.Mock).mockReturnValue({
+    segment: 'my',
+    setSegment: jest.fn(),
+    items: [createGist({id: 'mine-1', description: 'My gist'})],
+    isLoading: false,
+    isRefreshing: false,
+    isError: false,
+    refetch,
+  });
+
+  render(<HomeScreen navigation={{navigate: jest.fn()}} />);
+
+  screen.getByTestId('home-feed-list').props.onRefresh();
+
+  expect(refetch).toHaveBeenCalled();
+});
+
 test('keeps the home header focused by omitting the old descriptive subtitle', () => {
   (useHomeFeed as jest.Mock).mockReturnValue({
     segment: 'my',
     setSegment: jest.fn(),
     items: [createGist({id: 'mine-1', description: 'My gist'})],
     isLoading: false,
+    isRefreshing: false,
     isError: false,
     refetch: jest.fn(),
   });
@@ -143,7 +165,11 @@ test('explore screen only auto-navigates once per gist reference and allows a ne
   );
 
   await waitFor(() => {
-    expect(getPublicGists).toHaveBeenCalledWith(1);
+    expect(getPublicGists).toHaveBeenCalledWith(
+      1,
+      30,
+      expect.objectContaining({aborted: false}),
+    );
     expect(navigate).toHaveBeenCalledWith('GistDetail', {
       gistId: 'aa5a315d61ae9438b18d',
     });

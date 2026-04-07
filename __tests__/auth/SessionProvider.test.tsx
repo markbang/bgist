@@ -6,6 +6,7 @@ import * as Keychain from 'react-native-keychain';
 import {RootNavigator} from '../../src/app/navigation/RootNavigator';
 import * as GitHubOAuth from '../../src/features/auth/api/oauth';
 import {assertOAuthConfig, githubOAuthConfig} from '../../src/features/auth/config/oauth';
+import {getUserInfo} from '../../src/features/gists/api/gists';
 import {SessionProvider, useSession} from '../../src/features/auth/session/SessionProvider';
 import {queryKeys} from '../../src/shared/api/queryKeys';
 
@@ -17,6 +18,9 @@ jest.mock('react-native-keychain', () => ({
 jest.mock('../../src/features/auth/api/oauth', () => ({
   requestGitHubDeviceAuthorization: jest.fn(),
   pollGitHubDeviceAccessToken: jest.fn(),
+}));
+jest.mock('../../src/features/gists/api/gists', () => ({
+  getUserInfo: jest.fn(),
 }));
 jest.mock('@react-navigation/native', () => ({
   NavigationContainer: ({children}: {children: React.ReactNode}) => <>{children}</>,
@@ -147,10 +151,11 @@ test('signIn stores the OAuth session', async () => {
     accessToken: 'token-456',
   });
   githubOAuthConfig.clientId = 'bgist-test-client-id';
-  globalThis.fetch = jest.fn().mockResolvedValue({
-    ok: true,
-    json: async () => ({login: 'octocat'}),
-  }) as jest.Mock;
+  (getUserInfo as jest.Mock).mockResolvedValue({
+    login: 'octocat',
+    name: 'The Octocat',
+    avatar_url: 'https://example.com/octocat.png',
+  });
 
   let sessionApi: ReturnType<typeof useSession> | null = null;
 
@@ -178,6 +183,7 @@ test('signIn stores the OAuth session', async () => {
     userCode: 'WXYZ-1234',
     verificationUri: 'https://github.com/login/device',
   });
+  expect(getUserInfo).toHaveBeenCalledWith();
 
   await waitFor(() => {
     expect(screen.getByText('signedIn:octocat')).toBeTruthy();
@@ -199,10 +205,11 @@ test('clears query cache on signIn and signOut transitions', async () => {
     accessToken: 'token-789',
   });
   githubOAuthConfig.clientId = 'bgist-test-client-id';
-  globalThis.fetch = jest.fn().mockResolvedValue({
-    ok: true,
-    json: async () => ({login: 'octocat'}),
-  }) as jest.Mock;
+  (getUserInfo as jest.Mock).mockResolvedValue({
+    login: 'octocat',
+    name: 'The Octocat',
+    avatar_url: 'https://example.com/octocat.png',
+  });
 
   let sessionApi: ReturnType<typeof useSession> | null = null;
 

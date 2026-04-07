@@ -1,5 +1,5 @@
 import React from 'react';
-import {FlatList, StyleSheet, View} from 'react-native';
+import {FlatList, StyleSheet, type ListRenderItem, View} from 'react-native';
 import {useQuery} from '@tanstack/react-query';
 import {useAppTheme} from '../../../app/theme/context';
 import {createThemedStyles} from '../../../app/theme/tokens';
@@ -10,7 +10,9 @@ import {AppInput} from '../../../shared/ui/AppInput';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
 import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
 import {AppScreen} from '../../../shared/ui/AppScreen';
+import {appFeedListProps} from '../../../shared/ui/listPresets';
 import {useI18n} from '../../../i18n/context';
+import type {Gist} from '../../../types/gist';
 import {GistCard} from '../components/GistCard';
 import {getPublicGists} from '../api/gists';
 import {parseGistReference} from '../utils/parseGistReference';
@@ -26,15 +28,31 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
   const {t} = useI18n();
   const styles = getStyles(themeName);
   const [query, setQuery] = React.useState('');
+  const deferredQuery = React.useDeferredValue(query);
   const lastAutoNavigatedQueryRef = React.useRef<string | null>(null);
   const publicGistsQuery = useQuery({
     queryKey: queryKeys.publicGists,
-    queryFn: () => getPublicGists(1),
+    queryFn: ({signal}) => getPublicGists(1, 30, signal),
   });
 
-  const gistReference = parseGistReference(query);
+  const gistReference = React.useMemo(() => parseGistReference(query), [query]);
+  const deferredGistReference = React.useMemo(
+    () => parseGistReference(deferredQuery),
+    [deferredQuery],
+  );
   const normalizedQuery = query.trim().toLowerCase();
+  const deferredNormalizedQuery = deferredQuery.trim().toLowerCase();
   const gistReferenceId = gistReference?.gistId;
+  const handleOpenGist = React.useCallback(
+    (gistId: string) => {
+      navigation.navigate('GistDetail', {gistId});
+    },
+    [navigation],
+  );
+  const handleRefresh = React.useCallback(() => {
+    publicGistsQuery.refetch();
+  }, [publicGistsQuery]);
+  const keyExtractor = React.useCallback((item: Gist) => item.id, []);
 
   React.useEffect(() => {
     if (!gistReferenceId) {
@@ -50,28 +68,35 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
     navigation.navigate('GistDetail', {gistId: gistReferenceId});
   }, [gistReferenceId, navigation, normalizedQuery]);
 
-  const publicGists = publicGistsQuery.data ?? [];
-  const filteredGists = publicGists.filter(gist => {
-    if (!normalizedQuery) {
-      return true;
-    }
+  const filteredGists = React.useMemo(() => {
+    const publicGists = publicGistsQuery.data ?? [];
 
-    if (gistReference) {
-      return gist.id.toLowerCase() === gistReference.gistId.toLowerCase();
-    }
+    return publicGists.filter(gist => {
+      if (!deferredNormalizedQuery) {
+        return true;
+      }
 
-    const searchSpace = [
-      gist.description,
-      gist.owner?.login,
-      gist.user?.login,
-      ...Object.values(gist.files).map(file => file.filename),
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase();
+      if (deferredGistReference) {
+        return gist.id.toLowerCase() === deferredGistReference.gistId.toLowerCase();
+      }
 
-    return searchSpace.includes(normalizedQuery);
-  });
+      const searchSpace = [
+        gist.description,
+        gist.owner?.login,
+        gist.user?.login,
+        ...Object.values(gist.files).map(file => file.filename),
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return searchSpace.includes(deferredNormalizedQuery);
+    });
+  }, [deferredGistReference, deferredNormalizedQuery, publicGistsQuery.data]);
+  const renderItem = React.useCallback<ListRenderItem<Gist>>(
+    ({item}) => <GistCard gist={item} onPressGist={handleOpenGist} />,
+    [handleOpenGist],
+  );
 
   let content: React.ReactNode;
 
@@ -92,7 +117,7 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
         }}
       />
     );
-  } else if (filteredGists.length === 0 && !gistReference) {
+  } else if (filteredGists.length === 0 && !gistReference && !deferredGistReference) {
     content = (
       <AppEmptyState
         badgeLabel={t('explore.title')}
@@ -104,13 +129,11 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
     content = (
       <FlatList
         data={filteredGists}
-        keyExtractor={item => item.id}
-        renderItem={({item}) => (
-          <GistCard
-            gist={item}
-            onPress={() => navigation.navigate('GistDetail', {gistId: item.id})}
-          />
-        )}
+        {...appFeedListProps}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        refreshing={publicGistsQuery.isRefetching}
+        onRefresh={handleRefresh}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />

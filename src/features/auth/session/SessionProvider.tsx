@@ -7,6 +7,7 @@ import {
 } from '../api/oauth';
 import {clearSession, readSession, saveSession, StoredSession} from '../storage/secureSessionStore';
 import {setApiAccessToken} from '../../../shared/api/client';
+import {getUserInfo} from '../../gists/api/gists';
 
 type SessionStatus = 'loading' | 'signedOut' | 'signedIn';
 
@@ -19,22 +20,6 @@ type SessionContextValue = {
 };
 
 const SessionContext = createContext<SessionContextValue | null>(null);
-
-async function fetchCurrentUser(token: string) {
-  const response = await fetch('https://api.github.com/user', {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error('GITHUB_USER_FETCH_FAILED');
-  }
-
-  return response.json();
-}
 
 export function SessionProvider({children}: {children: React.ReactNode}) {
   const queryClient = useQueryClient();
@@ -87,21 +72,29 @@ export function SessionProvider({children}: {children: React.ReactNode}) {
         const authorization = await requestGitHubDeviceAuthorization();
         options?.onVerification?.(authorization);
         const authState = await pollGitHubDeviceAccessToken(authorization);
-        const currentUser = await fetchCurrentUser(authState.accessToken);
-        const nextSession = {
-          accessToken: authState.accessToken,
-          user: {
-            login: currentUser.login,
-            avatar_url: currentUser.avatar_url,
-            name: currentUser.name,
-          },
-        };
-        await saveSession(nextSession);
-        queryClient.clear();
-        setApiAccessToken(nextSession.accessToken);
-        setAccessToken(nextSession.accessToken);
-        setUser(nextSession.user);
-        setStatus('signedIn');
+        setApiAccessToken(authState.accessToken);
+
+        try {
+          const currentUser = await getUserInfo();
+          const nextSession = {
+            accessToken: authState.accessToken,
+            user: {
+              login: currentUser.login,
+              avatar_url: currentUser.avatar_url,
+              name: currentUser.name,
+            },
+          };
+
+          await saveSession(nextSession);
+          queryClient.clear();
+          setApiAccessToken(nextSession.accessToken);
+          setAccessToken(nextSession.accessToken);
+          setUser(nextSession.user);
+          setStatus('signedIn');
+        } catch (error) {
+          setApiAccessToken(null);
+          throw error;
+        }
       },
       async signOut() {
         await clearSession();

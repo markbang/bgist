@@ -1,8 +1,9 @@
 import React from 'react';
-import {StyleSheet, View} from 'react-native';
+import {StyleSheet} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {createThemedStyles} from '../../app/theme/tokens';
 import {useAppTheme} from '../../app/theme/context';
+import {AppReveal} from './AppReveal';
 
 export function AppScreen({children}: {children: React.ReactNode}) {
   const {themeName} = useAppTheme();
@@ -10,7 +11,7 @@ export function AppScreen({children}: {children: React.ReactNode}) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      <View style={styles.content}>{children}</View>
+      <AppReveal style={styles.content}>{children}</AppReveal>
     </SafeAreaView>
   );
 }

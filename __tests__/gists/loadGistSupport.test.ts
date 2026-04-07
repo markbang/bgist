@@ -3,6 +3,7 @@ import {GitHubApiError} from '../../src/shared/api/errors';
 import {loadGistSupport} from '../../src/features/gists/api/loadGistSupport';
 
 jest.mock('../../src/shared/api/client', () => ({
+  getApiAccessToken: jest.fn(() => 'token-123'),
   githubClient: {
     get: jest.fn(),
   },

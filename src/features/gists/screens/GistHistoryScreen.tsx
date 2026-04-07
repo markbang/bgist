@@ -1,28 +1,30 @@
 import React from 'react';
-import {Alert, FlatList, Linking, Pressable, StyleSheet, Text, View} from 'react-native';
+import {Alert, FlatList, Linking, Pressable, StyleSheet, type ListRenderItem, Text, View} from 'react-native';
 import {useQuery} from '@tanstack/react-query';
 import type {RootStackScreenProps} from '../../../app/navigation/types';
 import {useAppTheme} from '../../../app/theme/context';
 import {createThemedStyles} from '../../../app/theme/tokens';
+import {queryKeys} from '../../../shared/api/queryKeys';
 import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
 import {AppErrorState} from '../../../shared/ui/AppErrorState';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
 import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
 import {AppScreen} from '../../../shared/ui/AppScreen';
+import {appFeedListProps} from '../../../shared/ui/listPresets';
 import {useI18n} from '../../../i18n/context';
 import {getGist} from '../api/gists';
 import {AppCard} from '../../../shared/ui/AppCard';
 import type {GistHistoryEntry} from '../../../types/gist';
 
-function HistoryCard({
+const HistoryCard = React.memo(function HistoryCard({
   entry,
-  gistUrl,
   locale,
+  onOpenRevision,
   t,
 }: {
   entry: GistHistoryEntry;
-  gistUrl: string;
   locale: string;
+  onOpenRevision: (version: string) => void;
   t: (key: string, values?: Record<string, string | number>) => string;
 }) {
   const {themeName} = useAppTheme();
@@ -58,16 +60,14 @@ function HistoryCard({
           accessibilityRole="button"
           accessibilityLabel={t('history.openRevision')}
           onPress={() => {
-            Linking.openURL(`${gistUrl}/${entry.version}`).catch(() => {
-              Alert.alert(t('history.openErrorTitle'), t('history.openErrorDescription'));
-            });
+            onOpenRevision(entry.version);
           }}>
           <Text style={styles.historyLink}>{t('history.openRevision')}</Text>
         </Pressable>
       </View>
     </AppCard>
   );
-}
+});
 
 export function GistHistoryScreen({route}: RootStackScreenProps<'GistHistory'>) {
   const {themeName} = useAppTheme();
@@ -76,9 +76,33 @@ export function GistHistoryScreen({route}: RootStackScreenProps<'GistHistory'>) 
   const locale = language === 'zh' ? 'zh-CN' : 'en-US';
   const {gistId} = route.params;
   const historyQuery = useQuery({
-    queryKey: ['gists', 'history', gistId],
-    queryFn: () => getGist(gistId),
+    queryKey: queryKeys.gistHistory(gistId),
+    queryFn: ({signal}) => getGist(gistId, signal),
   });
+  const gistUrl = historyQuery.data?.html_url ?? `https://gist.github.com/${gistId}`;
+  const handleOpenRevision = React.useCallback(
+    (version: string) => {
+      Linking.openURL(`${gistUrl}/${version}`).catch(() => {
+        Alert.alert(t('history.openErrorTitle'), t('history.openErrorDescription'));
+      });
+    },
+    [gistUrl, t],
+  );
+  const keyExtractor = React.useCallback((item: GistHistoryEntry) => item.version, []);
+  const renderItem = React.useCallback<ListRenderItem<GistHistoryEntry>>(
+    ({item}) => (
+      <HistoryCard
+        entry={item}
+        locale={locale}
+        onOpenRevision={handleOpenRevision}
+        t={t}
+      />
+    ),
+    [handleOpenRevision, locale, t],
+  );
+  const handleRefresh = React.useCallback(() => {
+    historyQuery.refetch();
+  }, [historyQuery]);
 
   let content: React.ReactNode;
 
@@ -111,15 +135,11 @@ export function GistHistoryScreen({route}: RootStackScreenProps<'GistHistory'>) 
     content = (
       <FlatList
         data={historyQuery.data.history}
-        keyExtractor={item => item.version}
-        renderItem={({item}) => (
-          <HistoryCard
-            entry={item}
-            gistUrl={historyQuery.data?.html_url ?? `https://gist.github.com/${gistId}`}
-            locale={locale}
-            t={t}
-          />
-        )}
+        {...appFeedListProps}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        refreshing={historyQuery.isRefetching}
+        onRefresh={handleRefresh}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />
