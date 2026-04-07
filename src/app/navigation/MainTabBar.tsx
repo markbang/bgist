@@ -75,19 +75,21 @@ export function MainTabBar({state, descriptors, navigation, config}: MainTabBarP
               onPress={onPress}
               style={({pressed}) => [
                 styles.item,
-                isFocused
-                  ? isAccent
-                    ? styles.itemAccentFocused
-                    : styles.itemFocused
-                  : null,
+                isFocused ? styles.itemFocused : null,
                 pressed ? styles.itemPressed : null,
               ]}
               testID={options?.tabBarButtonTestID ?? `main-tab-${route.name.toLowerCase()}`}>
               <View
+                style={[
+                  styles.focusIndicator,
+                  isFocused ? (isAccent ? styles.focusIndicatorAccent : styles.focusIndicatorShown) : null,
+                ]}
+              />
+              <View
                 testID={`main-tab-${route.name.toLowerCase()}-icon-slot`}
                 style={[
                   styles.iconSlot,
-                  isFocused && !isAccent ? styles.iconSlotFocused : null,
+                  isFocused ? (isAccent ? styles.iconSlotAccentFocused : styles.iconSlotFocused) : null,
                 ]}>
                 <MaterialSymbolIcon
                   color={iconColor}
@@ -126,7 +128,7 @@ const getStyles = createThemedStyles(theme =>
       flexDirection: 'row',
       alignItems: 'stretch',
       gap: theme.spacing.xs,
-      borderRadius: 26,
+      borderRadius: 24,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
@@ -139,33 +141,44 @@ const getStyles = createThemedStyles(theme =>
     },
     item: {
       flex: 1,
-      minHeight: 58,
-      borderRadius: 20,
+      position: 'relative',
+      minHeight: 56,
+      borderRadius: 18,
       borderCurve: 'continuous',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 4,
+      gap: 3,
       paddingHorizontal: theme.spacing.xs,
       paddingVertical: theme.spacing.xs,
     },
     itemFocused: {
       backgroundColor: theme.colors.surfaceMuted,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-    },
-    itemAccentFocused: {
-      backgroundColor: theme.colors.accent,
-      borderWidth: 1,
-      borderColor: theme.colors.accent,
     },
     itemPressed: {
       opacity: 0.9,
       transform: [{scale: 0.98}],
     },
+    focusIndicator: {
+      position: 'absolute',
+      top: 0,
+      width: 18,
+      height: 3,
+      borderRadius: 999,
+      opacity: 0,
+      backgroundColor: theme.colors.border,
+    },
+    focusIndicatorShown: {
+      opacity: 1,
+      backgroundColor: theme.colors.textPrimary,
+    },
+    focusIndicatorAccent: {
+      opacity: 1,
+      backgroundColor: theme.colors.accent,
+    },
     iconSlot: {
-      width: 34,
-      height: 34,
-      borderRadius: 17,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
       borderCurve: 'continuous',
       alignItems: 'center',
       justifyContent: 'center',
@@ -173,16 +186,19 @@ const getStyles = createThemedStyles(theme =>
     iconSlotFocused: {
       backgroundColor: theme.colors.surface,
     },
+    iconSlotAccentFocused: {
+      backgroundColor: theme.colors.accent,
+    },
     label: {
       color: theme.colors.textSecondary,
-      fontSize: 11,
+      fontSize: 10,
       fontWeight: '700',
     },
     labelFocused: {
       color: theme.colors.textPrimary,
     },
     labelAccentFocused: {
-      color: theme.colors.accentContrast,
+      color: theme.colors.accent,
     },
   }),
 );

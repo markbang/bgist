@@ -1,11 +1,11 @@
 import React from 'react';
-import {Linking, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Linking, Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
 import type {RootStackScreenProps} from '../../../app/navigation/types';
 import {useAppTheme, useThemePreference} from '../../../app/theme/context';
 import {createThemedStyles} from '../../../app/theme/tokens';
+import {MaterialSymbolIcon, type MaterialSymbolName} from '../../../components/TabIcons';
 import {useSession} from '../../auth/session/SessionProvider';
 import {useI18n} from '../../../i18n/context';
-import {AppButton} from '../../../shared/ui/AppButton';
 import {AppCard} from '../../../shared/ui/AppCard';
 import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
 import {AppSegmentedControl} from '../../../shared/ui/AppSegmentedControl';
@@ -13,6 +13,85 @@ import {AppScreen} from '../../../shared/ui/AppScreen';
 
 const appVersion = (require('../../../../package.json') as {version: string}).version;
 const appRepositoryUrl = 'https://github.com/markbang/bgist';
+
+function SettingsSection({
+  title,
+  description,
+  icon,
+  children,
+}: {
+  title: string;
+  description: string;
+  icon: MaterialSymbolName;
+  children: React.ReactNode;
+}) {
+  const {themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+
+  return (
+    <AppCard>
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionIcon}>
+          <MaterialSymbolIcon icon={icon} size={20} />
+        </View>
+        <View style={styles.sectionCopy}>
+          <Text style={styles.sectionTitle}>{title}</Text>
+          <Text style={styles.sectionDescription}>{description}</Text>
+        </View>
+      </View>
+      {children}
+    </AppCard>
+  );
+}
+
+function SettingsRow({
+  title,
+  value,
+  icon,
+  onPress,
+  tone = 'default',
+}: {
+  title: string;
+  value?: string;
+  icon: MaterialSymbolName;
+  onPress?: () => void;
+  tone?: 'default' | 'danger';
+}) {
+  const {theme, themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+  const isDanger = tone === 'danger';
+
+  return (
+    <Pressable
+      accessibilityLabel={title}
+      accessibilityRole={onPress ? 'button' : undefined}
+      disabled={!onPress}
+      onPress={onPress}
+      style={({pressed}) => [
+        styles.row,
+        pressed && onPress ? styles.rowPressed : null,
+      ]}>
+      <View style={[styles.rowIcon, isDanger ? styles.rowIconDanger : null]}>
+        <MaterialSymbolIcon
+          color={isDanger ? theme.colors.danger : theme.colors.textPrimary}
+          icon={icon}
+          size={20}
+        />
+      </View>
+      <View style={styles.rowCopy}>
+        <Text style={[styles.rowTitle, isDanger ? styles.rowTitleDanger : null]}>{title}</Text>
+        {value ? <Text style={styles.rowValue}>{value}</Text> : null}
+      </View>
+      {onPress ? (
+        <MaterialSymbolIcon
+          color={isDanger ? theme.colors.danger : theme.colors.textSecondary}
+          icon="chevron-right-rounded"
+          size={18}
+        />
+      ) : null}
+    </Pressable>
+  );
+}
 
 export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
   const {themeName} = useAppTheme();
@@ -36,6 +115,16 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
     {label: t('common.languageChinese'), value: 'zh'},
   ];
   const profileUrl = user?.login ? `https://github.com/${user.login}` : null;
+  const currentAppearanceLabel =
+    colorMode === 'system'
+      ? resolvedScheme === 'dark'
+        ? t('settings.themeCurrentSystemDark')
+        : t('settings.themeCurrentSystemLight')
+      : colorMode === 'dark'
+        ? t('settings.themeCurrentDark')
+        : t('settings.themeCurrentLight');
+  const currentLanguageLabel =
+    language === 'zh' ? t('common.languageChinese') : t('common.languageEnglish');
 
   const openExternal = React.useCallback((url: string) => {
     Linking.openURL(url).catch(() => {});
@@ -46,12 +135,35 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}>
-        <AppPageHeader title={t('settings.title')} />
+        <AppPageHeader
+          title={t('settings.title')}
+          accessory={
+            <View style={styles.versionBadge}>
+              <Text style={styles.versionBadgeText}>{appVersion}</Text>
+            </View>
+          }
+        />
 
-        <AppCard>
-          <View style={styles.sectionCopy}>
-            <Text style={styles.sectionTitle}>{t('settings.appearanceTitle')}</Text>
-            <Text style={styles.sectionDescription}>{t('settings.appearanceDescription')}</Text>
+        <SettingsSection
+          description={t('settings.appearanceDescription')}
+          icon="palette-outline"
+          title={t('settings.appearanceTitle')}>
+          <View style={styles.optionBlock}>
+            <View style={styles.optionLabelRow}>
+              <View style={styles.optionPill}>
+                <MaterialSymbolIcon
+                  icon={
+                    colorMode === 'system'
+                      ? 'auto-mode-rounded'
+                      : colorMode === 'dark'
+                        ? 'dark-mode-rounded'
+                        : 'light-mode-rounded'
+                  }
+                  size={16}
+                />
+                <Text style={styles.optionPillText}>{currentAppearanceLabel}</Text>
+              </View>
+            </View>
           </View>
           <AppSegmentedControl
             options={appearanceOptions}
@@ -60,21 +172,19 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
               Promise.resolve(setColorMode(value)).catch(() => {});
             }}
           />
-          <Text style={styles.helperText}>
-            {colorMode === 'system'
-              ? resolvedScheme === 'dark'
-                ? t('settings.themeCurrentSystemDark')
-                : t('settings.themeCurrentSystemLight')
-              : colorMode === 'dark'
-                ? t('settings.themeCurrentDark')
-                : t('settings.themeCurrentLight')}
-          </Text>
-        </AppCard>
+        </SettingsSection>
 
-        <AppCard>
-          <View style={styles.sectionCopy}>
-            <Text style={styles.sectionTitle}>{t('settings.languageTitle')}</Text>
-            <Text style={styles.sectionDescription}>{t('settings.languageDescription')}</Text>
+        <SettingsSection
+          description={t('settings.languageDescription')}
+          icon="g-translate"
+          title={t('settings.languageTitle')}>
+          <View style={styles.optionBlock}>
+            <View style={styles.optionLabelRow}>
+              <View style={styles.optionPill}>
+                <MaterialSymbolIcon icon="g-translate" size={16} />
+                <Text style={styles.optionPillText}>{currentLanguageLabel}</Text>
+              </View>
+            </View>
           </View>
           <AppSegmentedControl
             options={languageOptions}
@@ -83,56 +193,57 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
               Promise.resolve(setLanguage(value)).catch(() => {});
             }}
           />
-        </AppCard>
+        </SettingsSection>
 
-        <AppCard>
-          <View style={styles.sectionCopy}>
-            <Text style={styles.sectionTitle}>{t('settings.accountTitle')}</Text>
-            <Text style={styles.sectionDescription}>{t('settings.accountDescription')}</Text>
-          </View>
-          <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>{t('settings.accountSignedInAs', {login: user?.login ?? '—'})}</Text>
-          </View>
-          <View style={styles.actionStack}>
-            <AppButton
-              disabled={!profileUrl}
-              label={t('settings.openGitHubProfile')}
+        <SettingsSection
+          description={t('settings.accountDescription')}
+          icon="person-rounded"
+          title={t('settings.accountTitle')}>
+          <View style={styles.rowGroup}>
+            <SettingsRow
+              icon="account-circle"
+              title={t('settings.accountSignedInAs', {login: user?.login ?? '—'})}
+              value={profileUrl ? 'GitHub' : undefined}
+            />
+            <SettingsRow
+              icon="account-circle-outline"
+              onPress={
+                profileUrl
+                  ? () => {
+                      openExternal(profileUrl);
+                    }
+                  : undefined
+              }
+              title={t('settings.openGitHubProfile')}
+            />
+            <SettingsRow
+              icon="logout-rounded"
               onPress={() => {
-                if (profileUrl) {
-                  openExternal(profileUrl);
-                }
+                signOut().catch(() => {});
               }}
-              size="compact"
-              variant="secondary"
+              title={t('settings.signOut')}
+              tone="danger"
             />
           </View>
-          <AppButton
-            label={t('settings.signOut')}
-            onPress={() => {
-              signOut().catch(() => {});
-            }}
-            size="compact"
-            variant="danger"
-          />
-        </AppCard>
+        </SettingsSection>
 
-        <AppCard>
-          <View style={styles.sectionCopy}>
-            <Text style={styles.sectionTitle}>{t('settings.aboutTitle')}</Text>
-            <Text style={styles.sectionDescription}>
-              {t('settings.aboutDescription', {version: appVersion})}
-            </Text>
+        <SettingsSection
+          description={t('settings.aboutDescription', {version: appVersion})}
+          icon="code-rounded"
+          title={t('settings.aboutTitle')}>
+          <View style={styles.rowGroup}>
+            <SettingsRow
+              icon="description-rounded"
+              title={t('settings.versionLabel', {version: appVersion})}
+              value="BGist"
+            />
+            <SettingsRow
+              icon="code-rounded"
+              onPress={() => openExternal(appRepositoryUrl)}
+              title={t('settings.openRepository')}
+            />
           </View>
-          <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>{t('settings.versionLabel', {version: appVersion})}</Text>
-          </View>
-          <AppButton
-            label={t('settings.openRepository')}
-            onPress={() => openExternal(appRepositoryUrl)}
-            size="compact"
-            variant="secondary"
-          />
-        </AppCard>
+        </SettingsSection>
       </ScrollView>
     </AppScreen>
   );
@@ -146,9 +257,40 @@ const getStyles = createThemedStyles(theme =>
       paddingHorizontal: theme.spacing.md,
       paddingTop: theme.spacing.md,
       paddingBottom: theme.spacing.xl,
+      gap: theme.spacing.lg,
+    },
+    versionBadge: {
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+    },
+    versionBadgeText: {
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+      fontWeight: '800',
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
       gap: theme.spacing.md,
     },
+    sectionIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 2,
+    },
     sectionCopy: {
+      flex: 1,
       gap: theme.spacing.xs,
     },
     sectionTitle: {
@@ -160,6 +302,78 @@ const getStyles = createThemedStyles(theme =>
       color: theme.colors.textSecondary,
       fontSize: 14,
       lineHeight: 21,
+    },
+    optionBlock: {
+      gap: theme.spacing.sm,
+    },
+    optionLabelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    optionPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+    },
+    optionPillText: {
+      color: theme.colors.textPrimary,
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    rowGroup: {
+      borderRadius: theme.radius.lg,
+      borderCurve: 'continuous',
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.colors.border,
+    },
+    rowPressed: {
+      opacity: 0.88,
+    },
+    rowIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      borderCurve: 'continuous',
+      backgroundColor: theme.colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    rowIconDanger: {
+      backgroundColor: theme.colors.dangerSoft,
+    },
+    rowCopy: {
+      flex: 1,
+      gap: 2,
+    },
+    rowTitle: {
+      color: theme.colors.textPrimary,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    rowTitleDanger: {
+      color: theme.colors.danger,
+    },
+    rowValue: {
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+      lineHeight: 18,
     },
     metaRow: {
       borderRadius: theme.radius.md,
@@ -174,9 +388,6 @@ const getStyles = createThemedStyles(theme =>
       color: theme.colors.textPrimary,
       fontSize: 14,
       fontWeight: '700',
-    },
-    actionStack: {
-      gap: theme.spacing.sm,
     },
     helperText: {
       color: theme.colors.textSecondary,

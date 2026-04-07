@@ -43,8 +43,9 @@ const getStyles = createThemedStyles(theme =>
     title: {
       flex: 1,
       color: theme.colors.textPrimary,
-      fontSize: 30,
+      fontSize: 28,
       fontWeight: '800',
+      letterSpacing: -0.4,
     },
     accessory: {
       flexShrink: 0,

@@ -19,13 +19,13 @@ export function MainTabs() {
     () => ({
       Home: {
         label: t('nav.home'),
-        activeIcon: 'home',
+        activeIcon: 'description-rounded',
         inactiveIcon: 'home-outline-rounded',
       },
       Explore: {
         label: t('nav.explore'),
-        activeIcon: 'explore',
-        inactiveIcon: 'explore-outline-rounded',
+        activeIcon: 'search-rounded',
+        inactiveIcon: 'search-rounded',
       },
       Compose: {
         label: t('nav.compose'),
@@ -35,7 +35,7 @@ export function MainTabs() {
       },
       Profile: {
         label: t('nav.profile'),
-        activeIcon: 'account-circle',
+        activeIcon: 'person-rounded',
         inactiveIcon: 'account-circle-outline',
       },
     }),

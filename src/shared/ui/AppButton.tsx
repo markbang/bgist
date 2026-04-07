@@ -115,9 +115,9 @@ const getStyles = createThemedStyles(theme =>
       alignItems: 'center',
     },
     buttonDefault: {
-      minHeight: 56,
+      minHeight: 52,
       paddingHorizontal: theme.spacing.lg,
-      paddingVertical: theme.spacing.sm + 2,
+      paddingVertical: theme.spacing.sm + 1,
     },
     buttonCompact: {
       minHeight: 44,
