@@ -84,9 +84,9 @@ export function MainTabBar({state, descriptors, navigation, config}: MainTabBarP
               ]}
               testID={options?.tabBarButtonTestID ?? `main-tab-${route.name.toLowerCase()}`}>
               <View
+                testID={`main-tab-${route.name.toLowerCase()}-icon-slot`}
                 style={[
                   styles.iconSlot,
-                  isAccent && !isFocused ? styles.iconSlotAccent : null,
                   isFocused && !isAccent ? styles.iconSlotFocused : null,
                 ]}>
                 <MaterialSymbolIcon
@@ -172,9 +172,6 @@ const getStyles = createThemedStyles(theme =>
     },
     iconSlotFocused: {
       backgroundColor: theme.colors.surface,
-    },
-    iconSlotAccent: {
-      backgroundColor: theme.colors.accentSoft,
     },
     label: {
       color: theme.colors.textSecondary,

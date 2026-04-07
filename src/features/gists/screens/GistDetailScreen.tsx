@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
@@ -10,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
+import Svg, {Circle, Path} from 'react-native-svg';
 import {WebView} from 'react-native-webview';
 import {useAppTheme} from '../../../app/theme/context';
 import {createThemedStyles} from '../../../app/theme/tokens';
@@ -42,6 +44,138 @@ function formatDate(value: string, locale: string, fallback: string) {
     day: 'numeric',
     year: 'numeric',
   });
+}
+
+function formatCompactCount(value: number | null | undefined) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return null;
+  }
+
+  if (value >= 1000) {
+    return `${(value / 1000).toFixed(value >= 10000 ? 0 : 1).replace(/\.0$/, '')}k`;
+  }
+
+  return String(value);
+}
+
+function GistActionGlyph({
+  color,
+  name,
+  size = 20,
+}: {
+  color: string;
+  name: 'star' | 'fork' | 'history' | 'comments' | 'more';
+  size?: number;
+}) {
+  switch (name) {
+    case 'star':
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <Path
+            d="M12 3.75L14.55 8.92L20.25 9.75L16.13 13.76L17.1 19.42L12 16.74L6.9 19.42L7.87 13.76L3.75 9.75L9.45 8.92L12 3.75Z"
+            stroke={color}
+            strokeLinejoin="round"
+            strokeWidth="1.8"
+          />
+        </Svg>
+      );
+    case 'fork':
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <Circle cx="7" cy="6" r="2.4" stroke={color} strokeWidth="1.8" />
+          <Circle cx="17" cy="6" r="2.4" stroke={color} strokeWidth="1.8" />
+          <Circle cx="12" cy="18" r="2.4" stroke={color} strokeWidth="1.8" />
+          <Path d="M7 8.6V10.2C7 11.3 7.9 12.2 9 12.2H12C13.1 12.2 14 11.3 14 10.2V8.6" stroke={color} strokeLinecap="round" strokeWidth="1.8" />
+          <Path d="M12 15.6V12.2" stroke={color} strokeLinecap="round" strokeWidth="1.8" />
+        </Svg>
+      );
+    case 'history':
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <Path d="M4.5 12A7.5 7.5 0 1 0 7 6.4" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+          <Path d="M4.5 4.75V9H8.75" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+          <Path d="M12 8.5V12L14.75 13.7" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+        </Svg>
+      );
+    case 'comments':
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <Path
+            d="M6.8 18.5L4.5 20.5V7.8C4.5 6.81 5.31 6 6.3 6H17.7C18.69 6 19.5 6.81 19.5 7.8V15.2C19.5 16.19 18.69 17 17.7 17H8.3L6.8 18.5Z"
+            stroke={color}
+            strokeLinejoin="round"
+            strokeWidth="1.8"
+          />
+          <Path d="M8 10H16M8 13.5H13" stroke={color} strokeLinecap="round" strokeWidth="1.8" />
+        </Svg>
+      );
+    case 'more':
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <Circle cx="6.5" cy="12" r="1.5" fill={color} />
+          <Circle cx="12" cy="12" r="1.5" fill={color} />
+          <Circle cx="17.5" cy="12" r="1.5" fill={color} />
+        </Svg>
+      );
+    default:
+      return null;
+  }
+}
+
+function GistActionButton({
+  active = false,
+  count,
+  disabled = false,
+  icon,
+  label,
+  loading = false,
+  onPress,
+  testID,
+}: {
+  active?: boolean;
+  count?: string | null;
+  disabled?: boolean;
+  icon: React.ReactNode;
+  label: string;
+  loading?: boolean;
+  onPress: () => void;
+  testID?: string;
+}) {
+  const {themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+
+  return (
+    <Pressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      accessibilityState={{disabled, selected: active, busy: loading}}
+      disabled={disabled}
+      onPress={onPress}
+      style={({pressed}) => [
+        styles.actionIconButton,
+        active ? styles.actionIconButtonActive : null,
+        disabled ? styles.actionIconButtonDisabled : null,
+        pressed && !disabled ? styles.actionIconButtonPressed : null,
+      ]}
+      testID={testID}>
+      <View style={styles.actionIconShell}>
+        {loading ? <ActivityIndicator size="small" /> : icon}
+      </View>
+      <Text
+        numberOfLines={1}
+        style={[styles.actionIconLabel, active ? styles.actionIconLabelActive : null]}>
+        {label}
+      </Text>
+      {count ? (
+        <Text
+          numberOfLines={1}
+          style={[styles.actionIconCount, active ? styles.actionIconCountActive : null]}
+          testID={testID ? `${testID}-count` : undefined}>
+          {count}
+        </Text>
+      ) : null}
+    </Pressable>
+  );
 }
 
 function FilePreviewCard({
@@ -269,6 +403,16 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
     );
   }
 
+  const starCountLabel = formatCompactCount(support?.starCount);
+  const forkCountLabel = formatCompactCount(support?.forkCount);
+  const historyCountLabel = formatCompactCount(gist.history.length);
+  const commentsCountLabel = formatCompactCount(gist.comments);
+  const starActionLabel = !canToggleStar
+    ? t('gistDetail.starUnavailable')
+    : support?.starred
+      ? t('gistDetail.unstar')
+      : t('common.star');
+
   const sheetActions = [
     {
       label: t('gistDetail.copyLink'),
@@ -333,27 +477,33 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
             />
           </View>
 
-          <View style={styles.actions}>
-            <AppButton
-              fullWidth={false}
+          <ScrollView
+            contentContainerStyle={styles.actions}
+            horizontal
+            nestedScrollEnabled
+            showsHorizontalScrollIndicator={false}>
+            <GistActionButton
+              active={support?.starred === true}
+              count={starCountLabel}
               disabled={!canToggleStar}
-              label={
-                isSupportLoading
-                  ? t('gistDetail.loadingStar')
-                  : !canToggleStar
-                    ? t('gistDetail.starUnavailable')
-                    : support?.starred
-                      ? t('gistDetail.unstar')
-                      : t('common.star')
+              icon={
+                <GistActionGlyph
+                  color={
+                    support?.starred === true ? theme.colors.accentContrast : theme.colors.textPrimary
+                  }
+                  name="star"
+                />
               }
-              loading={starGistMutation.isPending || unstarGistMutation.isPending}
+              label={starActionLabel}
+              loading={isSupportLoading || starGistMutation.isPending || unstarGistMutation.isPending}
               onPress={() => {
                 handleToggleStar().catch(() => {});
               }}
-              variant="secondary"
+              testID="gist-action-star"
             />
-            <AppButton
-              fullWidth={false}
+            <GistActionButton
+              count={forkCountLabel}
+              icon={<GistActionGlyph color={theme.colors.textPrimary} name="fork" />}
               label={t('gistDetail.fork')}
               loading={forkGistMutation.isPending}
               onPress={() => {
@@ -366,21 +516,29 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
                   }
                 })().catch(() => {});
               }}
-              variant="secondary"
+              testID="gist-action-fork"
             />
-            <AppButton
-              fullWidth={false}
+            <GistActionButton
+              count={historyCountLabel}
+              icon={<GistActionGlyph color={theme.colors.textPrimary} name="history" />}
               label={t('gistDetail.history')}
               onPress={() => navigation.navigate('GistHistory', {gistId})}
-              variant="secondary"
+              testID="gist-action-history"
             />
-            <AppButton
-              fullWidth={false}
+            <GistActionButton
+              count={commentsCountLabel}
+              icon={<GistActionGlyph color={theme.colors.textPrimary} name="comments" />}
+              label={t('common.comments')}
+              onPress={() => setCommentsEnabled(true)}
+              testID="gist-action-comments"
+            />
+            <GistActionButton
+              icon={<GistActionGlyph color={theme.colors.textPrimary} name="more" />}
               label={t('gistDetail.more')}
               onPress={() => setSheetVisible(true)}
-              variant="secondary"
+              testID="gist-action-more"
             />
-          </View>
+          </ScrollView>
 
           {starredErrorMessage ? <AppBanner message={starredErrorMessage} tone="warning" /> : null}
         </AppCard>
@@ -536,9 +694,60 @@ const getStyles = createThemedStyles(theme =>
       lineHeight: 20,
     },
     actions: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
+      alignItems: 'stretch',
       gap: theme.spacing.sm,
+      paddingRight: theme.spacing.md,
+    },
+    actionIconButton: {
+      width: 84,
+      minHeight: 90,
+      borderRadius: theme.radius.lg,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.xs,
+      paddingVertical: theme.spacing.sm,
+      gap: 4,
+    },
+    actionIconButtonActive: {
+      borderColor: theme.colors.accent,
+      backgroundColor: theme.colors.accent,
+    },
+    actionIconButtonDisabled: {
+      opacity: 0.55,
+    },
+    actionIconButtonPressed: {
+      opacity: 0.9,
+      transform: [{scale: 0.98}],
+    },
+    actionIconShell: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      borderCurve: 'continuous',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    actionIconLabel: {
+      color: theme.colors.textSecondary,
+      fontSize: 11,
+      fontWeight: '700',
+      textAlign: 'center',
+    },
+    actionIconLabelActive: {
+      color: theme.colors.accentContrast,
+    },
+    actionIconCount: {
+      color: theme.colors.textPrimary,
+      fontSize: 15,
+      fontWeight: '800',
+      textAlign: 'center',
+    },
+    actionIconCountActive: {
+      color: theme.colors.accentContrast,
     },
     section: {
       gap: theme.spacing.sm,

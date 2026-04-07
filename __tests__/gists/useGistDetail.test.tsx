@@ -75,7 +75,10 @@ test('waits for gist detail success before loading support data', async () => {
   gistDeferred.resolve({id: 'gist-123'});
 
   await waitFor(() => {
-    expect(loadGistSupport).toHaveBeenCalledWith('gist-123');
+    expect(loadGistSupport).toHaveBeenCalledWith('gist-123', {
+      gistUrl: undefined,
+      isPublic: undefined,
+    });
   });
 });
 
@@ -97,7 +100,10 @@ test('does not load gist comments until comments are explicitly enabled', async 
   gistDeferred.resolve({id: 'gist-123'});
 
   await waitFor(() => {
-    expect(loadGistSupport).toHaveBeenCalledWith('gist-123');
+    expect(loadGistSupport).toHaveBeenCalledWith('gist-123', {
+      gistUrl: undefined,
+      isPublic: undefined,
+    });
   });
 
   expect(getGistComments).not.toHaveBeenCalled();

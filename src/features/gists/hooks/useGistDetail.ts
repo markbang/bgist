@@ -19,7 +19,11 @@ export function useGistDetail(
 
   const supportQuery = useQuery({
     queryKey: queryKeys.gistSupport(gistId),
-    queryFn: () => loadGistSupport(gistId),
+    queryFn: () =>
+      loadGistSupport(gistId, {
+        gistUrl: gistQuery.data?.html_url,
+        isPublic: gistQuery.data?.public,
+      }),
     enabled: gistQuery.isSuccess,
   });
 

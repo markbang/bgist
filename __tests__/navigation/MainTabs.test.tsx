@@ -1,5 +1,6 @@
 import React from 'react';
 import {render} from '@testing-library/react-native';
+import {StyleSheet} from 'react-native';
 import type {BottomTabBarProps} from '@react-navigation/bottom-tabs';
 import type {MainTabParamList} from '../../src/app/navigation/types';
 
@@ -147,5 +148,52 @@ describe('MainTabs', () => {
     expect(tabBar.getByText('探索')).toBeTruthy();
     expect(tabBar.getByText('创作')).toBeTruthy();
     expect(tabBar.getByText('我的')).toBeTruthy();
+  });
+
+  test('keeps the compose tab visually neutral when it is not focused', () => {
+    const {MainTabs} = require('../../src/app/navigation/MainTabs') as typeof import('../../src/app/navigation/MainTabs');
+
+    render(<MainTabs />);
+
+    const routes = captured.screens.map(screen => ({
+      key: `${screen.name.toLowerCase()}-key`,
+      name: screen.name,
+    }));
+    const descriptors = Object.fromEntries(
+      routes.map(route => [
+        route.key,
+        {
+          key: route.key,
+          navigation: {} as never,
+          options: {},
+          render: () => <></>,
+          route,
+        },
+      ]),
+    ) as BottomTabBarProps['descriptors'];
+    const tabBarElement = captured.tabBar!({
+      state: {
+        index: 0,
+        key: 'main-tabs',
+        routeNames: routes.map(route => route.name),
+        routes,
+        history: [],
+        stale: false,
+        type: 'tab',
+        preloadedRouteKeys: [],
+      },
+      descriptors,
+      insets: {top: 0, right: 0, bottom: 0, left: 0},
+      navigation: {
+        emit: jest.fn(() => ({defaultPrevented: false})),
+        navigate: jest.fn(),
+      } as never,
+    }) as React.ReactElement;
+
+    const tabBar = render(tabBarElement);
+    const composeIconSlot = tabBar.getByTestId('main-tab-compose-icon-slot');
+    const flattenedStyle = StyleSheet.flatten(composeIconSlot.props.style);
+
+    expect(flattenedStyle.backgroundColor).toBeUndefined();
   });
 });

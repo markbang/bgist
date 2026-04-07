@@ -221,6 +221,116 @@ test('renders markdown files as a preview card instead of raw text in gist detai
   expect(screen.queryByText('# Hello')).toBeNull();
 });
 
+test('renders html files as a preview card instead of raw markup in gist detail', () => {
+  (useGistDetail as jest.Mock).mockReturnValue({
+    gist: createGist({
+      files: {
+        'index.html': {
+          filename: 'index.html',
+          type: 'text/html',
+          language: 'HTML',
+          raw_url: 'https://gist.githubusercontent.com/raw/index.html',
+          size: 256,
+          truncated: false,
+          content: '<h1>Hello</h1><p>Rendered from html.</p>',
+        },
+      },
+    }),
+    support: {
+      starred: false,
+      starredError: null,
+    },
+    comments: [],
+    gistQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    supportQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    commentsQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+  });
+
+  render(
+    <GistDetailScreen
+      navigation={
+        {
+          goBack: jest.fn(),
+          navigate: jest.fn(),
+        } as unknown as RootStackScreenProps<'GistDetail'>['navigation']
+      }
+      route={{key: 'GistDetail-gist-1', name: 'GistDetail', params: {gistId: 'gist-1'}}}
+    />,
+  );
+
+  const preview = screen.getByTestId('gist-file-preview-index.html');
+
+  expect(preview).toBeTruthy();
+  expect(preview.props.source.html).toContain('<h1>Hello</h1><p>Rendered from html.</p>');
+  expect(screen.queryByText('<h1>Hello</h1><p>Rendered from html.</p>')).toBeNull();
+});
+
+test('renders icon actions with engagement counts in gist detail', () => {
+  (useGistDetail as jest.Mock).mockReturnValue({
+    gist: createGist({
+      comments: 24,
+      history: [
+        createGist().history[0],
+        {
+          ...createGist().history[0],
+          version: 'def5678',
+        },
+      ],
+    }),
+    support: {
+      starred: false,
+      starredError: null,
+      starCount: 120,
+      forkCount: 18,
+    },
+    comments: [],
+    gistQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    supportQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    commentsQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+  });
+
+  render(
+    <GistDetailScreen
+      navigation={
+        {
+          goBack: jest.fn(),
+          navigate: jest.fn(),
+        } as unknown as RootStackScreenProps<'GistDetail'>['navigation']
+      }
+      route={{key: 'GistDetail-gist-1', name: 'GistDetail', params: {gistId: 'gist-1'}}}
+    />,
+  );
+
+  expect(screen.getByTestId('gist-action-star-count')).toHaveTextContent('120');
+  expect(screen.getByTestId('gist-action-fork-count')).toHaveTextContent('18');
+  expect(screen.getByTestId('gist-action-history-count')).toHaveTextContent('2');
+  expect(screen.getByTestId('gist-action-comments-count')).toHaveTextContent('24');
+});
+
 test('shows a page error when the gist itself cannot load', () => {
   const refetch = jest.fn();
   const navigation = {
