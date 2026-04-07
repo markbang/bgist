@@ -1,7 +1,7 @@
 import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Appearance, useColorScheme} from 'react-native';
-import {getTheme, type AppTheme, type ThemeName} from './tokens';
+import {getTheme, type AppTheme, type ThemeName, type ThemePreset} from './tokens';
 
 export type ThemeColorMode = 'system' | 'light' | 'dark';
 export type ThemePreference = ThemeColorMode;
@@ -9,16 +9,21 @@ export type ResolvedThemeScheme = ThemeName;
 
 type ThemePreferenceContextValue = {
   colorMode: ThemeColorMode;
+  preset: ThemePreset;
   resolvedScheme: ResolvedThemeScheme;
   setColorMode: (nextMode: ThemeColorMode) => Promise<void>;
+  setPreset: (nextPreset: ThemePreset) => Promise<void>;
 };
 
-const STORAGE_KEY = 'app_theme_preference';
+const MODE_STORAGE_KEY = 'app_theme_preference';
+const PRESET_STORAGE_KEY = 'app_theme_preset';
 
 const ThemePreferenceContext = React.createContext<ThemePreferenceContextValue>({
   colorMode: 'system',
+  preset: 'default',
   resolvedScheme: 'light',
   setColorMode: async () => {},
+  setPreset: async () => {},
 });
 
 function resolveScheme(
@@ -39,11 +44,22 @@ function resolveScheme(
 export function ThemeProvider({children}: {children: React.ReactNode}) {
   const systemScheme = useColorScheme();
   const [colorMode, setColorModeState] = React.useState<ThemeColorMode>('system');
+  const [preset, setPresetState] = React.useState<ThemePreset>('default');
 
   React.useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then(savedMode => {
+    AsyncStorage.getItem(MODE_STORAGE_KEY).then(savedMode => {
       if (savedMode === 'system' || savedMode === 'light' || savedMode === 'dark') {
         setColorModeState(savedMode);
+      }
+    });
+    AsyncStorage.getItem(PRESET_STORAGE_KEY).then(savedPreset => {
+      if (
+        savedPreset === 'default' ||
+        savedPreset === 'ocean' ||
+        savedPreset === 'forest' ||
+        savedPreset === 'sunset'
+      ) {
+        setPresetState(savedPreset);
       }
     });
   }, []);
@@ -54,7 +70,12 @@ export function ThemeProvider({children}: {children: React.ReactNode}) {
 
   const setColorMode = React.useCallback(async (nextMode: ThemeColorMode) => {
     setColorModeState(nextMode);
-    await AsyncStorage.setItem(STORAGE_KEY, nextMode);
+    await AsyncStorage.setItem(MODE_STORAGE_KEY, nextMode);
+  }, []);
+
+  const setPreset = React.useCallback(async (nextPreset: ThemePreset) => {
+    setPresetState(nextPreset);
+    await AsyncStorage.setItem(PRESET_STORAGE_KEY, nextPreset);
   }, []);
 
   const resolvedScheme = React.useMemo(
@@ -63,8 +84,8 @@ export function ThemeProvider({children}: {children: React.ReactNode}) {
   );
 
   const value = React.useMemo(
-    () => ({colorMode, resolvedScheme, setColorMode}),
-    [colorMode, resolvedScheme, setColorMode],
+    () => ({colorMode, preset, resolvedScheme, setColorMode, setPreset}),
+    [colorMode, preset, resolvedScheme, setColorMode, setPreset],
   );
 
   return (
@@ -79,17 +100,19 @@ export function useThemePreference() {
 }
 
 export function useAppTheme() {
-  const {colorMode, resolvedScheme, setColorMode} = useThemePreference();
-  const theme = getTheme(resolvedScheme);
+  const {colorMode, preset, resolvedScheme, setColorMode, setPreset} = useThemePreference();
+  const theme = getTheme(resolvedScheme, preset);
 
   return {
     ...theme,
     isDark: resolvedScheme === 'dark',
     theme,
     themeName: resolvedScheme,
+    themePreset: preset,
     themePreference: colorMode,
     resolvedScheme,
     setThemePreference: setColorMode,
+    setThemePreset: setPreset,
   };
 }
 

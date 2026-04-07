@@ -5,6 +5,7 @@ import {darkAppTheme as mockDarkAppTheme} from '../../src/app/theme/tokens';
 
 const mockSetLanguage = jest.fn();
 const mockSetThemePreference = jest.fn(() => Promise.resolve());
+const mockSetThemePreset = jest.fn(() => Promise.resolve());
 const mockSignOut = jest.fn();
 
 jest.mock('../../src/i18n/context', () => ({
@@ -21,6 +22,10 @@ jest.mock('../../src/i18n/context', () => ({
           'settings.themeSystem': 'System',
           'settings.themeLight': 'Light',
           'settings.themeDark': 'Dark',
+          'settings.themePresetDefault': 'Default',
+          'settings.themePresetOcean': 'Ocean',
+          'settings.themePresetForest': 'Forest',
+          'settings.themePresetSunset': 'Sunset',
           'settings.currentAppearance': 'Following system: {appearance}',
           'settings.themeCurrentSystemDark': 'Following system: dark',
           'settings.themeCurrentSystemLight': 'Following system: light',
@@ -63,14 +68,18 @@ jest.mock('../../src/app/theme/context', () => ({
     theme: mockDarkAppTheme,
     themeName: 'dark',
     themePreference: 'system',
+    themePreset: 'default',
     resolvedScheme: 'dark',
     setThemePreference: mockSetThemePreference,
+    setThemePreset: mockSetThemePreset,
     isDark: true,
   })),
   useThemePreference: jest.fn(() => ({
     colorMode: 'system',
+    preset: 'default',
     resolvedScheme: 'dark',
     setColorMode: mockSetThemePreference,
+    setPreset: mockSetThemePreset,
   })),
 }));
 
@@ -88,12 +97,15 @@ test('lets people change appearance and language from settings', () => {
 
   expect(screen.getByText('Settings')).toBeTruthy();
   expect(screen.getByText('Following system: dark')).toBeTruthy();
+  expect(screen.getAllByText('Default').length).toBeGreaterThan(0);
   expect(screen.getByText('Signed in as @octocat')).toBeTruthy();
   expect(screen.getByText('Version 0.2.3')).toBeTruthy();
 
   fireEvent.press(screen.getByRole('button', {name: 'Dark'}));
+  fireEvent.press(screen.getByRole('button', {name: 'Ocean'}));
   fireEvent.press(screen.getByRole('button', {name: '中文'}));
 
   expect(mockSetThemePreference).toHaveBeenCalledWith('dark');
+  expect(mockSetThemePreset).toHaveBeenCalledWith('ocean');
   expect(mockSetLanguage).toHaveBeenCalledWith('zh');
 });

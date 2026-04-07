@@ -61,6 +61,7 @@ export type AppTheme = {
 };
 
 export type ThemeName = 'light' | 'dark';
+export type ThemePreset = 'default' | 'ocean' | 'forest' | 'sunset';
 
 const sharedRadius = {
   sm: 10,
@@ -187,8 +188,96 @@ const themeMap: Record<ThemeName, AppTheme> = {
   dark: darkAppTheme,
 };
 
-export function getTheme(themeName: ThemeName) {
-  return themeMap[themeName];
+type ThemeOverride = Partial<AppTheme['colors']>;
+
+const presetOverrides: Record<ThemePreset, Record<ThemeName, ThemeOverride>> = {
+  default: {
+    light: {},
+    dark: {},
+  },
+  ocean: {
+    light: {
+      canvas: '#f1f8fb',
+      surfaceMuted: '#e0eef4',
+      border: '#c7dbe6',
+      accent: '#0f766e',
+      accentSoft: '#ccefeb',
+      infoSoft: '#e0f2fe',
+      infoBorder: '#bae6fd',
+    },
+    dark: {
+      canvas: '#09161b',
+      surface: '#102027',
+      surfaceMuted: '#132a33',
+      border: '#284551',
+      accent: '#4fd1c5',
+      accentSoft: '#12343b',
+      accentContrast: '#062021',
+      infoSoft: '#12343b',
+      infoBorder: '#215865',
+    },
+  },
+  forest: {
+    light: {
+      canvas: '#f4f8f2',
+      surfaceMuted: '#e6efe2',
+      border: '#cad8c1',
+      accent: '#2f6f4f',
+      accentSoft: '#dbeedf',
+      success: '#2f6f4f',
+      successSoft: '#dbeedf',
+    },
+    dark: {
+      canvas: '#0d1510',
+      surface: '#121d16',
+      surfaceMuted: '#18261c',
+      border: '#2d4232',
+      accent: '#7cd992',
+      accentSoft: '#18311f',
+      accentContrast: '#0d190f',
+      success: '#7cd992',
+      successSoft: '#18311f',
+    },
+  },
+  sunset: {
+    light: {
+      canvas: '#fbf6f1',
+      surfaceMuted: '#f4e6db',
+      border: '#e4cdb9',
+      accent: '#c2612d',
+      accentSoft: '#fde4d5',
+      warning: '#c2612d',
+      warningSoft: '#fff1e7',
+    },
+    dark: {
+      canvas: '#16100d',
+      surface: '#221813',
+      surfaceMuted: '#2d1f18',
+      border: '#493027',
+      accent: '#f6a66f',
+      accentSoft: '#3b2318',
+      accentContrast: '#24150f',
+      warning: '#f6a66f',
+      warningSoft: '#3b2318',
+    },
+  },
+};
+
+export function getTheme(themeName: ThemeName, preset: ThemePreset = 'default') {
+  const baseTheme = themeMap[themeName];
+  const overrides = presetOverrides[preset]?.[themeName] ?? {};
+
+  if (Object.keys(overrides).length === 0) {
+    return baseTheme;
+  }
+
+  return {
+    ...baseTheme,
+    colors: {
+      ...baseTheme.colors,
+      ...overrides,
+    },
+  };
 }
 
 export function createThemedStyles<T>(factory: (theme: AppTheme) => T) {

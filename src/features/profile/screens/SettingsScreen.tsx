@@ -94,8 +94,8 @@ function SettingsRow({
 }
 
 export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
-  const {themeName} = useAppTheme();
-  const {colorMode, resolvedScheme, setColorMode} = useThemePreference();
+  const {themeName, themePreset} = useAppTheme();
+  const {colorMode, preset, resolvedScheme, setColorMode, setPreset} = useThemePreference();
   const {language, setLanguage, t} = useI18n();
   const {user, signOut} = useSession();
   const styles = getStyles(themeName);
@@ -114,6 +114,15 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
     {label: t('common.languageEnglish'), value: 'en'},
     {label: t('common.languageChinese'), value: 'zh'},
   ];
+  const presetOptions: Array<{
+    label: string;
+    value: 'default' | 'ocean' | 'forest' | 'sunset';
+  }> = [
+    {label: t('settings.themePresetDefault'), value: 'default'},
+    {label: t('settings.themePresetOcean'), value: 'ocean'},
+    {label: t('settings.themePresetForest'), value: 'forest'},
+    {label: t('settings.themePresetSunset'), value: 'sunset'},
+  ];
   const profileUrl = user?.login ? `https://github.com/${user.login}` : null;
   const currentAppearanceLabel =
     colorMode === 'system'
@@ -125,6 +134,14 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
         : t('settings.themeCurrentLight');
   const currentLanguageLabel =
     language === 'zh' ? t('common.languageChinese') : t('common.languageEnglish');
+  const currentPresetLabel =
+    themePreset === 'ocean'
+      ? t('settings.themePresetOcean')
+      : themePreset === 'forest'
+        ? t('settings.themePresetForest')
+        : themePreset === 'sunset'
+          ? t('settings.themePresetSunset')
+          : t('settings.themePresetDefault');
 
   const openExternal = React.useCallback((url: string) => {
     Linking.openURL(url).catch(() => {});
@@ -170,6 +187,21 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
             value={colorMode}
             onChange={value => {
               Promise.resolve(setColorMode(value)).catch(() => {});
+            }}
+          />
+          <View style={styles.optionBlock}>
+            <View style={styles.optionLabelRow}>
+              <View style={styles.optionPill}>
+                <MaterialSymbolIcon icon="palette-outline" size={16} />
+                <Text style={styles.optionPillText}>{currentPresetLabel}</Text>
+              </View>
+            </View>
+          </View>
+          <AppSegmentedControl
+            options={presetOptions}
+            value={preset}
+            onChange={value => {
+              Promise.resolve(setPreset(value)).catch(() => {});
             }}
           />
         </SettingsSection>

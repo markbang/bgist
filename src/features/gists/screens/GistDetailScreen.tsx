@@ -303,7 +303,7 @@ function FilePreviewCard({
 
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={filename} onPress={onPress}>
-      <AppCard>
+      <AppCard style={styles.fileCard}>
         <View style={styles.fileHeader}>
           <View style={styles.fileHeaderText}>
             <Text style={styles.fileName}>{filename}</Text>
@@ -535,7 +535,7 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <AppPageHeader title={gist.description?.trim() || t('gistDetail.titleFallback')} />
 
-        <AppCard>
+        <AppCard style={styles.metaCard}>
           <View style={styles.metaHeader}>
             <View style={styles.metaHeaderText}>
               {owner ? (
@@ -759,6 +759,15 @@ const getStyles = createThemedStyles(theme =>
       justifyContent: 'space-between',
       gap: theme.spacing.sm,
     },
+    metaCard: {
+      gap: theme.spacing.sm,
+      paddingTop: theme.spacing.sm + 2,
+      paddingBottom: theme.spacing.sm + 2,
+      borderRadius: theme.radius.md,
+      backgroundColor: theme.colors.canvas,
+      shadowOpacity: 0,
+      elevation: 0,
+    },
     metaHeaderText: {
       flex: 1,
       gap: theme.spacing.xs,
@@ -775,8 +784,8 @@ const getStyles = createThemedStyles(theme =>
     },
     actions: {
       alignItems: 'stretch',
-      gap: theme.spacing.sm,
-      paddingRight: theme.spacing.md,
+      gap: theme.spacing.xs,
+      paddingRight: theme.spacing.sm,
     },
     actionIconButton: {
       minHeight: 40,
@@ -838,6 +847,13 @@ const getStyles = createThemedStyles(theme =>
       justifyContent: 'space-between',
       gap: theme.spacing.sm,
     },
+    fileCard: {
+      gap: theme.spacing.sm,
+      borderRadius: theme.radius.md,
+      backgroundColor: theme.colors.canvas,
+      shadowOpacity: 0,
+      elevation: 0,
+    },
     fileHeaderText: {
       flex: 1,
       gap: theme.spacing.xs,
@@ -865,14 +881,14 @@ const getStyles = createThemedStyles(theme =>
     },
     filePreviewWebViewShell: {
       overflow: 'hidden',
-      borderRadius: theme.radius.md,
+      borderRadius: 0,
       borderCurve: 'continuous',
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surfaceMuted,
+      backgroundColor: 'transparent',
     },
     filePreviewWebView: {
-      backgroundColor: theme.colors.surface,
+      backgroundColor: 'transparent',
     },
     commentsError: {
       gap: theme.spacing.sm,

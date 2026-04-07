@@ -6,11 +6,11 @@ import {ThemeProvider, useAppTheme, useThemePreference} from '../../src/app/them
 
 function ThemeProbe() {
   const theme = useAppTheme();
-  const {colorMode, resolvedScheme, setColorMode} = useThemePreference();
+  const {colorMode, preset, resolvedScheme, setColorMode, setPreset} = useThemePreference();
 
   return (
     <>
-      <ReactNative.Text>{`${colorMode}:${resolvedScheme}:${theme.colors.canvas}`}</ReactNative.Text>
+      <ReactNative.Text>{`${colorMode}:${preset}:${resolvedScheme}:${theme.colors.canvas}`}</ReactNative.Text>
       <ReactNative.Pressable
         accessibilityRole="button"
         accessibilityLabel="set-dark"
@@ -22,6 +22,12 @@ function ThemeProbe() {
         accessibilityLabel="set-light"
         onPress={() => setColorMode('light')}>
         <ReactNative.Text>Set light</ReactNative.Text>
+      </ReactNative.Pressable>
+      <ReactNative.Pressable
+        accessibilityRole="button"
+        accessibilityLabel="set-ocean"
+        onPress={() => setPreset('ocean')}>
+        <ReactNative.Text>Set ocean</ReactNative.Text>
       </ReactNative.Pressable>
     </>
   );
@@ -50,21 +56,28 @@ test('persists the selected appearance mode and resolves the active theme', asyn
   );
 
   await waitFor(() => {
-    expect(screen.getByText('system:dark:#0b1220')).toBeTruthy();
+    expect(screen.getByText('system:default:dark:#0b1220')).toBeTruthy();
   });
 
   fireEvent.press(screen.getByRole('button', {name: 'set-light'}));
 
   await waitFor(() => {
-    expect(screen.getByText('light:light:#f5f7fb')).toBeTruthy();
+    expect(screen.getByText('light:default:light:#f5f7fb')).toBeTruthy();
   });
 
   fireEvent.press(screen.getByRole('button', {name: 'set-dark'}));
 
   await waitFor(() => {
-    expect(screen.getByText('dark:dark:#0b1220')).toBeTruthy();
+    expect(screen.getByText('dark:default:dark:#0b1220')).toBeTruthy();
+  });
+
+  fireEvent.press(screen.getByRole('button', {name: 'set-ocean'}));
+
+  await waitFor(() => {
+    expect(screen.getByText('dark:ocean:dark:#09161b')).toBeTruthy();
   });
 
   expect(setItemSpy).toHaveBeenCalledWith('app_theme_preference', 'dark');
+  expect(setItemSpy).toHaveBeenCalledWith('app_theme_preset', 'ocean');
   expect(setColorSchemeSpy).toHaveBeenLastCalledWith('dark');
 });
