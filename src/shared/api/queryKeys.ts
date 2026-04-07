@@ -6,6 +6,7 @@ export const queryKeys = {
   myGists: ['gists', 'mine'] as const,
   starredGists: ['gists', 'starred'] as const,
   publicGists: ['gists', 'public'] as const,
+  searchGists: (query: string) => ['gists', 'search', query] as const,
   gistDetail: (gistId: string) => ['gists', 'detail', gistId] as const,
   gistSupport: (gistId: string) => ['gists', 'support', gistId] as const,
   gistComments: (gistId: string) => ['gists', 'comments', gistId] as const,

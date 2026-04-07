@@ -6,10 +6,11 @@ import {HomeScreen} from '../../src/features/gists/screens/HomeScreen';
 import {ExploreScreen} from '../../src/features/gists/screens/ExploreScreen';
 import {parseGistReference} from '../../src/features/gists/utils/parseGistReference';
 import {useHomeFeed} from '../../src/features/gists/hooks/useHomeFeed';
-import {getPublicGists} from '../../src/features/gists/api/gists';
+import {getPublicGists, searchGists} from '../../src/features/gists/api/gists';
 
 jest.mock('../../src/features/gists/api/gists', () => ({
   getPublicGists: jest.fn(),
+  searchGists: jest.fn(),
 }));
 
 jest.mock('../../src/features/gists/hooks/useHomeFeed', () => ({
@@ -154,6 +155,7 @@ test('explore screen only auto-navigates once per gist reference and allows a ne
   const navigation = {navigate};
 
   (getPublicGists as jest.Mock).mockImplementation(() => new Promise(() => {}));
+  (searchGists as jest.Mock).mockResolvedValue([]);
 
   const {rerender} = render(<ExploreScreen navigation={navigation} />, {
     wrapper: createWrapper(),
@@ -189,4 +191,28 @@ test('explore screen only auto-navigates once per gist reference and allows a ne
       gistId: 'bb6b9a4012f0c1234567',
     });
   });
+});
+
+test('explore screen uses the remote gist search api for keyword queries', async () => {
+  const navigation = {navigate: jest.fn()};
+
+  (getPublicGists as jest.Mock).mockResolvedValue([createGist({id: 'public-1'})]);
+  (searchGists as jest.Mock).mockResolvedValue([createGist({id: 'search-1', description: 'Search match'})]);
+
+  render(<ExploreScreen navigation={navigation} />, {
+    wrapper: createWrapper(),
+  });
+
+  fireEvent.changeText(screen.getByLabelText('Search public gists'), 'react query');
+
+  await waitFor(() => {
+    expect(searchGists).toHaveBeenCalledWith(
+      'react query',
+      1,
+      30,
+      expect.objectContaining({aborted: false}),
+    );
+  });
+
+  expect(await screen.findByText('Search match')).toBeTruthy();
 });

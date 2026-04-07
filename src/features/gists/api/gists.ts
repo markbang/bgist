@@ -41,6 +41,19 @@ export async function getPublicGists(page = 1, perPage = 30, signal?: AbortSigna
   return data;
 }
 
+export async function searchGists(
+  query: string,
+  page = 1,
+  perPage = 30,
+  signal?: AbortSignal,
+) {
+  const {data} = await githubClient.get<{items: Gist[]}>('/gists/search', {
+    params: {q: query, page, per_page: perPage},
+    signal,
+  });
+  return data.items ?? [];
+}
+
 export async function getUserGists(
   username: string,
   page = 1,

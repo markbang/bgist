@@ -77,3 +77,4 @@ yarn-error.log
 
 # Local agent artifacts
 .superpowers/
+.omx/
