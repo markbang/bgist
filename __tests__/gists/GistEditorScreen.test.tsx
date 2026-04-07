@@ -84,8 +84,8 @@ test('submits a new gist from create mode', async () => {
   );
 
   fireEvent.changeText(screen.getByLabelText('Gist description'), 'Demo gist');
-  fireEvent.changeText(screen.getByLabelText('Filename 1'), 'index.ts');
-  fireEvent.changeText(screen.getByLabelText('Content 1'), 'export {}');
+  fireEvent.changeText(screen.getByLabelText('Current filename'), 'index.ts');
+  fireEvent.changeText(screen.getByLabelText('Current content'), 'export {}');
   fireEvent.press(screen.getByRole('button', {name: 'Create Gist'}));
 
   await waitFor(() => {
@@ -148,8 +148,8 @@ test('loads an existing gist in edit mode and submits changed files', async () =
   expect(await screen.findByDisplayValue('Existing gist')).toBeTruthy();
   expect(screen.getByDisplayValue('hello.ts')).toBeTruthy();
 
-  fireEvent.changeText(screen.getByLabelText('Filename 1'), 'main.ts');
-  fireEvent.changeText(screen.getByLabelText('Content 1'), 'console.log("updated")');
+  fireEvent.changeText(screen.getByLabelText('Current filename'), 'main.ts');
+  fireEvent.changeText(screen.getByLabelText('Current content'), 'console.log("updated")');
   fireEvent.press(screen.getByRole('button', {name: 'Save changes'}));
 
   await waitFor(() => {
@@ -168,6 +168,75 @@ test('loads an existing gist in edit mode and submits changed files', async () =
   });
 
   expect(navigation.navigate).toHaveBeenCalledWith('GistDetail', {gistId: 'edited-gist'});
+});
+
+test('switches between files, preserves draft changes, and removes the active file', async () => {
+  const navigation = {
+    goBack: jest.fn(),
+    navigate: jest.fn(),
+  };
+  const createGistMutation = createMutationResult({id: 'created-gist'});
+
+  (useGistMutations as jest.Mock).mockReturnValue({
+    addCommentMutation: createMutationResult(),
+    createGistMutation,
+    deleteGistMutation: createMutationResult(),
+    editGistMutation: createMutationResult({id: 'edited-gist'}),
+    forkGistMutation: createMutationResult(),
+    starGistMutation: createMutationResult(),
+    unstarGistMutation: createMutationResult(),
+  });
+
+  render(
+    <GistEditorScreen
+      navigation={navigation as never}
+      route={{
+        key: 'GistEditor-create',
+        name: 'GistEditor',
+        params: {
+          mode: 'create',
+          description: 'Two files',
+          files: [
+            {filename: 'alpha.ts', content: 'export const alpha = 1;'},
+            {filename: 'beta.ts', content: 'export const beta = 1;'},
+          ],
+        },
+      } as never}
+    />,
+    {
+      wrapper: createWrapper(),
+    },
+  );
+
+  expect(screen.getByDisplayValue('alpha.ts')).toBeTruthy();
+
+  fireEvent.press(screen.getByText('beta.ts'));
+
+  expect(screen.getByDisplayValue('beta.ts')).toBeTruthy();
+
+  fireEvent.changeText(screen.getByLabelText('Current content'), 'export const beta = 2;');
+  fireEvent.press(screen.getByText('alpha.ts'));
+  fireEvent.press(screen.getByText('beta.ts'));
+
+  expect(screen.getByDisplayValue('export const beta = 2;')).toBeTruthy();
+
+  fireEvent.press(screen.getByRole('button', {name: 'Remove current file'}));
+
+  expect(screen.getByDisplayValue('alpha.ts')).toBeTruthy();
+
+  fireEvent.press(screen.getByRole('button', {name: 'Create Gist'}));
+
+  await waitFor(() => {
+    expect(createGistMutation.mutateAsync).toHaveBeenCalledWith({
+      description: 'Two files',
+      public: true,
+      files: {
+        'alpha.ts': {
+          content: 'export const alpha = 1;',
+        },
+      },
+    });
+  });
 });
 
 test('compose screen opens the create editor flow', () => {

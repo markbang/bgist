@@ -1,12 +1,17 @@
 import React from 'react';
 import {render} from '@testing-library/react-native';
+import type {BottomTabBarProps} from '@react-navigation/bottom-tabs';
 import type {MainTabParamList} from '../../src/app/navigation/types';
 
 const captured: {
   screenOptions: ((args: {route: {name: keyof MainTabParamList}}) => Record<string, unknown>) | null;
+  tabBar:
+    | ((props: BottomTabBarProps) => React.ReactNode)
+    | null;
   screens: Array<{name: keyof MainTabParamList; options?: Record<string, unknown>}>;
 } = {
   screenOptions: null,
+  tabBar: null,
   screens: [],
 };
 
@@ -15,11 +20,14 @@ jest.mock('@react-navigation/bottom-tabs', () => ({
     Navigator: ({
       children,
       screenOptions,
+      tabBar,
     }: {
       children: React.ReactNode;
       screenOptions: (args: {route: {name: keyof MainTabParamList}}) => Record<string, unknown>;
+      tabBar?: (props: BottomTabBarProps) => React.ReactNode;
     }) => {
       captured.screenOptions = screenOptions;
+      captured.tabBar = tabBar ?? null;
       return <>{children}</>;
     },
     Screen: ({
@@ -70,15 +78,17 @@ jest.mock('../../src/features/profile/screens/ProfileScreen', () => ({
 describe('MainTabs', () => {
   beforeEach(() => {
     captured.screenOptions = null;
+    captured.tabBar = null;
     captured.screens = [];
   });
 
-  test('provides translated labels and tab icons for each main tab', () => {
+  test('provides translated labels and renders a custom bottom tab bar', () => {
     const {MainTabs} = require('../../src/app/navigation/MainTabs') as typeof import('../../src/app/navigation/MainTabs');
 
     render(<MainTabs />);
 
     expect(typeof captured.screenOptions).toBe('function');
+    expect(typeof captured.tabBar).toBe('function');
 
     const screenOptions = captured.screenOptions!;
     const homeOptions = screenOptions({route: {name: 'Home'}});
@@ -90,9 +100,52 @@ describe('MainTabs', () => {
     expect(exploreOptions.tabBarLabel).toBe('探索');
     expect(composeOptions.tabBarLabel).toBe('创作');
     expect(profileOptions.tabBarLabel).toBe('我的');
-    expect(typeof homeOptions.tabBarIcon).toBe('function');
-    expect(typeof exploreOptions.tabBarIcon).toBe('function');
-    expect(typeof composeOptions.tabBarIcon).toBe('function');
-    expect(typeof profileOptions.tabBarIcon).toBe('function');
+
+    const routes = captured.screens.map(screen => ({
+      key: `${screen.name.toLowerCase()}-key`,
+      name: screen.name,
+    }));
+    const descriptors = Object.fromEntries(
+      routes.map(route => [
+        route.key,
+        {
+          key: route.key,
+          navigation: {} as never,
+          options: {},
+          render: () => <></>,
+          route,
+        },
+      ]),
+    ) as BottomTabBarProps['descriptors'];
+    const tabBarElement = captured.tabBar!({
+      state: {
+        index: 2,
+        key: 'main-tabs',
+        routeNames: routes.map(route => route.name),
+        routes,
+        history: [],
+        stale: false,
+        type: 'tab',
+        preloadedRouteKeys: [],
+      },
+      descriptors,
+      insets: {top: 0, right: 0, bottom: 0, left: 0},
+      navigation: {
+        emit: jest.fn(() => ({defaultPrevented: false})),
+        navigate: jest.fn(),
+      } as never,
+    }) as React.ReactElement;
+
+    const tabBar = render(tabBarElement);
+
+    expect(tabBar.getByTestId('main-tab-bar')).toBeTruthy();
+    expect(tabBar.getByTestId('main-tab-home').props.accessibilityState).toEqual({});
+    expect(tabBar.getByTestId('main-tab-compose').props.accessibilityState).toEqual({
+      selected: true,
+    });
+    expect(tabBar.getByText('首页')).toBeTruthy();
+    expect(tabBar.getByText('探索')).toBeTruthy();
+    expect(tabBar.getByText('创作')).toBeTruthy();
+    expect(tabBar.getByText('我的')).toBeTruthy();
   });
 });

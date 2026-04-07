@@ -90,21 +90,28 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
             <Text style={styles.sectionTitle}>{t('settings.accountTitle')}</Text>
             <Text style={styles.sectionDescription}>{t('settings.accountDescription')}</Text>
           </View>
-          <AppButton
-            disabled={!profileUrl}
-            label={t('settings.openGitHubProfile')}
-            onPress={() => {
-              if (profileUrl) {
-                openExternal(profileUrl);
-              }
-            }}
-            variant="secondary"
-          />
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>{t('settings.accountSignedInAs', {login: user?.login ?? '—'})}</Text>
+          </View>
+          <View style={styles.actionStack}>
+            <AppButton
+              disabled={!profileUrl}
+              label={t('settings.openGitHubProfile')}
+              onPress={() => {
+                if (profileUrl) {
+                  openExternal(profileUrl);
+                }
+              }}
+              size="compact"
+              variant="secondary"
+            />
+          </View>
           <AppButton
             label={t('settings.signOut')}
             onPress={() => {
               signOut().catch(() => {});
             }}
+            size="compact"
             variant="danger"
           />
         </AppCard>
@@ -116,9 +123,13 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
               {t('settings.aboutDescription', {version: appVersion})}
             </Text>
           </View>
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>{t('settings.versionLabel', {version: appVersion})}</Text>
+          </View>
           <AppButton
             label={t('settings.openRepository')}
             onPress={() => openExternal(appRepositoryUrl)}
+            size="compact"
             variant="secondary"
           />
         </AppCard>
@@ -149,6 +160,23 @@ const getStyles = createThemedStyles(theme =>
       color: theme.colors.textSecondary,
       fontSize: 14,
       lineHeight: 21,
+    },
+    metaRow: {
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm + 2,
+    },
+    metaLabel: {
+      color: theme.colors.textPrimary,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    actionStack: {
+      gap: theme.spacing.sm,
     },
     helperText: {
       color: theme.colors.textSecondary,

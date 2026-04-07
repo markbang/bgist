@@ -10,6 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@iconify-json/material-symbols": "^1.2.65",
     "@react-native-async-storage/async-storage": "^2.1.0",
     "@react-native-clipboard/clipboard": "^1.16.3",
     "@react-native-community/netinfo": "^12.0.1",

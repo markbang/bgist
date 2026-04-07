@@ -13,11 +13,13 @@ import {createThemedStyles} from '../../app/theme/tokens';
 import {useAppTheme} from '../../app/theme/context';
 
 type AppButtonVariant = 'primary' | 'secondary' | 'danger';
+type AppButtonSize = 'default' | 'compact';
 
 interface AppButtonProps extends Omit<PressableProps, 'children' | 'style'> {
   label: string;
   onPress?: () => void;
   variant?: AppButtonVariant;
+  size?: AppButtonSize;
   loading?: boolean;
   disabled?: boolean;
   fullWidth?: boolean;
@@ -28,6 +30,7 @@ export function AppButton({
   label,
   onPress,
   variant = 'primary',
+  size = 'default',
   loading = false,
   disabled = false,
   fullWidth = true,
@@ -44,11 +47,11 @@ export function AppButton({
     primary: {
       backgroundColor: theme.colors.accent,
       borderColor: theme.colors.accent,
-      textColor: '#ffffff',
-      spinnerColor: '#ffffff',
+      textColor: theme.colors.accentContrast,
+      spinnerColor: theme.colors.accentContrast,
     },
     secondary: {
-      backgroundColor: theme.colors.surface,
+      backgroundColor: theme.colors.surfaceMuted,
       borderColor: theme.colors.border,
       textColor: theme.colors.textPrimary,
       spinnerColor: theme.colors.accent,
@@ -74,8 +77,9 @@ export function AppButton({
       disabled={isDisabled}
       onPress={onPress}
       style={({pressed}) => [
-        styles.button,
+        styles.buttonBase,
         fullWidth ? styles.fullWidth : styles.autoWidth,
+        size === 'compact' ? styles.buttonCompact : styles.buttonDefault,
         {
           backgroundColor: buttonColors.backgroundColor,
           borderColor: buttonColors.borderColor,
@@ -88,7 +92,14 @@ export function AppButton({
         {loading ? (
           <ActivityIndicator color={buttonColors.spinnerColor} size="small" />
         ) : null}
-        <Text style={[styles.label, {color: buttonColors.textColor}]}>{label}</Text>
+        <Text
+          style={[
+            styles.labelBase,
+            size === 'compact' ? styles.labelCompact : styles.labelDefault,
+            {color: buttonColors.textColor},
+          ]}>
+          {label}
+        </Text>
       </View>
     </Pressable>
   );
@@ -96,15 +107,23 @@ export function AppButton({
 
 const getStyles = createThemedStyles(theme =>
   StyleSheet.create({
-    button: {
-      minHeight: 52,
+    buttonBase: {
       borderWidth: 1,
-      borderRadius: theme.radius.md,
+      borderRadius: theme.radius.lg,
       borderCurve: 'continuous',
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm + 2,
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    buttonDefault: {
+      minHeight: 56,
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.sm + 2,
+    },
+    buttonCompact: {
+      minHeight: 44,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.xs + 2,
+      borderRadius: theme.radius.md,
     },
     fullWidth: {
       alignSelf: 'stretch',
@@ -118,10 +137,15 @@ const getStyles = createThemedStyles(theme =>
       justifyContent: 'center',
       gap: theme.spacing.sm,
     },
-    label: {
-      fontSize: 16,
+    labelBase: {
       fontWeight: '700',
       letterSpacing: 0.1,
+    },
+    labelDefault: {
+      fontSize: 16,
+    },
+    labelCompact: {
+      fontSize: 14,
     },
     buttonPressed: {
       opacity: 0.9,

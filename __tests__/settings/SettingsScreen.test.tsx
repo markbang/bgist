@@ -30,16 +30,21 @@ jest.mock('../../src/i18n/context', () => ({
           'settings.accountTitle': 'Account',
           'settings.account': 'Account',
           'settings.accountDescription': 'Manage your GitHub session and open your public profile.',
+          'settings.accountSignedInAs': 'Signed in as @{login}',
           'settings.openGitHubProfile': 'Open GitHub profile',
           'settings.signOut': 'Sign Out',
           'settings.aboutTitle': 'About',
           'settings.aboutDescription': 'BGist version {version}',
           'settings.openRepository': 'Open repository',
+          'settings.versionLabel': 'Version {version}',
           'common.languageEnglish': 'English',
           'common.languageChinese': '中文',
           'auth.signOut': 'Sign Out',
         } as Record<string, string>
-      )[key]?.replace('{appearance}', 'Dark').replace('{version}', '0.2.2') ?? key,
+      )[key]
+        ?.replace('{appearance}', 'Dark')
+        .replace('{version}', '0.2.3')
+        .replace('{login}', 'octocat') ?? key,
   })),
 }));
 
@@ -83,6 +88,8 @@ test('lets people change appearance and language from settings', () => {
 
   expect(screen.getByText('Settings')).toBeTruthy();
   expect(screen.getByText('Following system: dark')).toBeTruthy();
+  expect(screen.getByText('Signed in as @octocat')).toBeTruthy();
+  expect(screen.getByText('Version 0.2.3')).toBeTruthy();
 
   fireEvent.press(screen.getByRole('button', {name: 'Dark'}));
   fireEvent.press(screen.getByRole('button', {name: '中文'}));

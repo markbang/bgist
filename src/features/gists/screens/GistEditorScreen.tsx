@@ -37,6 +37,11 @@ type DraftFile = {
   content: string;
 };
 
+type DraftState = {
+  files: DraftFile[];
+  activeFileId: string | null;
+};
+
 let nextDraftId = 0;
 
 function createDraftId() {
@@ -73,6 +78,52 @@ function createDraftFilesFromGist(files: Record<string, GistFile>): DraftFile[] 
     filename: file.filename,
     content: file.content ?? '',
   }));
+}
+
+function createInitialDraftState(files: GistEditorDraftFile[] | undefined, isEditMode: boolean): DraftState {
+  const seededFiles = createDraftFilesFromRoute(files);
+
+  if (seededFiles.length > 0) {
+    return {
+      files: seededFiles,
+      activeFileId: seededFiles[0].id,
+    };
+  }
+
+  if (isEditMode) {
+    return {
+      files: [],
+      activeFileId: null,
+    };
+  }
+
+  const blankFile = createBlankFile();
+
+  return {
+    files: [blankFile],
+    activeFileId: blankFile.id,
+  };
+}
+
+function getDraftFileLabel(file: DraftFile, index: number, t: (key: string, values?: Record<string, string | number>) => string) {
+  const trimmedFilename = file.filename.trim();
+
+  if (trimmedFilename) {
+    return trimmedFilename;
+  }
+
+  return t('editor.untitledFile', {index: index + 1});
+}
+
+function getFileExtension(filename: string) {
+  const trimmedFilename = filename.trim();
+  const extensionIndex = trimmedFilename.lastIndexOf('.');
+
+  if (extensionIndex <= 0 || extensionIndex === trimmedFilename.length - 1) {
+    return 'TXT';
+  }
+
+  return trimmedFilename.slice(extensionIndex + 1).toUpperCase();
 }
 
 function buildEditFilesPayload(files: DraftFile[], deletedOriginalFilenames: string[]): EditGistParams['files'] {
@@ -112,17 +163,17 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
   const isEditMode = route.params.mode === 'edit';
   const editGistId = isEditMode ? route.params.gistId : null;
   const routeDraftFiles = route.params.files;
+  const initialDraftStateRef = React.useRef<DraftState | null>(null);
+
+  if (!initialDraftStateRef.current) {
+    initialDraftStateRef.current = createInitialDraftState(routeDraftFiles, isEditMode);
+  }
+
+  const initialDraftState = initialDraftStateRef.current;
   const [description, setDescription] = React.useState(route.params.description ?? '');
   const [isPublic, setIsPublic] = React.useState(route.params.isPublic ?? true);
-  const [files, setFiles] = React.useState<DraftFile[]>(() => {
-    const seededFiles = createDraftFilesFromRoute(routeDraftFiles);
-
-    if (seededFiles.length > 0) {
-      return seededFiles;
-    }
-
-    return isEditMode ? [] : [createBlankFile()];
-  });
+  const [files, setFiles] = React.useState<DraftFile[]>(initialDraftState.files);
+  const [activeFileId, setActiveFileId] = React.useState<string | null>(initialDraftState.activeFileId);
   const [deletedOriginalFilenames, setDeletedOriginalFilenames] = React.useState<string[]>([]);
   const [hasHydratedEditState, setHasHydratedEditState] = React.useState(
     !isEditMode || Boolean(routeDraftFiles?.length),
@@ -142,9 +193,26 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
 
     setDescription(current => current || existingGistQuery.data?.description || '');
     setIsPublic(existingGistQuery.data.public);
-    setFiles(createDraftFilesFromGist(existingGistQuery.data.files));
+    const hydratedFiles = createDraftFilesFromGist(existingGistQuery.data.files);
+
+    setFiles(hydratedFiles);
+    setActiveFileId(hydratedFiles[0]?.id ?? null);
     setHasHydratedEditState(true);
   }, [existingGistQuery.data, hasHydratedEditState, isEditMode]);
+
+  React.useEffect(() => {
+    if (files.length === 0) {
+      if (activeFileId !== null) {
+        setActiveFileId(null);
+      }
+
+      return;
+    }
+
+    if (!activeFileId || !files.some(file => file.id === activeFileId)) {
+      setActiveFileId(files[0].id);
+    }
+  }, [activeFileId, files]);
 
   const updateFile = React.useCallback((fileId: string, updates: Partial<DraftFile>) => {
     setFiles(current =>
@@ -153,7 +221,10 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
   }, []);
 
   const addFile = React.useCallback(() => {
-    setFiles(current => [...current, createBlankFile()]);
+    const nextFile = createBlankFile();
+
+    setFiles(current => [...current, nextFile]);
+    setActiveFileId(nextFile.id);
   }, []);
 
   const removeFile = React.useCallback((fileId: string) => {
@@ -176,6 +247,9 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
       return current.filter(file => file.id !== fileId);
     });
   }, [t]);
+
+  const currentFile = files.find(file => file.id === activeFileId) ?? files[0] ?? null;
+  const currentFileIndex = currentFile ? files.findIndex(file => file.id === currentFile.id) : -1;
 
   const handleSubmit = React.useCallback(async () => {
     const trimmedDescription = description.trim();
@@ -295,17 +369,19 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
               {isEditMode ? (
                 <Text style={styles.helperText}>{t('editor.visibilityLocked')}</Text>
               ) : (
-                <View style={styles.visibilityButtons}>
+              <View style={styles.visibilityButtons}>
                   <AppButton
                     fullWidth={false}
                     label={t('common.public')}
                     onPress={() => setIsPublic(true)}
+                    size="compact"
                     variant={isPublic ? 'primary' : 'secondary'}
                   />
                   <AppButton
                     fullWidth={false}
                     label={t('common.secret')}
                     onPress={() => setIsPublic(false)}
+                    size="compact"
                     variant={!isPublic ? 'primary' : 'secondary'}
                   />
                 </View>
@@ -313,55 +389,110 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
             </AppCard>
 
             <View style={styles.fileSectionHeader}>
-              <Text style={styles.sectionTitle}>{t('common.files')}</Text>
-              <AppButton fullWidth={false} label={t('editor.addFile')} onPress={addFile} variant="secondary" />
+              <View style={styles.fileSectionCopy}>
+                <Text style={styles.sectionTitle}>{t('common.files')}</Text>
+                {currentFile ? (
+                  <Text style={styles.helperText}>
+                    {getDraftFileLabel(currentFile, currentFileIndex, t)}
+                  </Text>
+                ) : null}
+              </View>
+              <AppButton
+                fullWidth={false}
+                label={t('editor.addFile')}
+                onPress={addFile}
+                size="compact"
+                variant="secondary"
+              />
             </View>
 
-            {files.map((file, index) => (
-              <AppCard key={file.id}>
+            <ScrollView
+              contentContainerStyle={styles.fileTabsContent}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.fileTabsScroll}>
+              {files.map((file, index) => {
+                const isActive = file.id === currentFile?.id;
+                const label = getDraftFileLabel(file, index, t);
+
+                return (
+                  <Pressable
+                    key={file.id}
+                    accessibilityRole="tab"
+                    accessibilityState={isActive ? {selected: true} : {}}
+                    onPress={() => setActiveFileId(file.id)}
+                    style={({pressed}) => [
+                      styles.fileTab,
+                      isActive ? styles.fileTabActive : null,
+                      pressed ? styles.fileTabPressed : null,
+                    ]}>
+                    <Text style={[styles.fileTabLabel, isActive ? styles.fileTabLabelActive : null]}>
+                      {label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            {currentFile ? (
+              <AppCard>
                 <View style={styles.fileHeader}>
                   <View style={styles.fileHeaderText}>
-                    <Text style={styles.fileTitle}>{t('editor.fileTitle', {index: index + 1})}</Text>
+                    <Text style={styles.fileTitle}>
+                      {t('editor.fileTitle', {index: currentFileIndex + 1})}
+                    </Text>
                     <Text style={styles.fileMeta}>
-                      {file.originalFilename
-                        ? t('editor.editingFile', {filename: file.originalFilename})
+                      {currentFile.originalFilename
+                        ? t('editor.editingFile', {filename: currentFile.originalFilename})
                         : t('editor.newFile')}
                     </Text>
                   </View>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={t('editor.removeFileLabel', {index: index + 1})}
-                    onPress={() => removeFile(file.id)}
-                    style={({pressed}) => [styles.removeButton, pressed ? styles.removePressed : null]}>
-                    <Text style={styles.removeButtonText}>{t('editor.remove')}</Text>
-                  </Pressable>
+                  <AppButton
+                    accessibilityLabel={t('editor.removeCurrentFile')}
+                    fullWidth={false}
+                    label={t('editor.remove')}
+                    onPress={() => removeFile(currentFile.id)}
+                    size="compact"
+                    variant="danger"
+                  />
+                </View>
+
+                <View style={styles.editorMetaRow}>
+                  <View style={styles.editorMetaPill}>
+                    <Text style={styles.editorMetaPillText}>{getFileExtension(currentFile.filename)}</Text>
+                  </View>
+                  {currentFile.originalFilename && currentFile.originalFilename !== currentFile.filename.trim() ? (
+                    <View style={styles.editorMetaPill}>
+                      <Text style={styles.editorMetaPillText}>{currentFile.originalFilename}</Text>
+                    </View>
+                  ) : null}
                 </View>
 
                 <TextInput
-                  accessibilityLabel={`Filename ${index + 1}`}
+                  accessibilityLabel={t('editor.currentFilenameLabel')}
                   autoCapitalize="none"
                   autoCorrect={false}
-                  onChangeText={value => updateFile(file.id, {filename: value})}
+                  onChangeText={value => updateFile(currentFile.id, {filename: value})}
                   placeholder={t('editor.filenamePlaceholder')}
                   placeholderTextColor={theme.colors.textSecondary}
                   style={styles.filenameInput}
-                  value={file.filename}
+                  value={currentFile.filename}
                 />
                 <TextInput
-                  accessibilityLabel={`Content ${index + 1}`}
+                  accessibilityLabel={t('editor.currentContentLabel')}
                   autoCapitalize="none"
                   autoCorrect={false}
                   multiline
-                  onChangeText={value => updateFile(file.id, {content: value})}
+                  onChangeText={value => updateFile(currentFile.id, {content: value})}
                   placeholder={t('editor.contentPlaceholder')}
                   placeholderTextColor={theme.colors.textSecondary}
                   spellCheck={false}
                   style={styles.contentInput}
                   textAlignVertical="top"
-                  value={file.content}
+                  value={currentFile.content}
                 />
               </AppCard>
-            ))}
+            ) : null}
           </ScrollView>
 
           <View style={styles.footer}>
@@ -411,8 +542,8 @@ const getStyles = createThemedStyles(theme =>
       lineHeight: 20,
     },
     descriptionInput: {
-      minHeight: 52,
-      borderRadius: theme.radius.md,
+      minHeight: 56,
+      borderRadius: theme.radius.lg,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
@@ -420,7 +551,7 @@ const getStyles = createThemedStyles(theme =>
       color: theme.colors.textPrimary,
       fontSize: 15,
       paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm + 2,
+      paddingVertical: theme.spacing.sm + 3,
     },
     visibilityHeader: {
       flexDirection: 'row',
@@ -438,6 +569,43 @@ const getStyles = createThemedStyles(theme =>
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: theme.spacing.sm,
+    },
+    fileSectionCopy: {
+      flex: 1,
+      gap: theme.spacing.xs,
+    },
+    fileTabsScroll: {
+      marginHorizontal: -theme.spacing.xs,
+    },
+    fileTabsContent: {
+      gap: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.xs,
+    },
+    fileTab: {
+      minHeight: 42,
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.xs + 2,
+    },
+    fileTabActive: {
+      borderColor: theme.colors.accent,
+      backgroundColor: theme.colors.accentSoft,
+    },
+    fileTabPressed: {
+      opacity: 0.9,
+    },
+    fileTabLabel: {
+      color: theme.colors.textSecondary,
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    fileTabLabelActive: {
+      color: theme.colors.accent,
     },
     fileHeader: {
       flexDirection: 'row',
@@ -458,26 +626,27 @@ const getStyles = createThemedStyles(theme =>
       color: theme.colors.textSecondary,
       fontSize: 13,
     },
-    removeButton: {
-      borderRadius: theme.radius.md,
-      borderCurve: 'continuous',
+    editorMetaRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.xs,
+    },
+    editorMetaPill: {
+      borderRadius: 999,
       borderWidth: 1,
-      borderColor: theme.colors.danger,
-      backgroundColor: theme.colors.dangerSoft,
-      paddingHorizontal: theme.spacing.sm + 2,
-      paddingVertical: theme.spacing.xs + 2,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
     },
-    removePressed: {
-      opacity: 0.85,
-    },
-    removeButtonText: {
-      color: theme.colors.danger,
-      fontSize: 13,
+    editorMetaPillText: {
+      color: theme.colors.textSecondary,
+      fontSize: 12,
       fontWeight: '700',
     },
     filenameInput: {
-      minHeight: 52,
-      borderRadius: theme.radius.md,
+      minHeight: 56,
+      borderRadius: theme.radius.lg,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
@@ -485,11 +654,11 @@ const getStyles = createThemedStyles(theme =>
       color: theme.colors.textPrimary,
       fontSize: 15,
       paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm + 2,
+      paddingVertical: theme.spacing.sm + 3,
     },
     contentInput: {
-      minHeight: 220,
-      borderRadius: theme.radius.md,
+      minHeight: 320,
+      borderRadius: theme.radius.lg,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
