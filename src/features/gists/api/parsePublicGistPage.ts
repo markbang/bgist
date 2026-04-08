@@ -4,11 +4,11 @@ const GIST_WEB_ORIGIN = 'https://gist.github.com';
 
 function decodeHtmlEntities(value: string) {
   return value
-    .replaceAll('&amp;', '&')
     .replaceAll('&lt;', '<')
     .replaceAll('&gt;', '>')
     .replaceAll('&quot;', '"')
-    .replaceAll('&#39;', "'");
+    .replaceAll('&#39;', "'")
+    .replaceAll('&amp;', '&');
 }
 
 function normalizeText(value: string) {
