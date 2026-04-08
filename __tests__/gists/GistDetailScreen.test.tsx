@@ -251,7 +251,67 @@ test('renders markdown files as a preview card instead of raw text in gist detai
   expect(preview).toBeTruthy();
   expect(preview.props.source.html).toContain('<h1>Hello</h1>');
   expect(previewShell.props.style.height).toBeUndefined();
+  expect(preview.props.style).toEqual(
+    expect.arrayContaining([expect.objectContaining({height: expect.any(Number)})]),
+  );
   expect(screen.queryByText('# Hello')).toBeNull();
+});
+
+test('keeps short markdown previews compact instead of leaving a tall blank area', async () => {
+  (useGistDetail as jest.Mock).mockReturnValue({
+    gist: createGist({
+      files: {
+        'README.md': {
+          filename: 'README.md',
+          type: 'text/markdown',
+          language: 'Markdown',
+          raw_url: 'https://gist.githubusercontent.com/raw/README.md',
+          size: 32,
+          truncated: false,
+          content: '# Hi',
+        },
+      },
+    }),
+    support: {
+      starred: false,
+      starredError: null,
+    },
+    comments: [],
+    gistQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    supportQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+    commentsQuery: {
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    },
+  });
+
+  renderDetail(
+    <GistDetailScreen
+      navigation={
+        {
+          goBack: jest.fn(),
+          navigate: jest.fn(),
+        } as unknown as RootStackScreenProps<'GistDetail'>['navigation']
+      }
+      route={{key: 'GistDetail-gist-1', name: 'GistDetail', params: {gistId: 'gist-1'}}}
+    />,
+  );
+
+  const preview = await screen.findByTestId('gist-file-preview-README.md');
+  const heightStyle = preview.props.style.find(
+    (style: Record<string, unknown>) => typeof style?.height === 'number',
+  );
+
+  expect(heightStyle.height).toBeLessThanOrEqual(120);
 });
 
 test('renders html files as a preview card instead of raw markup in gist detail', async () => {
