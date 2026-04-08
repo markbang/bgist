@@ -53,11 +53,11 @@ test('loads fork count from the forks API and star count from the public gist pa
     text: async () => `
       <a href="/octocat/gist-123/stargazers" class="UnderlineNav-item">
         Stars
-        <span title="5,000+" class="Counter">5,000+</span>
+        <span class="d-flex" aria-hidden="true"><span title="5,000+" data-view-component="true" class="Counter">5,000+</span></span>
       </a>
       <a href="/octocat/gist-123/forks" class="UnderlineNav-item">
         Forks
-        <span title="1,859" class="Counter">1,859</span>
+        <span class="d-flex" aria-hidden="true"><span title="1,859" data-view-component="true" class="Counter">1,859</span></span>
       </a>
     `,
   })) as jest.Mock;

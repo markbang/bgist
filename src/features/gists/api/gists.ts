@@ -9,6 +9,7 @@ import type {
 import {githubClient} from '../../../shared/api/client';
 import {GitHubApiError} from '../../../shared/api/errors';
 import {parsePublicGistPage} from './parsePublicGistPage';
+import {parseGistSearchPage} from './parseGistSearchPage';
 
 function canFallbackToPublicPage(error: unknown) {
   return (
@@ -47,11 +48,17 @@ export async function searchGists(
   perPage = 30,
   signal?: AbortSignal,
 ) {
-  const {data} = await githubClient.get<{items: Gist[]}>('/gists/search', {
-    params: {q: query, page, per_page: perPage},
-    signal,
-  });
-  return data.items ?? [];
+  const searchUrl = new URL('https://gist.github.com/search');
+  searchUrl.searchParams.set('q', query);
+  searchUrl.searchParams.set('p', String(page));
+
+  const response = await fetch(searchUrl.toString(), {signal});
+
+  if (!response.ok) {
+    throw new Error('GIST_SEARCH_FAILED');
+  }
+
+  return parseGistSearchPage(await response.text()).slice(0, perPage);
 }
 
 export async function getUserGists(

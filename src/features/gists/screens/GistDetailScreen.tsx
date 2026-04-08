@@ -60,11 +60,20 @@ function formatCompactCount(value: number | null | undefined) {
   return String(value);
 }
 
-function estimateDocumentHeight(content?: string, renderedHtml?: string) {
-  const source = renderedHtml ?? content ?? '';
-  const lineCount = source.length > 0 ? source.split('\n').length : 1;
+function stripMarkup(value: string) {
+  return value
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
-  return Math.min(Math.max(120, lineCount * 22 + 40), 1600);
+function estimateDocumentHeight(sourceText?: string) {
+  const normalized = (sourceText ?? '').trim();
+  const lineCount = normalized.length > 0 ? normalized.split('\n').length : 1;
+  const characterWeight = Math.min(Math.ceil(stripMarkup(normalized).length / 72), 10);
+  const estimatedLines = Math.max(lineCount, characterWeight);
+
+  return Math.min(Math.max(72, estimatedLines * 22 + 18), 720);
 }
 
 const webViewHeightScript = `
@@ -210,17 +219,17 @@ function GistActionButton({
 function AutoHeightDocument({
   baseUrl,
   content,
-  renderedHtml,
+  sourceText,
   testID,
 }: {
   baseUrl?: string;
   content: string;
-  renderedHtml?: string;
+  sourceText?: string;
   testID: string;
 }) {
   const {themeName} = useAppTheme();
   const styles = getStyles(themeName);
-  const [height, setHeight] = React.useState(() => estimateDocumentHeight(content, renderedHtml));
+  const [height, setHeight] = React.useState(() => estimateDocumentHeight(sourceText));
 
   const handleMessage = React.useCallback((event: {nativeEvent: {data: string}}) => {
     const nextHeight = Number.parseInt(event.nativeEvent.data, 10);
@@ -315,7 +324,7 @@ function FilePreviewCard({
           <AutoHeightDocument
             baseUrl={baseUrl}
             content={previewDocument}
-            renderedHtml={renderedHtml}
+            sourceText={content ?? renderedHtml ?? ''}
             testID={`gist-file-preview-${filename}`}
           />
         ) : (
@@ -752,7 +761,7 @@ const getStyles = createThemedStyles(theme =>
       paddingHorizontal: theme.spacing.md,
       paddingTop: theme.spacing.md,
       paddingBottom: theme.spacing.xl,
-      gap: theme.spacing.md,
+      gap: theme.spacing.sm,
     },
     metaHeader: {
       flexDirection: 'row',
@@ -760,9 +769,9 @@ const getStyles = createThemedStyles(theme =>
       gap: theme.spacing.sm,
     },
     metaCard: {
-      gap: theme.spacing.sm,
-      paddingTop: theme.spacing.sm + 2,
-      paddingBottom: theme.spacing.sm + 2,
+      gap: theme.spacing.xs,
+      paddingTop: theme.spacing.xs + 2,
+      paddingBottom: theme.spacing.xs + 2,
       borderRadius: theme.radius.md,
       backgroundColor: theme.colors.canvas,
       shadowOpacity: 0,
@@ -785,7 +794,7 @@ const getStyles = createThemedStyles(theme =>
     actions: {
       alignItems: 'stretch',
       gap: theme.spacing.xs,
-      paddingRight: theme.spacing.sm,
+      paddingRight: theme.spacing.xs,
     },
     actionIconButton: {
       minHeight: 40,
@@ -832,7 +841,7 @@ const getStyles = createThemedStyles(theme =>
       color: theme.colors.accent,
     },
     section: {
-      gap: theme.spacing.sm,
+      gap: theme.spacing.xs,
     },
     sectionTitle: {
       color: theme.colors.textPrimary,
@@ -840,7 +849,7 @@ const getStyles = createThemedStyles(theme =>
       fontWeight: '800',
     },
     sectionContent: {
-      gap: theme.spacing.md,
+      gap: theme.spacing.sm,
     },
     fileHeader: {
       flexDirection: 'row',

@@ -52,7 +52,7 @@ async function getGistForkCount(gistId: string, signal?: AbortSignal) {
 
 function parsePublicCount(html: string, pathPattern: string) {
   const pattern = new RegExp(
-    `href="${pathPattern}"[^>]*>[\\s\\S]*?<span title="([^"]+)"[^>]*class="Counter"`,
+    `href="${pathPattern}"[^>]*>[\\s\\S]{0,400}?<span[^>]*class="Counter"[^>]*>([^<]+)<\\/span>`,
     'i',
   );
   const match = html.match(pattern);
