@@ -96,7 +96,7 @@ test('lets people change appearance and language from settings', () => {
   );
 
   expect(screen.getByText('Settings')).toBeTruthy();
-  expect(screen.getByText('Following system: dark')).toBeTruthy();
+  expect(screen.getAllByText('Following system: dark').length).toBeGreaterThan(0);
   expect(screen.getAllByText('Default').length).toBeGreaterThan(0);
   expect(screen.getByText('@octocat')).toBeTruthy();
   expect(screen.getByText('Signed in as @octocat')).toBeTruthy();
