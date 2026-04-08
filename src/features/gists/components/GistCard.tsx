@@ -32,6 +32,7 @@ function GistCardComponent({gist, onPressGist}: GistCardProps) {
   const owner = gist.owner?.login ?? gist.user?.login ?? 'Unknown';
   const description = gist.description?.trim() || 'Untitled gist';
   const fileNames = files.map(file => file.filename).filter(Boolean);
+  const visibleFileNames = fileNames.slice(0, 3);
   const handlePress = React.useCallback(() => {
     onPressGist?.(gist.id);
   }, [gist.id, onPressGist]);
@@ -45,30 +46,42 @@ function GistCardComponent({gist, onPressGist}: GistCardProps) {
       <AppCard>
         <View style={styles.header}>
           <View style={styles.headerContent}>
-            <Text style={styles.title}>{description}</Text>
-            <Text style={styles.owner}>@{owner}</Text>
+            <Text numberOfLines={2} style={styles.title}>
+              {description}
+            </Text>
+            <View style={styles.supportingRow}>
+              <Text numberOfLines={1} style={styles.owner}>
+                @{owner}
+              </Text>
+              <Text style={styles.supportingDot}>•</Text>
+              <Text numberOfLines={1} style={styles.supportingText}>
+                {formatDate(gist.updated_at)}
+              </Text>
+            </View>
           </View>
           <AppBadge label={gist.public ? 'Public' : 'Secret'} tone={gist.public ? 'public' : 'secret'} />
         </View>
 
-        <View style={styles.metaRow}>
+        <View style={styles.statsRow}>
           <Text style={styles.metaText}>
             {files.length} file{files.length === 1 ? '' : 's'}
           </Text>
           <Text style={styles.metaDot}>•</Text>
           <Text style={styles.metaText}>{gist.comments} comments</Text>
-          <Text style={styles.metaDot}>•</Text>
-          <Text style={styles.metaText}>Updated {formatDate(gist.updated_at)}</Text>
         </View>
 
-        <View style={styles.files}>
-          {fileNames.slice(0, 3).map(filename => (
-            <Text key={filename} style={styles.fileName}>
-              {filename}
-            </Text>
+        <View style={styles.filePills}>
+          {visibleFileNames.map(filename => (
+            <View key={filename} style={styles.filePill}>
+              <Text numberOfLines={1} style={styles.filePillText}>
+                {filename}
+              </Text>
+            </View>
           ))}
           {fileNames.length > 3 ? (
-            <Text style={styles.moreFiles}>+{fileNames.length - 3} more files</Text>
+            <View style={styles.filePill}>
+              <Text style={styles.moreFiles}>+{fileNames.length - 3} more</Text>
+            </View>
           ) : null}
         </View>
       </AppCard>
@@ -96,15 +109,29 @@ const getStyles = createThemedStyles(theme =>
     },
     title: {
       color: theme.colors.textPrimary,
-      fontSize: 17,
+      fontSize: 16,
       fontWeight: '800',
+    },
+    supportingRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
     },
     owner: {
       color: theme.colors.textSecondary,
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: '600',
     },
-    metaRow: {
+    supportingText: {
+      color: theme.colors.textSecondary,
+      fontSize: 13,
+    },
+    supportingDot: {
+      color: theme.colors.border,
+      fontSize: 12,
+    },
+    statsRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       alignItems: 'center',
@@ -118,17 +145,28 @@ const getStyles = createThemedStyles(theme =>
       color: theme.colors.border,
       fontSize: 12,
     },
-    files: {
+    filePills: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: theme.spacing.xs,
     },
-    fileName: {
+    filePill: {
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+    },
+    filePillText: {
       color: theme.colors.textPrimary,
-      fontSize: 14,
+      fontSize: 12,
       fontWeight: '600',
     },
     moreFiles: {
       color: theme.colors.textSecondary,
-      fontSize: 13,
+      fontSize: 12,
+      fontWeight: '700',
     },
   }),
 );

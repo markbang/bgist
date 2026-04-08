@@ -309,6 +309,8 @@ function FilePreviewCard({
     staleTime: Infinity,
   });
   const previewDocument = richPreviewDocument ?? codePreviewQuery.data ?? null;
+  const previewFallbackText =
+    typeof content === 'string' && content.trim().length > 0 ? content : emptyPreviewText;
 
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={filename} onPress={onPress}>
@@ -328,8 +330,8 @@ function FilePreviewCard({
             testID={`gist-file-preview-${filename}`}
           />
         ) : (
-          <Text style={styles.filePreview}>
-            {typeof content === 'string' ? ' ' : emptyPreviewText}
+          <Text numberOfLines={6} style={styles.filePreview}>
+            {previewFallbackText}
           </Text>
         )}
       </AppCard>
@@ -572,6 +574,25 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
             />
           </View>
 
+          <View style={styles.metaStatsRow}>
+            <View style={styles.metaStatPill}>
+              <Text style={styles.metaStatText}>
+                {files.length}{' '}
+                {files.length === 1 ? t('gistDetail.fileSingular') : t('gistDetail.filePlural')}
+              </Text>
+            </View>
+            <View style={styles.metaStatPill}>
+              <Text style={styles.metaStatText}>
+                {commentsCountLabel ?? '0'} {t('gistDetail.commentsTitle')}
+              </Text>
+            </View>
+            <View style={styles.metaStatPill}>
+              <Text style={styles.metaStatText}>
+                {historyCountLabel ?? '0'} {t('gistDetail.history')}
+              </Text>
+            </View>
+          </View>
+
           <ScrollView
             contentContainerStyle={styles.actions}
             horizontal
@@ -769,7 +790,7 @@ const getStyles = createThemedStyles(theme =>
       gap: theme.spacing.sm,
     },
     metaCard: {
-      gap: theme.spacing.xs,
+      gap: theme.spacing.sm,
       paddingTop: theme.spacing.xs + 2,
       paddingBottom: theme.spacing.xs + 2,
       borderRadius: theme.radius.md,
@@ -790,6 +811,24 @@ const getStyles = createThemedStyles(theme =>
       color: theme.colors.textSecondary,
       fontSize: 14,
       lineHeight: 20,
+    },
+    metaStatsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.xs,
+    },
+    metaStatPill: {
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+    },
+    metaStatText: {
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+      fontWeight: '700',
     },
     actions: {
       alignItems: 'stretch',
@@ -845,7 +884,7 @@ const getStyles = createThemedStyles(theme =>
     },
     sectionTitle: {
       color: theme.colors.textPrimary,
-      fontSize: 20,
+      fontSize: 18,
       fontWeight: '800',
     },
     sectionContent: {
