@@ -50,12 +50,14 @@ function SettingsRow({
   icon,
   onPress,
   tone = 'default',
+  isLast = false,
 }: {
   title: string;
   value?: string;
   icon: MaterialSymbolName;
   onPress?: () => void;
   tone?: 'default' | 'danger';
+  isLast?: boolean;
 }) {
   const {theme, themeName} = useAppTheme();
   const styles = getStyles(themeName);
@@ -69,6 +71,7 @@ function SettingsRow({
       onPress={onPress}
       style={({pressed}) => [
         styles.row,
+        isLast ? styles.rowLast : null,
         pressed && onPress ? styles.rowPressed : null,
       ]}>
       <View style={[styles.rowIcon, isDanger ? styles.rowIconDanger : null]}>
@@ -160,6 +163,48 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
             </View>
           }
         />
+
+        <AppCard style={styles.overviewCard}>
+          <View style={styles.overviewGrid}>
+            <View style={styles.overviewTile}>
+              <View style={styles.overviewIcon}>
+                <MaterialSymbolIcon
+                  icon={
+                    colorMode === 'system'
+                      ? 'auto-mode-rounded'
+                      : colorMode === 'dark'
+                        ? 'dark-mode-rounded'
+                        : 'light-mode-rounded'
+                  }
+                  size={18}
+                />
+              </View>
+              <Text style={styles.overviewLabel}>{t('settings.appearanceTitle')}</Text>
+              <Text style={styles.overviewValue}>{currentAppearanceLabel}</Text>
+            </View>
+            <View style={styles.overviewTile}>
+              <View style={styles.overviewIcon}>
+                <MaterialSymbolIcon icon="g-translate" size={18} />
+              </View>
+              <Text style={styles.overviewLabel}>{t('settings.languageTitle')}</Text>
+              <Text style={styles.overviewValue}>{currentLanguageLabel}</Text>
+            </View>
+            <View style={styles.overviewTile}>
+              <View style={styles.overviewIcon}>
+                <MaterialSymbolIcon icon="person-rounded" size={18} />
+              </View>
+              <Text style={styles.overviewLabel}>{t('settings.accountTitle')}</Text>
+              <Text style={styles.overviewValue}>{user?.login ? `@${user.login}` : '—'}</Text>
+            </View>
+            <View style={styles.overviewTile}>
+              <View style={styles.overviewIcon}>
+                <MaterialSymbolIcon icon="code-rounded" size={18} />
+              </View>
+              <Text style={styles.overviewLabel}>{t('settings.aboutTitle')}</Text>
+              <Text style={styles.overviewValue}>{appVersion}</Text>
+            </View>
+          </View>
+        </AppCard>
 
         <SettingsSection
           description={t('settings.appearanceDescription')}
@@ -255,6 +300,7 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
               }}
               title={t('settings.signOut')}
               tone="danger"
+              isLast
             />
           </View>
         </SettingsSection>
@@ -273,6 +319,7 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
               icon="code-rounded"
               onPress={() => openExternal(appRepositoryUrl)}
               title={t('settings.openRepository')}
+              isLast
             />
           </View>
         </SettingsSection>
@@ -290,6 +337,48 @@ const getStyles = createThemedStyles(theme =>
       paddingTop: theme.spacing.md,
       paddingBottom: theme.spacing.xl,
       gap: theme.spacing.lg,
+    },
+    overviewCard: {
+      padding: theme.spacing.sm,
+    },
+    overviewGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+    },
+    overviewTile: {
+      flexBasis: '48%',
+      flexGrow: 1,
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.md,
+      gap: theme.spacing.xs,
+    },
+    overviewIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      borderCurve: 'continuous',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.colors.surface,
+    },
+    overviewLabel: {
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.4,
+    },
+    overviewValue: {
+      color: theme.colors.textPrimary,
+      fontSize: 14,
+      fontWeight: '800',
+      lineHeight: 20,
     },
     versionBadge: {
       borderRadius: 999,
@@ -374,6 +463,9 @@ const getStyles = createThemedStyles(theme =>
       paddingVertical: theme.spacing.md,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: theme.colors.border,
+    },
+    rowLast: {
+      borderBottomWidth: 0,
     },
     rowPressed: {
       opacity: 0.88,

@@ -138,6 +138,20 @@ function MainTabBarItem({
       },
     ],
   };
+  const activeBackdropStyle = {
+    opacity: progress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 1],
+    }),
+    transform: [
+      {
+        scale: progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.92, 1],
+        }),
+      },
+    ],
+  };
 
   return (
     <Pressable
@@ -151,6 +165,11 @@ function MainTabBarItem({
         pressed ? styles.itemPressed : null,
       ]}
       testID={testID}>
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.activeBackdrop, activeBackdropStyle]}
+        testID={`${testID}-active-backdrop`}
+      />
       <Animated.View
         style={[styles.iconWrap, iconAnimatedStyle]}
         testID={`${testID}-icon-wrap`}>
@@ -171,36 +190,52 @@ function MainTabBarItem({
 const getStyles = createThemedStyles(theme =>
   StyleSheet.create({
     outer: {
-      backgroundColor: theme.colors.canvas,
       paddingHorizontal: theme.spacing.md,
       paddingTop: theme.spacing.xs,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: theme.colors.border,
     },
     inner: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: theme.spacing.xs,
+      borderRadius: theme.radius.lg + 6,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: theme.spacing.xs,
       paddingTop: theme.spacing.xs,
+      paddingBottom: theme.spacing.xs,
+      ...theme.shadow.card,
     },
     item: {
+      position: 'relative',
       flex: 1,
-      minHeight: 48,
-      borderRadius: 16,
+      minHeight: 50,
+      borderRadius: theme.radius.lg,
       borderCurve: 'continuous',
       alignItems: 'center',
       justifyContent: 'center',
       gap: theme.spacing.xs,
-      paddingHorizontal: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.sm,
       paddingVertical: theme.spacing.xs,
+      overflow: 'hidden',
     },
     itemPressed: {
       opacity: 0.88,
     },
+    activeBackdrop: {
+      ...StyleSheet.absoluteFillObject,
+      borderRadius: theme.radius.lg,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.accentSoft,
+      backgroundColor: theme.colors.accentSoft,
+    },
     iconWrap: {
       alignItems: 'center',
       justifyContent: 'center',
+      zIndex: 1,
     },
     iconSlot: {
       width: 28,
@@ -209,7 +244,8 @@ const getStyles = createThemedStyles(theme =>
       justifyContent: 'center',
     },
     indicator: {
-      width: 16,
+      zIndex: 1,
+      width: 18,
       height: 3,
       borderRadius: 999,
       backgroundColor: theme.colors.accent,

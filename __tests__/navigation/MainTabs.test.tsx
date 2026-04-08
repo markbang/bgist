@@ -151,6 +151,7 @@ describe('MainTabs', () => {
     expect(tabBar.getByRole('tab', {name: '探索'})).toBeTruthy();
     expect(tabBar.getByRole('tab', {name: '创作'})).toBeTruthy();
     expect(tabBar.getByRole('tab', {name: '我的'})).toBeTruthy();
+    expect(tabBar.getByTestId('main-tab-compose-active-backdrop')).toBeTruthy();
     expect(tabBar.getByTestId('main-tab-compose-indicator')).toBeTruthy();
   });
 
@@ -198,6 +199,7 @@ describe('MainTabs', () => {
     const composeIconSlot = tabBar.getByTestId('main-tab-compose-icon-slot');
 
     expect(composeIconSlot.props.style.backgroundColor).toBeUndefined();
+    expect(tabBar.getByTestId('main-tab-compose-active-backdrop')).toBeTruthy();
     expect(tabBar.getByTestId('main-tab-compose-indicator')).toBeTruthy();
   });
 });
