@@ -63,6 +63,8 @@ export type AppTheme = {
 export type ThemeName = 'light' | 'dark';
 export type ThemePreset = 'default' | 'ocean' | 'forest' | 'sunset';
 
+let activeThemePreset: ThemePreset = 'default';
+
 const sharedRadius = {
   sm: 10,
   md: 14,
@@ -119,10 +121,10 @@ export const lightAppTheme: AppTheme = {
   shadow: {
     card: {
       shadowColor: '#0f172a',
-      shadowOffset: {width: 0, height: 12},
-      shadowOpacity: 0.1,
-      shadowRadius: 24,
-      elevation: 8,
+      shadowOffset: {width: 0, height: 6},
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      elevation: 3,
     },
   },
   radius: sharedRadius,
@@ -171,10 +173,10 @@ export const darkAppTheme: AppTheme = {
   shadow: {
     card: {
       shadowColor: '#020617',
-      shadowOffset: {width: 0, height: 10},
-      shadowOpacity: 0.28,
-      shadowRadius: 20,
-      elevation: 10,
+      shadowOffset: {width: 0, height: 8},
+      shadowOpacity: 0.18,
+      shadowRadius: 16,
+      elevation: 5,
     },
   },
   radius: sharedRadius,
@@ -264,6 +266,7 @@ const presetOverrides: Record<ThemePreset, Record<ThemeName, ThemeOverride>> = {
 };
 
 export function getTheme(themeName: ThemeName, preset: ThemePreset = 'default') {
+  activeThemePreset = preset;
   const baseTheme = themeMap[themeName];
   const overrides = presetOverrides[preset]?.[themeName] ?? {};
 
@@ -281,17 +284,18 @@ export function getTheme(themeName: ThemeName, preset: ThemePreset = 'default') 
 }
 
 export function createThemedStyles<T>(factory: (theme: AppTheme) => T) {
-  const cache = new Map<ThemeName, T>();
+  const cache = new Map<string, T>();
 
-  return (themeName: ThemeName) => {
-    const cached = cache.get(themeName);
+  return (themeName: ThemeName, preset: ThemePreset = activeThemePreset) => {
+    const cacheKey = `${themeName}:${preset}`;
+    const cached = cache.get(cacheKey);
 
     if (cached) {
       return cached;
     }
 
-    const nextStyles = factory(getTheme(themeName));
-    cache.set(themeName, nextStyles);
+    const nextStyles = factory(getTheme(themeName, preset));
+    cache.set(cacheKey, nextStyles);
     return nextStyles;
   };
 }

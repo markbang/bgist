@@ -14,8 +14,8 @@ export function AppPageHeader({
   accessory,
   numberOfLines = 2,
 }: AppPageHeaderProps) {
-  const {themeName} = useAppTheme();
-  const styles = getStyles(themeName);
+  const {themeName, themePreset} = useAppTheme();
+  const styles = getStyles(themeName, themePreset);
 
   return (
     <View style={styles.header}>
@@ -43,9 +43,10 @@ const getStyles = createThemedStyles(theme =>
     title: {
       flex: 1,
       color: theme.colors.textPrimary,
-      fontSize: 28,
+      fontSize: 24,
+      lineHeight: 30,
       fontWeight: '800',
-      letterSpacing: -0.4,
+      letterSpacing: -0.6,
     },
     accessory: {
       flexShrink: 0,

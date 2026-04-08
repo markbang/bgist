@@ -21,8 +21,8 @@ export function AppSegmentedControl<T extends string>({
   onChange,
   disabled = false,
 }: AppSegmentedControlProps<T>) {
-  const {theme, themeName} = useAppTheme();
-  const styles = getStyles(themeName);
+  const {theme, themeName, themePreset} = useAppTheme();
+  const styles = getStyles(themeName, themePreset);
   const thumbTranslateX = React.useRef(new Animated.Value(0)).current;
   const thumbOpacity = React.useRef(new Animated.Value(0)).current;
   const [containerWidth, setContainerWidth] = React.useState(0);
@@ -125,12 +125,12 @@ const getStyles = createThemedStyles(theme =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: theme.spacing.xs,
-      borderRadius: theme.radius.lg,
+      borderRadius: theme.radius.md,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
       backgroundColor: theme.colors.surfaceMuted,
-      padding: theme.spacing.xs,
+      padding: theme.spacing.xs - 1,
       overflow: 'hidden',
     },
     containerDisabled: {
@@ -141,7 +141,7 @@ const getStyles = createThemedStyles(theme =>
       top: theme.spacing.xs,
       bottom: theme.spacing.xs,
       left: 0,
-      borderRadius: theme.radius.md,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       backgroundColor: theme.colors.surface,
       ...theme.shadow.card,
@@ -152,23 +152,25 @@ const getStyles = createThemedStyles(theme =>
     segment: {
       zIndex: 1,
       flex: 1,
-      minHeight: 44,
-      borderRadius: theme.radius.md,
+      minHeight: 40,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs - 1,
     },
     segmentPressed: {
       opacity: 0.8,
     },
     label: {
       color: theme.colors.textSecondary,
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: '600',
     },
     labelSelected: {
       color: theme.colors.textPrimary,
+      fontWeight: '700',
     },
   }),
 );

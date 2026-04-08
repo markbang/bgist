@@ -40,8 +40,8 @@ export function AppButton({
   accessibilityState,
   ...pressableProps
 }: AppButtonProps) {
-  const {theme, themeName} = useAppTheme();
-  const styles = getStyles(themeName);
+  const {theme, themeName, themePreset} = useAppTheme();
+  const styles = getStyles(themeName, themePreset);
   const isDisabled = disabled || loading;
   const buttonColors = {
     primary: {
@@ -51,7 +51,7 @@ export function AppButton({
       spinnerColor: theme.colors.accentContrast,
     },
     secondary: {
-      backgroundColor: theme.colors.surfaceMuted,
+      backgroundColor: theme.colors.surface,
       borderColor: theme.colors.border,
       textColor: theme.colors.textPrimary,
       spinnerColor: theme.colors.accent,
@@ -109,21 +109,21 @@ const getStyles = createThemedStyles(theme =>
   StyleSheet.create({
     buttonBase: {
       borderWidth: 1,
-      borderRadius: theme.radius.lg,
+      borderRadius: theme.radius.md,
       borderCurve: 'continuous',
       justifyContent: 'center',
       alignItems: 'center',
     },
     buttonDefault: {
-      minHeight: 52,
-      paddingHorizontal: theme.spacing.lg,
+      minHeight: 48,
+      paddingHorizontal: theme.spacing.md + 2,
       paddingVertical: theme.spacing.sm + 1,
     },
     buttonCompact: {
-      minHeight: 44,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.xs + 2,
-      borderRadius: theme.radius.md,
+      minHeight: 40,
+      paddingHorizontal: theme.spacing.sm + 4,
+      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.radius.sm,
     },
     fullWidth: {
       alignSelf: 'stretch',
@@ -135,17 +135,17 @@ const getStyles = createThemedStyles(theme =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: theme.spacing.sm,
+      gap: theme.spacing.xs + 2,
     },
     labelBase: {
       fontWeight: '700',
-      letterSpacing: 0.1,
+      letterSpacing: 0,
     },
     labelDefault: {
-      fontSize: 16,
+      fontSize: 15,
     },
     labelCompact: {
-      fontSize: 14,
+      fontSize: 13,
     },
     buttonPressed: {
       opacity: 0.9,

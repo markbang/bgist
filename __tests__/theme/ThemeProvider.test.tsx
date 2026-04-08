@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ReactNative from 'react-native';
 import {fireEvent, render, screen, waitFor} from '@testing-library/react-native';
 import {ThemeProvider, useAppTheme, useThemePreference} from '../../src/app/theme/context';
+import {createThemedStyles} from '../../src/app/theme/tokens';
 
 function ThemeProbe() {
   const theme = useAppTheme();
@@ -33,6 +34,24 @@ function ThemeProbe() {
   );
 }
 
+const getStyledProbeStyles = createThemedStyles(theme =>
+  ReactNative.StyleSheet.create({
+    box: {
+      backgroundColor: theme.colors.surfaceMuted,
+      borderColor: theme.colors.border,
+      borderWidth: 1,
+    },
+  }),
+);
+
+function ThemeStyleProbe() {
+  const {themeName} = useAppTheme();
+  const styles = getStyledProbeStyles(themeName);
+  const resolved = ReactNative.StyleSheet.flatten(styles.box);
+
+  return <ReactNative.Text>{`styled:${resolved.backgroundColor}:${resolved.borderColor}`}</ReactNative.Text>;
+}
+
 afterEach(() => {
   jest.restoreAllMocks();
   jest.clearAllMocks();
@@ -52,29 +71,34 @@ test('persists the selected appearance mode and resolves the active theme', asyn
   render(
     <ThemeProvider>
       <ThemeProbe />
+      <ThemeStyleProbe />
     </ThemeProvider>,
   );
 
   await waitFor(() => {
     expect(screen.getByText('system:default:dark:#0b1220')).toBeTruthy();
+    expect(screen.getByText('styled:#172032:#263349')).toBeTruthy();
   });
 
   fireEvent.press(screen.getByRole('button', {name: 'set-light'}));
 
   await waitFor(() => {
     expect(screen.getByText('light:default:light:#f5f7fb')).toBeTruthy();
+    expect(screen.getByText('styled:#eef2f8:#d5ddeb')).toBeTruthy();
   });
 
   fireEvent.press(screen.getByRole('button', {name: 'set-dark'}));
 
   await waitFor(() => {
     expect(screen.getByText('dark:default:dark:#0b1220')).toBeTruthy();
+    expect(screen.getByText('styled:#172032:#263349')).toBeTruthy();
   });
 
   fireEvent.press(screen.getByRole('button', {name: 'set-ocean'}));
 
   await waitFor(() => {
     expect(screen.getByText('dark:ocean:dark:#09161b')).toBeTruthy();
+    expect(screen.getByText('styled:#132a33:#284551')).toBeTruthy();
   });
 
   expect(setItemSpy).toHaveBeenCalledWith('app_theme_preference', 'dark');
