@@ -250,6 +250,9 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
 
   const currentFile = files.find(file => file.id === activeFileId) ?? files[0] ?? null;
   const currentFileIndex = currentFile ? files.findIndex(file => file.id === currentFile.id) : -1;
+  const fileCountLabel = `${files.length} ${
+    files.length === 1 ? t('gistDetail.fileSingular') : t('gistDetail.filePlural')
+  }`;
 
   const handleSubmit = React.useCallback(async () => {
     const trimmedDescription = description.trim();
@@ -346,6 +349,24 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
             <AppPageHeader title={isEditMode ? t('editor.editTitle') : t('editor.createTitle')} />
+
+            <View style={styles.summaryRow}>
+              <View style={styles.summaryPill}>
+                <Text style={styles.summaryPillText}>
+                  {isPublic ? t('common.public') : t('common.secret')}
+                </Text>
+              </View>
+              <View style={styles.summaryPill}>
+                <Text style={styles.summaryPillText}>{fileCountLabel}</Text>
+              </View>
+              {currentFile ? (
+                <View style={styles.summaryPill}>
+                  <Text numberOfLines={1} style={styles.summaryPillText}>
+                    {getDraftFileLabel(currentFile, currentFileIndex, t)}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
 
             <AppCard>
               <Text style={styles.sectionTitle}>{t('editor.detailsTitle')}</Text>
@@ -522,9 +543,28 @@ const getStyles = createThemedStyles(theme =>
     },
     content: {
       paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.md,
+      paddingTop: theme.spacing.sm,
       paddingBottom: 120,
-      gap: theme.spacing.md,
+      gap: theme.spacing.sm,
+    },
+    summaryRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.xs,
+    },
+    summaryPill: {
+      maxWidth: '100%',
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+    },
+    summaryPillText: {
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+      fontWeight: '700',
     },
     sectionTitle: {
       color: theme.colors.textPrimary,

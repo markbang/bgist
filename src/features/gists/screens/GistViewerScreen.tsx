@@ -1,5 +1,5 @@
 import React from 'react';
-import {Alert, Pressable, ScrollView, Share, StyleSheet, View} from 'react-native';
+import {Alert, Pressable, ScrollView, Share, StyleSheet, Text, View} from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {useQuery} from '@tanstack/react-query';
 import Svg, {Circle, Path} from 'react-native-svg';
@@ -314,6 +314,13 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
     <AppScreen>
       <View style={styles.container}>
         <AppPageHeader title={filename} />
+        {language ? (
+          <View style={styles.metaRow}>
+            <View style={styles.metaPill}>
+              <Text style={styles.metaPillText}>{language}</Text>
+            </View>
+          </View>
+        ) : null}
 
         <ScrollView
           contentContainerStyle={styles.actions}
@@ -392,11 +399,6 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
               style={styles.preview}
               testID="gist-render-preview"
             />
-          ) : rawCodeDocumentQuery.isLoading ? (
-            <AppLoadingState
-              label={t('viewer.renderingTitle')}
-              description={t('viewer.renderingDescription')}
-            />
           ) : rawCodeDocument ? (
             <WebView
               nestedScrollEnabled
@@ -421,14 +423,32 @@ const getStyles = createThemedStyles(theme =>
     container: {
       flex: 1,
       paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.md,
+      paddingTop: theme.spacing.sm,
       paddingBottom: theme.spacing.xl,
-      gap: theme.spacing.md,
+      gap: theme.spacing.sm,
+    },
+    metaRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.xs,
+    },
+    metaPill: {
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+    },
+    metaPillText: {
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+      fontWeight: '700',
     },
     actions: {
       alignItems: 'center',
-      gap: theme.spacing.sm,
-      paddingRight: theme.spacing.md,
+      gap: theme.spacing.xs,
+      paddingRight: theme.spacing.xs,
     },
     actionButton: {
       width: 48,
@@ -455,7 +475,7 @@ const getStyles = createThemedStyles(theme =>
     codeShell: {
       flex: 1,
       minHeight: 0,
-      padding: theme.spacing.sm,
+      padding: theme.spacing.xs,
     },
     preview: {
       flex: 1,
