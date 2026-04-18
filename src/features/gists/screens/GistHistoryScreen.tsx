@@ -80,6 +80,7 @@ export function GistHistoryScreen({route}: RootStackScreenProps<'GistHistory'>) 
     queryFn: ({signal}) => getGist(gistId, signal),
   });
   const gistUrl = historyQuery.data?.html_url ?? `https://gist.github.com/${gistId}`;
+  const revisionCount = historyQuery.data?.history.length ?? 0;
   const handleOpenRevision = React.useCallback(
     (version: string) => {
       Linking.openURL(`${gistUrl}/${version}`).catch(() => {
@@ -151,6 +152,18 @@ export function GistHistoryScreen({route}: RootStackScreenProps<'GistHistory'>) 
       <View style={styles.container}>
         <View style={styles.header}>
           <AppPageHeader title={t('history.title')} />
+          {historyQuery.data ? (
+            <AppCard style={styles.summaryCard}>
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryPill}>
+                  <Text style={styles.summaryPillText}>{revisionCount} revisions</Text>
+                </View>
+                <View style={styles.summaryPill}>
+                  <Text style={styles.summaryPillText}>gist/{gistId.slice(0, 7)}</Text>
+                </View>
+              </View>
+            </AppCard>
+          ) : null}
         </View>
 
         <View style={styles.content}>{content}</View>
@@ -166,18 +179,39 @@ const getStyles = createThemedStyles(theme =>
     container: {
       flex: 1,
       paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.md,
-      gap: theme.spacing.md,
+      paddingTop: theme.spacing.sm,
+      gap: theme.spacing.sm,
     },
     header: {
-      gap: theme.spacing.sm,
+      gap: theme.spacing.xs,
     },
     content: {
       flex: 1,
     },
     listContent: {
-      paddingBottom: theme.spacing.xl,
-      gap: theme.spacing.md,
+      paddingBottom: theme.spacing.lg,
+      gap: theme.spacing.sm,
+    },
+    summaryCard: {
+      gap: theme.spacing.xs,
+    },
+    summaryRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.xs,
+    },
+    summaryPill: {
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+    },
+    summaryPillText: {
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+      fontWeight: '700',
     },
     historyHeader: {
       flexDirection: 'row',
@@ -190,13 +224,13 @@ const getStyles = createThemedStyles(theme =>
     },
     historyTitle: {
       color: theme.colors.textPrimary,
-      fontSize: 17,
+      fontSize: 16,
       fontWeight: '800',
     },
     historyMeta: {
       color: theme.colors.textSecondary,
-      fontSize: 14,
-      lineHeight: 20,
+      fontSize: 13,
+      lineHeight: 18,
     },
     historyBody: {
       gap: theme.spacing.xs,

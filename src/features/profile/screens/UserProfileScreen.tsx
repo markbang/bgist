@@ -48,7 +48,7 @@ const ProfileHero = React.memo(function ProfileHero({
     <View style={styles.header}>
       <AppPageHeader title={profile.name ?? username} />
 
-      <AppCard>
+      <AppCard style={styles.heroCard}>
         <View style={styles.identity}>
           <Image source={{uri: profile.avatar_url}} style={styles.avatar} />
           <View style={styles.identityCopy}>
@@ -190,12 +190,15 @@ const getStyles = createThemedStyles(theme =>
   StyleSheet.create({
     content: {
       paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.md,
-      paddingBottom: theme.spacing.xl,
-      gap: theme.spacing.md,
+      paddingTop: theme.spacing.sm,
+      paddingBottom: theme.spacing.lg,
+      gap: theme.spacing.sm,
     },
     header: {
-      gap: theme.spacing.md,
+      gap: theme.spacing.sm,
+    },
+    heroCard: {
+      gap: theme.spacing.sm,
     },
     identity: {
       flexDirection: 'row',
@@ -220,18 +223,18 @@ const getStyles = createThemedStyles(theme =>
     },
     name: {
       color: theme.colors.textPrimary,
-      fontSize: 22,
+      fontSize: 20,
       fontWeight: '800',
     },
     login: {
       color: theme.colors.textSecondary,
-      fontSize: 15,
+      fontSize: 14,
       fontWeight: '600',
     },
     bio: {
       color: theme.colors.textPrimary,
-      fontSize: 15,
-      lineHeight: 22,
+      fontSize: 14,
+      lineHeight: 20,
     },
     metaRow: {
       flexDirection: 'row',
@@ -267,7 +270,7 @@ const getStyles = createThemedStyles(theme =>
     },
     statValue: {
       color: theme.colors.textPrimary,
-      fontSize: 22,
+      fontSize: 20,
       fontWeight: '800',
     },
     statLabel: {
@@ -280,13 +283,13 @@ const getStyles = createThemedStyles(theme =>
     },
     sectionTitle: {
       color: theme.colors.textPrimary,
-      fontSize: 20,
+      fontSize: 18,
       fontWeight: '800',
     },
     sectionSubtitle: {
       color: theme.colors.textSecondary,
-      fontSize: 14,
-      lineHeight: 20,
+      fontSize: 13,
+      lineHeight: 18,
     },
   }),
 );

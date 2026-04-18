@@ -40,7 +40,7 @@ test('ignores repeat sign-in presses while a sign-in request is pending', async 
 
   render(<LoginScreen />);
 
-  fireEvent.press(screen.getByText('Sign in with GitHub'));
+  fireEvent.press(screen.getByRole('button', {name: 'Sign in with GitHub'}));
 
   await waitFor(() => {
     expect(screen.getByText('Waiting for GitHub authorization…')).toBeTruthy();
@@ -75,7 +75,7 @@ test('shows device flow actions for copying the code and opening GitHub verifica
 
   render(<LoginScreen />);
 
-  fireEvent.press(screen.getByText('Sign in with GitHub'));
+  fireEvent.press(screen.getByRole('button', {name: 'Sign in with GitHub'}));
 
   expect(await screen.findByText('ABCD-EFGH')).toBeTruthy();
 
@@ -102,7 +102,7 @@ test('clears stale verification details when authorization fails after code disp
 
   render(<LoginScreen />);
 
-  fireEvent.press(screen.getByText('Sign in with GitHub'));
+  fireEvent.press(screen.getByRole('button', {name: 'Sign in with GitHub'}));
 
   expect(await screen.findByText('GitHub authorization was denied. Start again to request a new code.')).toBeTruthy();
   expect(screen.queryByText('ZZZZ-9999')).toBeNull();

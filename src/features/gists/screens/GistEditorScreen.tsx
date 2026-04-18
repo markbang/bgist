@@ -545,7 +545,7 @@ const getStyles = createThemedStyles(theme =>
       paddingHorizontal: theme.spacing.md,
       paddingTop: theme.spacing.sm,
       paddingBottom: 120,
-      gap: theme.spacing.sm,
+      gap: theme.spacing.xs,
     },
     summaryRow: {
       flexDirection: 'row',
@@ -622,15 +622,15 @@ const getStyles = createThemedStyles(theme =>
       paddingHorizontal: theme.spacing.xs,
     },
     fileTab: {
-      minHeight: 42,
+      minHeight: 38,
       borderRadius: theme.radius.md,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
       backgroundColor: theme.colors.surface,
       justifyContent: 'center',
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.xs + 2,
+      paddingHorizontal: theme.spacing.sm + 2,
+      paddingVertical: theme.spacing.xs + 1,
     },
     fileTabActive: {
       borderColor: theme.colors.accent,
@@ -641,7 +641,7 @@ const getStyles = createThemedStyles(theme =>
     },
     fileTabLabel: {
       color: theme.colors.textSecondary,
-      fontSize: 13,
+      fontSize: 12,
       fontWeight: '700',
     },
     fileTabLabelActive: {

@@ -84,7 +84,7 @@ export function ProfileScreen({navigation}: MainTabScreenProps<'Profile'>) {
           }
         />
 
-        <AppCard>
+        <AppCard style={styles.heroCard}>
           <View style={styles.identity}>
             {user.avatar_url ? <Image source={{uri: user.avatar_url}} style={styles.avatar} /> : null}
             <View style={styles.identityText}>
@@ -127,9 +127,12 @@ const getStyles = createThemedStyles(theme =>
   StyleSheet.create({
     content: {
       paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.md,
-      paddingBottom: theme.spacing.xl,
-      gap: theme.spacing.md,
+      paddingTop: theme.spacing.sm,
+      paddingBottom: theme.spacing.lg,
+      gap: theme.spacing.sm,
+    },
+    heroCard: {
+      gap: theme.spacing.sm,
     },
     settingsButton: {
       width: 42,
@@ -162,18 +165,18 @@ const getStyles = createThemedStyles(theme =>
     },
     name: {
       color: theme.colors.textPrimary,
-      fontSize: 22,
+      fontSize: 20,
       fontWeight: '800',
     },
     login: {
       color: theme.colors.textSecondary,
-      fontSize: 15,
+      fontSize: 14,
       fontWeight: '600',
     },
     bio: {
       color: theme.colors.textSecondary,
-      fontSize: 14,
-      lineHeight: 20,
+      fontSize: 13,
+      lineHeight: 18,
     },
     stats: {
       flexDirection: 'row',
@@ -191,7 +194,7 @@ const getStyles = createThemedStyles(theme =>
     },
     statValue: {
       color: theme.colors.textPrimary,
-      fontSize: 20,
+      fontSize: 18,
       fontWeight: '800',
     },
     statLabel: {

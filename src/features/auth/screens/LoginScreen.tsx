@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {Linking, StyleSheet, Text, View} from 'react-native';
+import {MaterialSymbolIcon} from '../../../components/TabIcons';
 import {AppButton} from '../../../shared/ui/AppButton';
 import {AppCard} from '../../../shared/ui/AppCard';
 import {useSession} from '../session/SessionProvider';
@@ -50,55 +51,70 @@ export default function LoginScreen() {
   return (
     <AppScreen>
       <View style={styles.container}>
-        <Text style={styles.title}>BGist</Text>
+        <View style={styles.hero}>
+          <View style={styles.heroBadge}>
+            <MaterialSymbolIcon icon="description-rounded" size={18} />
+            <Text style={styles.heroBadgeText}>GitHub Gist client</Text>
+          </View>
+          <Text style={styles.title}>BGist</Text>
+          <Text style={styles.subtitle}>
+            Sign in once, then browse, search, read, and edit gists with a compact native workflow.
+          </Text>
+        </View>
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        <AppButton
-          disabled={isSubmitting}
-          label={
-            isSubmitting && verification
-              ? 'Waiting for GitHub authorization…'
-              : isSubmitting
-                ? 'Starting GitHub device sign-in…'
-                : 'Sign in with GitHub'
-          }
-          loading={isSubmitting && !verification}
-          onPress={() => {
-            if (isSubmitting) {
-              return;
+        <AppCard style={styles.authCard}>
+          <Text style={styles.cardTitle}>Sign in with GitHub</Text>
+          <Text style={styles.helper}>
+            BGist uses GitHub Device Flow, so you can approve login from the browser and come back here instantly.
+          </Text>
+          <AppButton
+            disabled={isSubmitting}
+            label={
+              isSubmitting && verification
+                ? 'Waiting for GitHub authorization…'
+                : isSubmitting
+                  ? 'Starting GitHub device sign-in…'
+                  : 'Sign in with GitHub'
             }
-
-            setError(null);
-            setVerification(null);
-            setIsSubmitting(true);
-            (async () => {
-              try {
-                await signIn({
-                  onVerification: nextVerification => {
-                    if (!isMountedRef.current) {
-                      return;
-                    }
-
-                    setVerification({
-                      userCode: nextVerification.userCode,
-                      verificationUri: nextVerification.verificationUri,
-                      expiresAt: nextVerification.expiresAt,
-                      intervalSeconds: nextVerification.intervalSeconds,
-                    });
-                  },
-                });
-              } catch (nextError) {
-                if (isMountedRef.current) {
-                  setVerification(null);
-                  setError(getSignInErrorMessage(nextError));
-                }
-              } finally {
-                if (isMountedRef.current) {
-                  setIsSubmitting(false);
-                }
+            loading={isSubmitting && !verification}
+            onPress={() => {
+              if (isSubmitting) {
+                return;
               }
-            })().catch(() => {});
-          }}
-        />
+
+              setError(null);
+              setVerification(null);
+              setIsSubmitting(true);
+              (async () => {
+                try {
+                  await signIn({
+                    onVerification: nextVerification => {
+                      if (!isMountedRef.current) {
+                        return;
+                      }
+
+                      setVerification({
+                        userCode: nextVerification.userCode,
+                        verificationUri: nextVerification.verificationUri,
+                        expiresAt: nextVerification.expiresAt,
+                        intervalSeconds: nextVerification.intervalSeconds,
+                      });
+                    },
+                  });
+                } catch (nextError) {
+                  if (isMountedRef.current) {
+                    setVerification(null);
+                    setError(getSignInErrorMessage(nextError));
+                  }
+                } finally {
+                  if (isMountedRef.current) {
+                    setIsSubmitting(false);
+                  }
+                }
+              })().catch(() => {});
+            }}
+          />
+        </AppCard>
 
         {verification ? (
           <AppCard>
@@ -147,17 +163,45 @@ const getStyles = createThemedStyles(theme =>
       flex: 1,
       justifyContent: 'center',
       paddingHorizontal: theme.spacing.lg,
-      gap: theme.spacing.md,
+      gap: theme.spacing.sm,
+    },
+    hero: {
+      gap: theme.spacing.xs,
+    },
+    heroBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'flex-start',
+      gap: theme.spacing.xs,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+    },
+    heroBadgeText: {
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+      fontWeight: '700',
     },
     title: {
       fontSize: 36,
       fontWeight: '800',
       color: theme.colors.textPrimary,
     },
+    subtitle: {
+      color: theme.colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 20,
+    },
     error: {
       color: theme.colors.danger,
       fontSize: 14,
       lineHeight: 20,
+    },
+    authCard: {
+      gap: theme.spacing.sm,
     },
     cardTitle: {
       color: theme.colors.textPrimary,
