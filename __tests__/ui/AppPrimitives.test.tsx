@@ -3,7 +3,10 @@ import {fireEvent, render, screen} from '@testing-library/react-native';
 import {appTheme} from '../../src/app/theme/tokens';
 import {AppButton} from '../../src/shared/ui/AppButton';
 import {AppCodeBlock} from '../../src/shared/ui/AppCodeBlock';
+import {AppEmptyState} from '../../src/shared/ui/AppEmptyState';
+import {AppErrorState} from '../../src/shared/ui/AppErrorState';
 import {AppInput} from '../../src/shared/ui/AppInput';
+import {AppLoadingState} from '../../src/shared/ui/AppLoadingState';
 
 test('AppButton forwards standard Pressable props', () => {
   const onLongPress = jest.fn();
@@ -74,4 +77,30 @@ test('AppCodeBlock keeps each code line on a single row', () => {
   render(<AppCodeBlock filename="gist.ts" content={longLine} />);
 
   expect(screen.getByText(longLine).props.numberOfLines).toBe(1);
+});
+
+test('state primitives render compact panel content and actions', () => {
+  const onRetry = jest.fn();
+
+  render(
+    <>
+      <AppEmptyState
+        title="No gists yet"
+        description="Create one to get started."
+        actionLabel="Create"
+        onAction={onRetry}
+      />
+      <AppLoadingState label="Loading gists" description="Fetching latest changes." />
+      <AppErrorState title="Could not load" description="Retry in a moment." onRetry={onRetry} />
+    </>,
+  );
+
+  expect(screen.getByText('No gists yet')).toBeTruthy();
+  expect(screen.getByText('Loading gists')).toBeTruthy();
+  expect(screen.getByText('Could not load')).toBeTruthy();
+
+  fireEvent.press(screen.getByRole('button', {name: 'Create'}));
+  fireEvent.press(screen.getByRole('button', {name: 'Try again'}));
+
+  expect(onRetry).toHaveBeenCalledTimes(2);
 });
