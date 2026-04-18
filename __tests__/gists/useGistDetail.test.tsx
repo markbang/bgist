@@ -1,5 +1,6 @@
 import React from 'react';
 import {act, renderHook, waitFor} from '@testing-library/react-native';
+import {notifyManager} from '@tanstack/query-core';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {queryKeys} from '../../src/shared/api/queryKeys';
 import {useGistDetail} from '../../src/features/gists/hooks/useGistDetail';
@@ -15,15 +16,25 @@ jest.mock('../../src/features/gists/api/loadGistSupport', () => ({
   loadGistSupport: jest.fn(),
 }));
 
+const testQueryClients: QueryClient[] = [];
+
 function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
         gcTime: Infinity,
         retry: false,
+        staleTime: Infinity,
+        refetchOnMount: false,
+        refetchOnReconnect: false,
+        refetchOnWindowFocus: false,
+      },
+      mutations: {
+        retry: 0,
       },
     },
   });
+  testQueryClients.push(queryClient);
 
   return function Wrapper({children}: {children: React.ReactNode}) {
     return (
@@ -43,6 +54,29 @@ function createDeferred<T>() {
 
   return {promise, resolve, reject};
 }
+
+beforeAll(() => {
+  notifyManager.setNotifyFunction(callback => {
+    act(callback);
+  });
+});
+
+afterAll(() => {
+  notifyManager.setNotifyFunction(callback => {
+    callback();
+  });
+});
+
+afterEach(async () => {
+  await Promise.all(
+    testQueryClients.map(async queryClient => {
+      await queryClient.cancelQueries();
+      queryClient.clear();
+    }),
+  );
+  testQueryClients.length = 0;
+  jest.clearAllMocks();
+});
 
 test('defines the shared query keys for session and gist queries', () => {
   expect(queryKeys.session).toEqual(['session']);

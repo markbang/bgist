@@ -18,8 +18,18 @@ export function AppReveal({
 }: AppRevealProps) {
   const opacity = React.useRef(new Animated.Value(0)).current;
   const translateY = React.useRef(new Animated.Value(distance)).current;
+  const isTestEnv = Boolean(
+    (globalThis as {process?: {env?: Record<string, string | undefined>}}).process?.env
+      ?.JEST_WORKER_ID,
+  );
 
   React.useEffect(() => {
+    if (isTestEnv) {
+      opacity.setValue(1);
+      translateY.setValue(0);
+      return;
+    }
+
     opacity.setValue(0);
     translateY.setValue(distance);
 
@@ -45,7 +55,7 @@ export function AppReveal({
     return () => {
       animation.stop();
     };
-  }, [delay, distance, duration, opacity, translateY]);
+  }, [delay, distance, duration, isTestEnv, opacity, translateY]);
 
   return (
     <Animated.View

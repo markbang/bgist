@@ -15,22 +15,51 @@ jest.mock('../../src/features/gists/utils/renderCodePreview', () => {
   };
 });
 
+const testQueryClients: QueryClient[] = [];
+
+function createAbortablePendingFetchMock() {
+  return jest.fn((_input?: unknown, init?: RequestInit) => {
+    return new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => {
+        const error = new Error('The operation was aborted');
+        error.name = 'AbortError';
+        reject(error);
+      });
+    });
+  }) as jest.Mock;
+}
+
 function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
         gcTime: Infinity,
         retry: false,
+        staleTime: Infinity,
+        refetchOnMount: false,
+        refetchOnReconnect: false,
+        refetchOnWindowFocus: false,
+      },
+      mutations: {
+        retry: 0,
       },
     },
   });
+  testQueryClients.push(queryClient);
 
   return function Wrapper({children}: {children: React.ReactNode}) {
     return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
   };
 }
 
-afterEach(() => {
+afterEach(async () => {
+  await Promise.all(
+    testQueryClients.map(async queryClient => {
+      await queryClient.cancelQueries();
+      queryClient.clear();
+    }),
+  );
+  testQueryClients.length = 0;
   Reflect.deleteProperty(globalThis, 'fetch');
   jest.clearAllMocks();
   jest.useRealTimers();
@@ -67,7 +96,7 @@ test('renders an empty file in raw mode without treating it as missing remote co
 });
 
 test('keeps copy content disabled while remote file content is still loading', () => {
-  globalThis.fetch = jest.fn(() => new Promise(() => {})) as jest.Mock;
+  globalThis.fetch = createAbortablePendingFetchMock();
 
   render(
     <GistViewerScreen
@@ -198,7 +227,7 @@ test('defaults code files to raw shiki highlighting', async () => {
 });
 
 test('renders truncated markdown from inline content before the full raw file finishes loading', async () => {
-  globalThis.fetch = jest.fn(() => new Promise(() => {})) as jest.Mock;
+  globalThis.fetch = createAbortablePendingFetchMock();
 
   render(
     <GistViewerScreen
@@ -231,7 +260,7 @@ test('renders truncated markdown from inline content before the full raw file fi
 });
 
 test('renders provided GitHub preview html before the raw source finishes loading', async () => {
-  globalThis.fetch = jest.fn(() => new Promise(() => {})) as jest.Mock;
+  globalThis.fetch = createAbortablePendingFetchMock();
 
   render(
     <GistViewerScreen
@@ -292,15 +321,7 @@ test('renders markdown files in preview mode and allows switching back to raw', 
 test('shows an error instead of loading forever when remote file content never resolves', async () => {
   jest.useFakeTimers();
 
-  globalThis.fetch = jest.fn((_input?: unknown, init?: RequestInit) => {
-    return new Promise((_resolve, reject) => {
-      init?.signal?.addEventListener('abort', () => {
-        const error = new Error('The operation was aborted');
-        error.name = 'AbortError';
-        reject(error);
-      });
-    });
-  }) as jest.Mock;
+  globalThis.fetch = createAbortablePendingFetchMock();
 
   render(
     <GistViewerScreen

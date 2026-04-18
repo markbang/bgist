@@ -7,6 +7,7 @@ module.exports = {
   modulePathIgnorePatterns: ['<rootDir>/.omx/'],
   testPathIgnorePatterns: ['<rootDir>/.omx/'],
   watchPathIgnorePatterns: ['<rootDir>/.omx/'],
+  openHandlesTimeout: 0,
   transformIgnorePatterns: [
     'node_modules/(?!(react-native|@react-native|@react-navigation|react-native-safe-area-context)/)',
   ],

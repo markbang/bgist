@@ -1,5 +1,6 @@
 import React from 'react';
-import {fireEvent, render, screen, waitFor} from '@testing-library/react-native';
+import {act, fireEvent, render, screen, waitFor} from '@testing-library/react-native';
+import {notifyManager} from '@tanstack/query-core';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import type {Gist, UserInfo} from '../../src/types/gist';
 import UserProfileScreen from '../../src/features/profile/screens/UserProfileScreen';
@@ -173,11 +174,27 @@ function renderScreen() {
 }
 
 afterEach(() => {
-  testQueryClients.forEach(queryClient => {
-    queryClient.clear();
+  return Promise.all(
+    testQueryClients.map(async queryClient => {
+      await queryClient.cancelQueries();
+      queryClient.clear();
+    }),
+  ).then(() => {
+    testQueryClients.length = 0;
+    jest.clearAllMocks();
   });
-  testQueryClients.length = 0;
-  jest.clearAllMocks();
+});
+
+beforeAll(() => {
+  notifyManager.setNotifyFunction(callback => {
+    act(callback);
+  });
+});
+
+afterAll(() => {
+  notifyManager.setNotifyFunction(callback => {
+    callback();
+  });
 });
 
 test(
