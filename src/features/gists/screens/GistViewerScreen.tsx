@@ -313,14 +313,16 @@ export function GistViewerScreen({route}: RootStackScreenProps<'GistViewer'>) {
   return (
     <AppScreen>
       <View style={styles.container}>
-        <AppPageHeader title={filename} />
-        {language ? (
-          <View style={styles.metaRow}>
-            <View style={styles.metaPill}>
-              <Text style={styles.metaPillText}>{language}</Text>
-            </View>
-          </View>
-        ) : null}
+        <AppPageHeader
+          accessory={
+            language ? (
+              <View style={styles.metaPill}>
+                <Text style={styles.metaPillText}>{language}</Text>
+              </View>
+            ) : undefined
+          }
+          title={filename}
+        />
 
         <ScrollView
           contentContainerStyle={styles.actions}
@@ -451,8 +453,8 @@ const getStyles = createThemedStyles(theme =>
       paddingRight: theme.spacing.xs,
     },
     actionButton: {
-      width: 48,
-      height: 48,
+      width: 42,
+      height: 42,
       borderRadius: theme.radius.md,
       borderCurve: 'continuous',
       borderWidth: 1,

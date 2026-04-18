@@ -187,6 +187,7 @@ test('renders gist core content even when support data degrades', () => {
 
   expect(screen.getByText('Useful gist')).toBeTruthy();
   expect(screen.getByText('hello.ts')).toBeTruthy();
+  expect(screen.getAllByText(/1 file/)).toHaveLength(1);
   expect(screen.getByText('Star status is unavailable right now.')).toBeTruthy();
   expect(screen.getByText('Comments failed to load.')).toBeTruthy();
   expect(screen.getByRole('button', {name: 'Retry comments'})).toBeTruthy();
