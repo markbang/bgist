@@ -208,6 +208,8 @@ test('switches between files, preserves draft changes, and removes the active fi
     },
   );
 
+  expect(screen.getAllByText('alpha.ts')).toHaveLength(1);
+  expect(screen.getAllByText('beta.ts')).toHaveLength(1);
   expect(screen.getByDisplayValue('alpha.ts')).toBeTruthy();
 
   fireEvent.press(screen.getByText('beta.ts'));
