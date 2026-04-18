@@ -1,13 +1,14 @@
 import React, {useEffect, useRef, useState} from 'react';
 import Clipboard from '@react-native-clipboard/clipboard';
-import {Linking, StyleSheet, Text, View} from 'react-native';
+import {Linking, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {createThemedStyles} from '../../../app/theme/tokens';
+import {useAppTheme} from '../../../app/theme/context';
 import {MaterialSymbolIcon} from '../../../components/TabIcons';
+import {AppBadge} from '../../../shared/ui/AppBadge';
 import {AppButton} from '../../../shared/ui/AppButton';
 import {AppCard} from '../../../shared/ui/AppCard';
-import {useSession} from '../session/SessionProvider';
 import {AppScreen} from '../../../shared/ui/AppScreen';
-import {useAppTheme} from '../../../app/theme/context';
-import {createThemedStyles} from '../../../app/theme/tokens';
+import {useSession} from '../session/SessionProvider';
 
 type VerificationState = {
   userCode: string;
@@ -33,6 +34,23 @@ function getSignInErrorMessage(error: unknown) {
   }
 }
 
+function AuthStep({index, title, description}: {index: string; title: string; description: string}) {
+  const {themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+
+  return (
+    <View style={styles.stepRow}>
+      <View style={styles.stepIndex}>
+        <Text style={styles.stepIndexText}>{index}</Text>
+      </View>
+      <View style={styles.stepCopy}>
+        <Text style={styles.stepTitle}>{title}</Text>
+        <Text style={styles.stepDescription}>{description}</Text>
+      </View>
+    </View>
+  );
+}
+
 export default function LoginScreen() {
   const {themeName} = useAppTheme();
   const styles = getStyles(themeName);
@@ -50,7 +68,7 @@ export default function LoginScreen() {
 
   return (
     <AppScreen>
-      <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
           <View style={styles.heroBadge}>
             <MaterialSymbolIcon icon="description-rounded" size={18} />
@@ -61,12 +79,48 @@ export default function LoginScreen() {
             Sign in once, then browse, search, read, and edit gists with a compact native workflow.
           </Text>
         </View>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+
+        {error ? (
+          <AppCard style={styles.errorCard}>
+            <View style={styles.errorHeader}>
+              <View style={styles.errorIcon}>
+                <Text style={styles.errorIconText}>!</Text>
+              </View>
+              <View style={styles.errorCopy}>
+                <Text style={styles.errorTitle}>Sign-in issue</Text>
+                <Text style={styles.errorMessage}>{error}</Text>
+              </View>
+            </View>
+          </AppCard>
+        ) : null}
+
         <AppCard style={styles.authCard}>
-          <Text style={styles.cardTitle}>Sign in with GitHub</Text>
-          <Text style={styles.helper}>
-            BGist uses GitHub Device Flow, so you can approve login from the browser and come back here instantly.
-          </Text>
+          <View style={styles.cardHeader}>
+            <AppBadge label="Device flow" tone="public" />
+            <Text style={styles.cardTitle}>Sign in with GitHub</Text>
+            <Text style={styles.helper}>
+              BGist uses GitHub Device Flow, so you can approve login from the browser and come back here instantly.
+            </Text>
+          </View>
+
+          <View style={styles.stepsCard}>
+            <AuthStep
+              index="1"
+              title="Start on this device"
+              description="BGist requests a one-time code without asking you to paste a personal access token."
+            />
+            <AuthStep
+              index="2"
+              title="Approve in GitHub"
+              description="Open the GitHub verification page in your browser, then enter the code shown below."
+            />
+            <AuthStep
+              index="3"
+              title="Come back automatically"
+              description="Keep this screen open while BGist waits for approval and restores your signed-in session."
+            />
+          </View>
+
           <AppButton
             disabled={isSubmitting}
             label={
@@ -117,19 +171,35 @@ export default function LoginScreen() {
         </AppCard>
 
         {verification ? (
-          <AppCard>
-            <Text style={styles.cardTitle}>Authorize on GitHub</Text>
-            <Text style={styles.helper}>
-              Open GitHub, enter this one-time code, and keep this screen open while BGist waits for approval.
-            </Text>
-            <Text style={styles.codeLabel}>Your code</Text>
-            <Text style={styles.codeValue}>{verification.userCode}</Text>
-            <Text style={styles.helper}>
-              GitHub verification page: {verification.verificationUri}
-            </Text>
-            <Text style={styles.helper}>
-              Polling every {verification.intervalSeconds} seconds until the code expires.
-            </Text>
+          <AppCard style={styles.verificationCard}>
+            <View style={styles.cardHeader}>
+              <AppBadge label="Authorize now" tone="secret" />
+              <Text style={styles.cardTitle}>Authorize on GitHub</Text>
+              <Text style={styles.helper}>
+                Open GitHub, enter this one-time code, and keep this screen open while BGist waits for approval.
+              </Text>
+            </View>
+
+            <View style={styles.codePanel}>
+              <Text style={styles.codeLabel}>Your code</Text>
+              <Text style={styles.codeValue}>{verification.userCode}</Text>
+            </View>
+
+            <View style={styles.metaRow}>
+              <View style={styles.metaPill}>
+                <Text style={styles.metaPillTitle}>Verification page</Text>
+                <Text numberOfLines={1} style={styles.metaPillValue}>
+                  {verification.verificationUri}
+                </Text>
+              </View>
+              <View style={styles.metaPill}>
+                <Text style={styles.metaPillTitle}>Polling cadence</Text>
+                <Text style={styles.metaPillValue}>
+                  Every {verification.intervalSeconds} seconds
+                </Text>
+              </View>
+            </View>
+
             <View style={styles.actions}>
               <AppButton
                 fullWidth={false}
@@ -152,18 +222,19 @@ export default function LoginScreen() {
             </View>
           </AppCard>
         ) : null}
-      </View>
+      </ScrollView>
     </AppScreen>
   );
 }
 
 const getStyles = createThemedStyles(theme =>
   StyleSheet.create({
-    container: {
-      flex: 1,
+    content: {
+      flexGrow: 1,
       justifyContent: 'center',
       paddingHorizontal: theme.spacing.lg,
-      gap: theme.spacing.sm,
+      paddingVertical: theme.spacing.lg,
+      gap: theme.spacing.md,
     },
     hero: {
       gap: theme.spacing.xs,
@@ -195,18 +266,113 @@ const getStyles = createThemedStyles(theme =>
       fontSize: 14,
       lineHeight: 20,
     },
-    error: {
+    errorCard: {
+      borderColor: theme.colors.dangerBorder,
+      backgroundColor: theme.colors.surface,
+    },
+    errorHeader: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: theme.spacing.sm,
+    },
+    errorIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      borderCurve: 'continuous',
+      backgroundColor: theme.colors.dangerSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    errorIconText: {
+      color: theme.colors.danger,
+      fontSize: 20,
+      fontWeight: '800',
+    },
+    errorCopy: {
+      flex: 1,
+      gap: theme.spacing.xs,
+    },
+    errorTitle: {
+      color: theme.colors.textPrimary,
+      fontSize: 16,
+      fontWeight: '800',
+    },
+    errorMessage: {
       color: theme.colors.danger,
       fontSize: 14,
       lineHeight: 20,
     },
     authCard: {
-      gap: theme.spacing.sm,
+      gap: theme.spacing.md,
+    },
+    verificationCard: {
+      gap: theme.spacing.md,
+    },
+    cardHeader: {
+      gap: theme.spacing.xs,
     },
     cardTitle: {
       color: theme.colors.textPrimary,
       fontSize: 18,
       fontWeight: '800',
+    },
+    helper: {
+      color: theme.colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 21,
+    },
+    stepsCard: {
+      gap: theme.spacing.sm,
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.sm,
+    },
+    stepRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: theme.spacing.sm,
+    },
+    stepIndex: {
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    stepIndexText: {
+      color: theme.colors.textPrimary,
+      fontSize: 12,
+      fontWeight: '800',
+    },
+    stepCopy: {
+      flex: 1,
+      gap: 2,
+    },
+    stepTitle: {
+      color: theme.colors.textPrimary,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    stepDescription: {
+      color: theme.colors.textSecondary,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    codePanel: {
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.md,
+      gap: theme.spacing.xs,
     },
     codeLabel: {
       color: theme.colors.textSecondary,
@@ -221,10 +387,33 @@ const getStyles = createThemedStyles(theme =>
       fontWeight: '900',
       letterSpacing: 1.4,
     },
-    helper: {
+    metaRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+    },
+    metaPill: {
+      flexGrow: 1,
+      minWidth: '47%',
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.sm,
+      gap: theme.spacing.xs,
+    },
+    metaPillTitle: {
       color: theme.colors.textSecondary,
-      fontSize: 14,
-      lineHeight: 21,
+      fontSize: 12,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.4,
+    },
+    metaPillValue: {
+      color: theme.colors.textPrimary,
+      fontSize: 13,
+      lineHeight: 18,
+      fontWeight: '600',
     },
     actions: {
       flexDirection: 'row',
