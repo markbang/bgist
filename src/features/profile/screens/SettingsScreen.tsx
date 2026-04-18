@@ -5,14 +5,15 @@ import {useAppTheme, useThemePreference} from '../../../app/theme/context';
 import {createThemedStyles, getTheme, type ThemePreset} from '../../../app/theme/tokens';
 import {MaterialSymbolIcon, type MaterialSymbolName} from '../../../components/TabIcons';
 import {useSession} from '../../auth/session/SessionProvider';
+import {useAppUpdate} from '../../updates/context/AppUpdateProvider';
 import {useI18n} from '../../../i18n/context';
+import {appRepositoryUrl, appVersion} from '../../../shared/appInfo';
+import {AppBanner} from '../../../shared/ui/AppBanner';
+import {AppButton} from '../../../shared/ui/AppButton';
 import {AppCard} from '../../../shared/ui/AppCard';
 import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
 import {AppSegmentedControl} from '../../../shared/ui/AppSegmentedControl';
 import {AppScreen} from '../../../shared/ui/AppScreen';
-
-const appVersion = (require('../../../../package.json') as {version: string}).version;
-const appRepositoryUrl = 'https://github.com/markbang/bgist';
 const themePresetOrder: ThemePreset[] = ['default', 'ocean', 'forest', 'sunset'];
 
 function SettingsSection({
@@ -180,7 +181,21 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
   const {colorMode, preset, resolvedScheme, setColorMode, setPreset} = useThemePreference();
   const {language, setLanguage, t} = useI18n();
   const {user, signOut} = useSession();
+  const {
+    autoCheckEnabled,
+    checkForUpdates,
+    currentVersion,
+    errorMessage,
+    isChecking,
+    lastCheckedAt,
+    latestVersion,
+    openRelease,
+    openUpdate,
+    setAutoCheckEnabled,
+    updateAvailable,
+  } = useAppUpdate();
   const styles = getStyles(themeName);
+  const locale = language === 'zh' ? 'zh-CN' : 'en-US';
   const appearanceOptions: Array<{
     label: string;
     value: 'system' | 'light' | 'dark';
@@ -195,6 +210,13 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
   }> = [
     {label: t('common.languageEnglish'), value: 'en'},
     {label: t('common.languageChinese'), value: 'zh'},
+  ];
+  const autoUpdateOptions: Array<{
+    label: string;
+    value: 'on' | 'off';
+  }> = [
+    {label: t('common.on'), value: 'on'},
+    {label: t('common.off'), value: 'off'},
   ];
   const presetOptions = React.useMemo(
     () =>
@@ -239,6 +261,21 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
         : themePreset === 'sunset'
           ? t('settings.themePresetSunset')
           : t('settings.themePresetDefault');
+  const updateStatusLabel = isChecking
+    ? t('settings.updatesStatusChecking')
+    : updateAvailable && latestVersion
+      ? t('settings.updatesStatusAvailable', {version: latestVersion})
+      : latestVersion
+        ? t('settings.updatesStatusUpToDate', {version: latestVersion})
+        : errorMessage
+          ? t('settings.updatesStatusFailed')
+          : t('settings.updatesStatusIdle');
+  const lastCheckedLabel = lastCheckedAt
+    ? new Intl.DateTimeFormat(locale, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(new Date(lastCheckedAt))
+    : null;
 
   const openExternal = React.useCallback((url: string) => {
     Linking.openURL(url).catch(() => {});
@@ -377,6 +414,81 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
         </SettingsSection>
 
         <SettingsSection
+          description={t('settings.updatesDescription')}
+          icon="settings-outline-rounded"
+          title={t('settings.updatesTitle')}>
+          <View style={styles.optionBlock}>
+            <View style={styles.optionLabelRow}>
+              <View style={styles.optionPill}>
+                <MaterialSymbolIcon icon="code-rounded" size={16} />
+                <Text style={styles.optionPillText}>{updateStatusLabel}</Text>
+              </View>
+            </View>
+            {lastCheckedLabel ? (
+              <Text style={styles.optionMeta}>
+                {t('settings.updatesLastChecked', {date: lastCheckedLabel})}
+              </Text>
+            ) : null}
+          </View>
+          {updateAvailable && latestVersion ? (
+            <AppBanner message={t('settings.updateAvailableBanner', {version: latestVersion})} />
+          ) : errorMessage ? (
+            <AppBanner message={errorMessage} tone="warning" />
+          ) : null}
+          <View style={styles.optionBlock}>
+            <View style={styles.optionLabelRow}>
+              <View style={styles.optionPill}>
+                <MaterialSymbolIcon icon="settings-outline-rounded" size={16} />
+                <Text style={styles.optionPillText}>
+                  {autoCheckEnabled
+                    ? t('settings.autoCheckEnabled')
+                    : t('settings.autoCheckDisabled')}
+                </Text>
+              </View>
+            </View>
+          </View>
+          <AppSegmentedControl
+            options={autoUpdateOptions}
+            value={autoCheckEnabled ? 'on' : 'off'}
+            onChange={value => {
+              Promise.resolve(setAutoCheckEnabled(value === 'on')).catch(() => {});
+            }}
+          />
+          <View style={styles.actionRow}>
+            <AppButton
+              fullWidth={false}
+              label={t('settings.checkForUpdates')}
+              loading={isChecking}
+              onPress={() => {
+                Promise.resolve(checkForUpdates({interactive: true})).catch(() => {});
+              }}
+              size="compact"
+            />
+            {updateAvailable ? (
+              <AppButton
+                fullWidth={false}
+                label={t('settings.downloadLatest')}
+                onPress={() => {
+                  Promise.resolve(openUpdate()).catch(() => {});
+                }}
+                size="compact"
+                variant="secondary"
+              />
+            ) : latestVersion ? (
+              <AppButton
+                fullWidth={false}
+                label={t('settings.openLatestRelease')}
+                onPress={() => {
+                  Promise.resolve(openRelease()).catch(() => {});
+                }}
+                size="compact"
+                variant="secondary"
+              />
+            ) : null}
+          </View>
+        </SettingsSection>
+
+        <SettingsSection
           description={t('settings.accountDescription')}
           icon="person-rounded"
           title={t('settings.accountTitle')}>
@@ -410,13 +522,13 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
         </SettingsSection>
 
         <SettingsSection
-          description={t('settings.aboutDescription', {version: appVersion})}
+          description={t('settings.aboutDescription', {version: currentVersion})}
           icon="code-rounded"
           title={t('settings.aboutTitle')}>
           <View style={styles.rowGroup}>
             <SettingsRow
               icon="description-rounded"
-              title={t('settings.versionLabel', {version: appVersion})}
+              title={t('settings.versionLabel', {version: currentVersion})}
               value="BGist"
             />
             <SettingsRow
@@ -535,6 +647,12 @@ const getStyles = createThemedStyles(theme =>
       flexDirection: 'row',
       alignItems: 'center',
     },
+    optionMeta: {
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+      lineHeight: 18,
+      marginTop: theme.spacing.sm,
+    },
     optionPill: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -647,6 +765,11 @@ const getStyles = createThemedStyles(theme =>
       color: theme.colors.textSecondary,
       fontSize: 12,
       lineHeight: 18,
+    },
+    actionRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
     },
     rowGroup: {
       borderRadius: theme.radius.lg,
