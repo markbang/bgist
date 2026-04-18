@@ -2,7 +2,7 @@ import React from 'react';
 import {Linking, Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
 import type {RootStackScreenProps} from '../../../app/navigation/types';
 import {useAppTheme, useThemePreference} from '../../../app/theme/context';
-import {createThemedStyles} from '../../../app/theme/tokens';
+import {createThemedStyles, getTheme, type ThemePreset} from '../../../app/theme/tokens';
 import {MaterialSymbolIcon, type MaterialSymbolName} from '../../../components/TabIcons';
 import {useSession} from '../../auth/session/SessionProvider';
 import {useI18n} from '../../../i18n/context';
@@ -13,6 +13,7 @@ import {AppScreen} from '../../../shared/ui/AppScreen';
 
 const appVersion = (require('../../../../package.json') as {version: string}).version;
 const appRepositoryUrl = 'https://github.com/markbang/bgist';
+const themePresetOrder: ThemePreset[] = ['default', 'ocean', 'forest', 'sunset'];
 
 function SettingsSection({
   title,
@@ -96,6 +97,84 @@ function SettingsRow({
   );
 }
 
+function ThemePresetCard({
+  label,
+  description,
+  isSelected,
+  previewColors,
+  onPress,
+  selectedLabel,
+}: {
+  label: string;
+  description: string;
+  isSelected: boolean;
+  previewColors: readonly [string, string, string];
+  onPress: () => void;
+  selectedLabel: string;
+}) {
+  const {theme, themeName} = useAppTheme();
+  const styles = getStyles(themeName);
+
+  return (
+    <Pressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      accessibilityState={{selected: isSelected}}
+      onPress={onPress}
+      style={({pressed}) => [
+        styles.presetCard,
+        isSelected ? styles.presetCardSelected : null,
+        pressed ? styles.presetCardPressed : null,
+      ]}>
+      <View
+        style={[
+          styles.presetPreview,
+          {
+            backgroundColor: previewColors[0],
+            borderColor: isSelected ? theme.colors.accent : theme.colors.border,
+          },
+        ]}>
+        <View
+          style={[
+            styles.presetPreviewTop,
+            {
+              backgroundColor: previewColors[1],
+            },
+          ]}>
+          <View style={[styles.presetPreviewDot, {backgroundColor: previewColors[2]}]} />
+          <View
+            style={[
+              styles.presetPreviewAccent,
+              {
+                backgroundColor: isSelected ? theme.colors.accent : previewColors[2],
+              },
+            ]}
+          />
+        </View>
+        <View style={styles.presetPreviewBody}>
+          <View style={[styles.presetPreviewLine, {backgroundColor: previewColors[1]}]} />
+          <View
+            style={[
+              styles.presetPreviewLine,
+              styles.presetPreviewLineShort,
+              {backgroundColor: previewColors[2]},
+            ]}
+          />
+        </View>
+      </View>
+      <View style={styles.presetCardHeader}>
+        <Text style={styles.presetCardTitle}>{label}</Text>
+        {isSelected ? (
+          <View style={styles.presetSelectedBadge}>
+            <Text style={styles.presetSelectedBadgeText}>{selectedLabel}</Text>
+          </View>
+        ) : null}
+      </View>
+      <Text style={styles.presetCardDescription}>{description}</Text>
+    </Pressable>
+  );
+}
+
 export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
   const {themeName, themePreset} = useAppTheme();
   const {colorMode, preset, resolvedScheme, setColorMode, setPreset} = useThemePreference();
@@ -117,15 +196,30 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
     {label: t('common.languageEnglish'), value: 'en'},
     {label: t('common.languageChinese'), value: 'zh'},
   ];
-  const presetOptions: Array<{
-    label: string;
-    value: 'default' | 'ocean' | 'forest' | 'sunset';
-  }> = [
-    {label: t('settings.themePresetDefault'), value: 'default'},
-    {label: t('settings.themePresetOcean'), value: 'ocean'},
-    {label: t('settings.themePresetForest'), value: 'forest'},
-    {label: t('settings.themePresetSunset'), value: 'sunset'},
-  ];
+  const presetOptions = React.useMemo(
+    () =>
+      themePresetOrder.map(value => ({
+        label:
+          value === 'ocean'
+            ? t('settings.themePresetOcean')
+            : value === 'forest'
+              ? t('settings.themePresetForest')
+              : value === 'sunset'
+                ? t('settings.themePresetSunset')
+                : t('settings.themePresetDefault'),
+        value,
+        description:
+          value === 'ocean'
+            ? t('settings.themePresetOceanDescription')
+            : value === 'forest'
+              ? t('settings.themePresetForestDescription')
+              : value === 'sunset'
+                ? t('settings.themePresetSunsetDescription')
+                : t('settings.themePresetDefaultDescription'),
+        previewColors: getPresetPreviewColors(value, resolvedScheme),
+      })),
+    [resolvedScheme, t],
+  );
   const profileUrl = user?.login ? `https://github.com/${user.login}` : null;
   const currentAppearanceLabel =
     colorMode === 'system'
@@ -242,13 +336,23 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
               </View>
             </View>
           </View>
-          <AppSegmentedControl
-            options={presetOptions}
-            value={preset}
-            onChange={value => {
-              Promise.resolve(setPreset(value)).catch(() => {});
-            }}
-          />
+          <View style={styles.presetGrid}>
+            {presetOptions.map(option => (
+              <ThemePresetCard
+                key={option.value}
+                description={option.description}
+                isSelected={option.value === preset}
+                label={option.label}
+                onPress={() => {
+                  if (option.value !== preset) {
+                    Promise.resolve(setPreset(option.value)).catch(() => {});
+                  }
+                }}
+                previewColors={option.previewColors}
+                selectedLabel={t('settings.themePresetCurrent')}
+              />
+            ))}
+          </View>
         </SettingsSection>
 
         <SettingsSection
@@ -447,6 +551,103 @@ const getStyles = createThemedStyles(theme =>
       fontSize: 13,
       fontWeight: '700',
     },
+    presetGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+    },
+    presetCard: {
+      flexBasis: '48%',
+      flexGrow: 1,
+      minWidth: 140,
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      padding: theme.spacing.sm,
+      gap: theme.spacing.sm,
+    },
+    presetCardSelected: {
+      borderColor: theme.colors.accent,
+      backgroundColor: theme.colors.surface,
+      ...theme.shadow.card,
+      shadowOpacity: 0.12,
+      elevation: 3,
+    },
+    presetCardPressed: {
+      opacity: 0.9,
+    },
+    presetPreview: {
+      borderRadius: theme.radius.sm,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      overflow: 'hidden',
+      minHeight: 72,
+    },
+    presetPreviewTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+    },
+    presetPreviewDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 999,
+    },
+    presetPreviewAccent: {
+      width: 28,
+      height: 8,
+      borderRadius: 999,
+    },
+    presetPreviewBody: {
+      flex: 1,
+      justifyContent: 'center',
+      gap: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.sm,
+      paddingBottom: theme.spacing.sm,
+    },
+    presetPreviewLine: {
+      height: 8,
+      borderRadius: 999,
+    },
+    presetPreviewLineShort: {
+      width: '72%',
+    },
+    presetCardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: theme.spacing.sm,
+    },
+    presetCardTitle: {
+      color: theme.colors.textPrimary,
+      fontSize: 14,
+      fontWeight: '800',
+      flexShrink: 1,
+    },
+    presetSelectedBadge: {
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: theme.colors.accentSoft,
+      backgroundColor: theme.colors.accentSoft,
+      paddingHorizontal: theme.spacing.xs + 2,
+      paddingVertical: 4,
+    },
+    presetSelectedBadgeText: {
+      color: theme.colors.accent,
+      fontSize: 11,
+      fontWeight: '800',
+      textTransform: 'uppercase',
+      letterSpacing: 0.4,
+    },
+    presetCardDescription: {
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+      lineHeight: 18,
+    },
     rowGroup: {
       borderRadius: theme.radius.lg,
       borderCurve: 'continuous',
@@ -520,3 +721,16 @@ const getStyles = createThemedStyles(theme =>
     },
   }),
 );
+
+function getPresetPreviewColors(
+  preset: ThemePreset,
+  themeName: 'light' | 'dark',
+): [string, string, string] {
+  const previewTheme = getTheme(themeName, preset);
+
+  return [
+    previewTheme.colors.canvas,
+    previewTheme.colors.surfaceMuted,
+    previewTheme.colors.accent,
+  ];
+}

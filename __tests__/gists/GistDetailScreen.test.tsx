@@ -1,5 +1,6 @@
 import React from 'react';
-import {fireEvent, render, screen} from '@testing-library/react-native';
+import {act, fireEvent, render, screen} from '@testing-library/react-native';
+import {notifyManager} from '@tanstack/query-core';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import type {RootStackScreenProps} from '../../src/app/navigation/types';
 import type {GistWithHistory} from '../../src/types/gist';
@@ -107,7 +108,9 @@ function createMutationResult() {
   };
 }
 
-function createWrapper() {
+const testQueryClients = new Set<QueryClient>();
+
+function createTestQueryClient() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -117,14 +120,26 @@ function createWrapper() {
     },
   });
 
+  testQueryClients.add(queryClient);
+  return queryClient;
+}
+
+function createWrapper(queryClient: QueryClient) {
   return function Wrapper({children}: {children: React.ReactNode}) {
     return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
   };
 }
 
 function renderDetail(screenNode: React.ReactElement) {
-  return render(screenNode, {wrapper: createWrapper()});
+  const queryClient = createTestQueryClient();
+  return render(screenNode, {wrapper: createWrapper(queryClient)});
 }
+
+beforeAll(() => {
+  notifyManager.setNotifyFunction(callback => {
+    act(callback);
+  });
+});
 
 beforeEach(() => {
   (useSession as jest.Mock).mockReturnValue({
@@ -143,8 +158,21 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => {
+afterEach(async () => {
+  await Promise.all(
+    Array.from(testQueryClients).map(queryClient => queryClient.cancelQueries()),
+  );
+  testQueryClients.forEach(queryClient => {
+    queryClient.clear();
+  });
+  testQueryClients.clear();
   jest.clearAllMocks();
+});
+
+afterAll(() => {
+  notifyManager.setNotifyFunction(callback => {
+    callback();
+  });
 });
 
 test('renders gist core content even when support data degrades', () => {

@@ -129,10 +129,10 @@ const getStyles = createThemedStyles(theme =>
       paddingHorizontal: theme.spacing.md,
       paddingTop: theme.spacing.sm,
       paddingBottom: theme.spacing.lg,
-      gap: theme.spacing.xs + 2,
+      gap: theme.spacing.sm,
     },
     heroCard: {
-      gap: theme.spacing.xs + 2,
+      gap: theme.spacing.sm,
     },
     settingsButton: {
       width: 40,
@@ -152,7 +152,7 @@ const getStyles = createThemedStyles(theme =>
     identity: {
       flexDirection: 'row',
       alignItems: 'flex-start',
-      gap: theme.spacing.sm + 2,
+      gap: theme.spacing.sm,
     },
     avatar: {
       width: 64,
@@ -181,7 +181,7 @@ const getStyles = createThemedStyles(theme =>
     stats: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: theme.spacing.xs + 2,
+      gap: theme.spacing.sm,
     },
     stat: {
       flexGrow: 1,

@@ -192,18 +192,18 @@ const getStyles = createThemedStyles(theme =>
       paddingHorizontal: theme.spacing.md,
       paddingTop: theme.spacing.sm,
       paddingBottom: theme.spacing.lg,
-      gap: theme.spacing.xs + 2,
+      gap: theme.spacing.sm,
     },
     header: {
-      gap: theme.spacing.xs + 2,
+      gap: theme.spacing.sm,
     },
     heroCard: {
-      gap: theme.spacing.xs + 2,
+      gap: theme.spacing.sm,
     },
     identity: {
       flexDirection: 'row',
       alignItems: 'flex-start',
-      gap: theme.spacing.sm + 2,
+      gap: theme.spacing.sm,
     },
     avatar: {
       width: 72,
@@ -219,7 +219,7 @@ const getStyles = createThemedStyles(theme =>
       flexDirection: 'row',
       flexWrap: 'wrap',
       alignItems: 'center',
-      gap: theme.spacing.xs + 2,
+      gap: theme.spacing.xs,
     },
     name: {
       color: theme.colors.textPrimary,
@@ -239,7 +239,7 @@ const getStyles = createThemedStyles(theme =>
     metaRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: theme.spacing.xs + 2,
+      gap: theme.spacing.sm,
     },
     metaPill: {
       borderRadius: 999,
@@ -258,7 +258,7 @@ const getStyles = createThemedStyles(theme =>
     statsGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: theme.spacing.xs + 2,
+      gap: theme.spacing.sm,
     },
     statCard: {
       flexGrow: 1,

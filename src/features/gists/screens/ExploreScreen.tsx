@@ -147,18 +147,18 @@ const getStyles = createThemedStyles(theme =>
     container: {
       flex: 1,
       paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.md,
-      gap: theme.spacing.md,
+      paddingTop: theme.spacing.sm,
+      gap: theme.spacing.sm,
     },
     header: {
-      gap: theme.spacing.sm,
+      gap: theme.spacing.xs,
     },
     content: {
       flex: 1,
     },
     listContent: {
-      paddingBottom: theme.spacing.xl,
-      gap: theme.spacing.md,
+      paddingBottom: theme.spacing.lg,
+      gap: theme.spacing.sm,
     },
   }),
 );

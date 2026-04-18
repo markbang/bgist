@@ -105,7 +105,7 @@ const getStyles = createThemedStyles(theme =>
     },
     headerContent: {
       flex: 1,
-      gap: theme.spacing.xs,
+      gap: theme.spacing.xs + 2,
     },
     title: {
       color: theme.colors.textPrimary,
@@ -116,7 +116,7 @@ const getStyles = createThemedStyles(theme =>
       flexDirection: 'row',
       flexWrap: 'wrap',
       alignItems: 'center',
-      gap: theme.spacing.xs,
+      gap: theme.spacing.xs + 2,
     },
     owner: {
       color: theme.colors.textSecondary,
@@ -135,7 +135,7 @@ const getStyles = createThemedStyles(theme =>
       flexDirection: 'row',
       flexWrap: 'wrap',
       alignItems: 'center',
-      gap: theme.spacing.xs,
+      gap: theme.spacing.xs + 2,
     },
     metaText: {
       color: theme.colors.textSecondary,
@@ -148,7 +148,7 @@ const getStyles = createThemedStyles(theme =>
     filePills: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: theme.spacing.xs,
+      gap: theme.spacing.xs + 2,
     },
     filePill: {
       borderRadius: 999,

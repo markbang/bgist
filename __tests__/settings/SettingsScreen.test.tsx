@@ -26,6 +26,11 @@ jest.mock('../../src/i18n/context', () => ({
           'settings.themePresetOcean': 'Ocean',
           'settings.themePresetForest': 'Forest',
           'settings.themePresetSunset': 'Sunset',
+          'settings.themePresetCurrent': 'Current',
+          'settings.themePresetDefaultDescription': 'Neutral GitHub-inspired tones.',
+          'settings.themePresetOceanDescription': 'Cool teal accents with a quieter mood.',
+          'settings.themePresetForestDescription': 'Calm green accents with softer contrast.',
+          'settings.themePresetSunsetDescription': 'Warm amber accents with gentle highlights.',
           'settings.currentAppearance': 'Following system: {appearance}',
           'settings.themeCurrentSystemDark': 'Following system: dark',
           'settings.themeCurrentSystemLight': 'Following system: light',
@@ -98,6 +103,8 @@ test('lets people change appearance and language from settings', () => {
   expect(screen.getByText('Settings')).toBeTruthy();
   expect(screen.getAllByText('Following system: dark').length).toBeGreaterThan(0);
   expect(screen.getAllByText('Default').length).toBeGreaterThan(0);
+  expect(screen.getAllByText('Current').length).toBeGreaterThan(0);
+  expect(screen.getByText('Cool teal accents with a quieter mood.')).toBeTruthy();
   expect(screen.getByText('@octocat')).toBeTruthy();
   expect(screen.getByText('Signed in as @octocat')).toBeTruthy();
   expect(screen.getByText('Version 0.2.3')).toBeTruthy();

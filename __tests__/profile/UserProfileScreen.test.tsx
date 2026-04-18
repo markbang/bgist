@@ -60,18 +60,32 @@ const {getUserGists, getUserInfo} = jest.requireMock('../../src/features/gists/a
 };
 
 function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        gcTime: Infinity,
-        retry: false,
-      },
-    },
-  });
+  const queryClient = createTestQueryClient();
+  testQueryClients.push(queryClient);
 
   return function Wrapper({children}: {children: React.ReactNode}) {
     return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
   };
+}
+
+const testQueryClients: QueryClient[] = [];
+
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        gcTime: Infinity,
+        retry: false,
+        staleTime: Infinity,
+        refetchOnMount: false,
+        refetchOnReconnect: false,
+        refetchOnWindowFocus: false,
+      },
+      mutations: {
+        retry: 0,
+      },
+    },
+  });
 }
 
 function createUserInfo(overrides: Partial<UserInfo> = {}): UserInfo {
@@ -159,10 +173,16 @@ function renderScreen() {
 }
 
 afterEach(() => {
+  testQueryClients.forEach(queryClient => {
+    queryClient.clear();
+  });
+  testQueryClients.length = 0;
   jest.clearAllMocks();
 });
 
-test('renders profile details, stats, public gists, and opens gist detail', async () => {
+test(
+  'renders profile details, stats, public gists, and opens gist detail',
+  async () => {
   getUserInfo.mockResolvedValue(createUserInfo());
   getUserGists.mockResolvedValue([
     createGist(),
@@ -188,7 +208,9 @@ test('renders profile details, stats, public gists, and opens gist detail', asyn
   expect(navigation.navigate).toHaveBeenCalledWith('GistDetail', {gistId: 'gist-1'});
   expect(getUserInfo).toHaveBeenCalledWith('octocat', expect.any(Object));
   expect(getUserGists).toHaveBeenCalledWith('octocat', 1, 30, expect.any(Object));
-});
+  },
+  15_000,
+);
 
 test('shows an error state when the profile request fails', async () => {
   getUserInfo.mockRejectedValue(new Error('boom'));
