@@ -97,7 +97,7 @@ export default function LoginScreen() {
         <AppCard style={styles.authCard}>
           <View style={styles.cardHeader}>
             <AppBadge label="Device flow" tone="public" />
-            <Text style={styles.cardTitle}>Sign in with GitHub</Text>
+            <Text style={styles.cardTitle}>Connect your GitHub account</Text>
             <Text style={styles.helper}>
               BGist uses GitHub Device Flow, so you can approve login from the browser and come back here instantly.
             </Text>
