@@ -1,20 +1,38 @@
 import React from 'react';
-import {Alert, FlatList, Linking, Pressable, StyleSheet, type ListRenderItem, Text, View} from 'react-native';
+import {Alert, FlatList, Linking, StyleSheet, Text, type ListRenderItem, View} from 'react-native';
 import {useQuery} from '@tanstack/react-query';
 import type {RootStackScreenProps} from '../../../app/navigation/types';
 import {useAppTheme} from '../../../app/theme/context';
 import {createThemedStyles} from '../../../app/theme/tokens';
+import {useI18n} from '../../../i18n/context';
 import {queryKeys} from '../../../shared/api/queryKeys';
+import {AppBadge} from '../../../shared/ui/AppBadge';
+import {AppButton} from '../../../shared/ui/AppButton';
+import {AppCard} from '../../../shared/ui/AppCard';
 import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
 import {AppErrorState} from '../../../shared/ui/AppErrorState';
 import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
 import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
 import {AppScreen} from '../../../shared/ui/AppScreen';
 import {appFeedListProps} from '../../../shared/ui/listPresets';
-import {useI18n} from '../../../i18n/context';
-import {getGist} from '../api/gists';
-import {AppCard} from '../../../shared/ui/AppCard';
 import type {GistHistoryEntry} from '../../../types/gist';
+import {getGist} from '../api/gists';
+
+function formatRevisionDate(value: string, locale: string, fallback: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return fallback;
+  }
+
+  return date.toLocaleString(locale, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
 
 const HistoryCard = React.memo(function HistoryCard({
   entry,
@@ -29,42 +47,42 @@ const HistoryCard = React.memo(function HistoryCard({
 }) {
   const {themeName} = useAppTheme();
   const styles = getStyles(themeName);
+  const committedAt = formatRevisionDate(entry.committed_at, locale, t('history.unknownDate'));
 
   return (
-    <AppCard>
+    <AppCard style={styles.historyCard}>
       <View style={styles.historyHeader}>
         <View style={styles.historyTitleWrap}>
-          <Text style={styles.historyTitle}>
-            {t('history.revisionTitle', {version: entry.version.slice(0, 7)})}
-          </Text>
-          <Text style={styles.historyMeta}>
-            {new Date(entry.committed_at).toLocaleString(locale, {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-              hour: 'numeric',
-              minute: '2-digit',
-            })}
-          </Text>
+          <AppBadge
+            label={t('history.revisionTitle', {version: entry.version.slice(0, 7)})}
+            tone="secret"
+          />
+          <Text style={styles.historyMeta}>{committedAt}</Text>
         </View>
-        <Text style={styles.historyMeta}>
-          @{entry.user?.login ?? t('common.unknown')}
-        </Text>
+        <Text style={styles.historyAuthor}>@{entry.user?.login ?? t('common.unknown')}</Text>
       </View>
 
-      <View style={styles.historyBody}>
-        <Text style={styles.historyMeta}>
-          +{entry.change_status.additions} / -{entry.change_status.deletions}
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('history.openRevision')}
-          onPress={() => {
-            onOpenRevision(entry.version);
-          }}>
-          <Text style={styles.historyLink}>{t('history.openRevision')}</Text>
-        </Pressable>
+      <View style={styles.changeRow}>
+        <View style={styles.changePill}>
+          <Text style={styles.changePillText}>+{entry.change_status.additions}</Text>
+        </View>
+        <View style={styles.changePill}>
+          <Text style={styles.changePillText}>-{entry.change_status.deletions}</Text>
+        </View>
+        <View style={styles.changePill}>
+          <Text style={styles.changePillText}>{entry.change_status.total}</Text>
+        </View>
       </View>
+
+      <AppButton
+        fullWidth={false}
+        label={t('history.openRevision')}
+        onPress={() => {
+          onOpenRevision(entry.version);
+        }}
+        size="compact"
+        variant="secondary"
+      />
     </AppCard>
   );
 });
@@ -81,6 +99,7 @@ export function GistHistoryScreen({route}: RootStackScreenProps<'GistHistory'>) 
   });
   const gistUrl = historyQuery.data?.html_url ?? `https://gist.github.com/${gistId}`;
   const revisionCount = historyQuery.data?.history.length ?? 0;
+  const latestRevision = historyQuery.data?.history[0];
   const handleOpenRevision = React.useCallback(
     (version: string) => {
       Linking.openURL(`${gistUrl}/${version}`).catch(() => {
@@ -152,15 +171,27 @@ export function GistHistoryScreen({route}: RootStackScreenProps<'GistHistory'>) 
       <View style={styles.container}>
         <View style={styles.header}>
           <AppPageHeader title={t('history.title')} />
+          <Text style={styles.subtitle}>{t('history.subtitle')}</Text>
           {historyQuery.data ? (
             <AppCard style={styles.summaryCard}>
+              <AppBadge label={t('history.eyebrow')} tone="public" />
               <View style={styles.summaryRow}>
                 <View style={styles.summaryPill}>
-                  <Text style={styles.summaryPillText}>{revisionCount} revisions</Text>
+                  <Text style={styles.summaryPillValue}>{revisionCount}</Text>
+                  <Text style={styles.summaryPillText}>{t('history.title')}</Text>
                 </View>
                 <View style={styles.summaryPill}>
-                  <Text style={styles.summaryPillText}>gist/{gistId.slice(0, 7)}</Text>
+                  <Text style={styles.summaryPillValue}>gist/{gistId.slice(0, 7)}</Text>
+                  <Text style={styles.summaryPillText}>{t('history.version')}</Text>
                 </View>
+                {latestRevision ? (
+                  <View style={styles.summaryPill}>
+                    <Text style={styles.summaryPillValue}>@{latestRevision.user?.login ?? t('common.unknown')}</Text>
+                    <Text style={styles.summaryPillText}>
+                      {formatRevisionDate(latestRevision.committed_at, locale, t('history.unknownDate'))}
+                    </Text>
+                  </View>
+                ) : null}
               </View>
             </AppCard>
           ) : null}
@@ -185,6 +216,11 @@ const getStyles = createThemedStyles(theme =>
     header: {
       gap: theme.spacing.xs,
     },
+    subtitle: {
+      color: theme.colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 20,
+    },
     content: {
       flex: 1,
     },
@@ -193,14 +229,64 @@ const getStyles = createThemedStyles(theme =>
       gap: theme.spacing.sm,
     },
     summaryCard: {
-      gap: theme.spacing.xs,
+      gap: theme.spacing.sm,
     },
     summaryRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: theme.spacing.xs,
+      gap: theme.spacing.sm,
     },
     summaryPill: {
+      flexGrow: 1,
+      minWidth: '47%',
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.sm,
+      gap: theme.spacing.xs,
+    },
+    summaryPillValue: {
+      color: theme.colors.textPrimary,
+      fontSize: 16,
+      fontWeight: '800',
+    },
+    summaryPillText: {
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+      lineHeight: 16,
+    },
+    historyCard: {
+      gap: theme.spacing.sm,
+    },
+    historyHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      gap: theme.spacing.sm,
+    },
+    historyTitleWrap: {
+      flex: 1,
+      gap: theme.spacing.xs,
+    },
+    historyMeta: {
+      color: theme.colors.textSecondary,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    historyAuthor: {
+      color: theme.colors.textSecondary,
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    changeRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.xs,
+    },
+    changePill: {
       borderRadius: 999,
       borderWidth: 1,
       borderColor: theme.colors.border,
@@ -208,36 +294,9 @@ const getStyles = createThemedStyles(theme =>
       paddingHorizontal: theme.spacing.sm,
       paddingVertical: theme.spacing.xs,
     },
-    summaryPillText: {
+    changePillText: {
       color: theme.colors.textSecondary,
       fontSize: 12,
-      fontWeight: '700',
-    },
-    historyHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      gap: theme.spacing.sm,
-    },
-    historyTitleWrap: {
-      flex: 1,
-      gap: theme.spacing.xs,
-    },
-    historyTitle: {
-      color: theme.colors.textPrimary,
-      fontSize: 16,
-      fontWeight: '800',
-    },
-    historyMeta: {
-      color: theme.colors.textSecondary,
-      fontSize: 13,
-      lineHeight: 18,
-    },
-    historyBody: {
-      gap: theme.spacing.xs,
-    },
-    historyLink: {
-      color: theme.colors.accent,
-      fontSize: 14,
       fontWeight: '700',
     },
   }),
