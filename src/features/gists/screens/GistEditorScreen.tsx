@@ -359,13 +359,6 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
               <View style={styles.summaryPill}>
                 <Text style={styles.summaryPillText}>{fileCountLabel}</Text>
               </View>
-              {currentFile ? (
-                <View style={styles.summaryPill}>
-                  <Text numberOfLines={1} style={styles.summaryPillText}>
-                    {getDraftFileLabel(currentFile, currentFileIndex, t)}
-                  </Text>
-                </View>
-              ) : null}
             </View>
 
             <AppCard>
@@ -410,14 +403,7 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
             </AppCard>
 
             <View style={styles.fileSectionHeader}>
-              <View style={styles.fileSectionCopy}>
-                <Text style={styles.sectionTitle}>{t('common.files')}</Text>
-                {currentFile ? (
-                  <Text style={styles.helperText}>
-                    {getDraftFileLabel(currentFile, currentFileIndex, t)}
-                  </Text>
-                ) : null}
-              </View>
+              <Text style={styles.sectionTitle}>{t('common.files')}</Text>
               <AppButton
                 fullWidth={false}
                 label={t('editor.addFile')}

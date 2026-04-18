@@ -544,7 +544,15 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
   return (
     <AppScreen>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        <AppPageHeader title={gist.description?.trim() || t('gistDetail.titleFallback')} />
+        <AppPageHeader
+          accessory={
+            <AppBadge
+              label={gist.public ? t('common.public') : t('common.secret')}
+              tone={gist.public ? 'public' : 'secret'}
+            />
+          }
+          title={gist.description?.trim() || t('gistDetail.titleFallback')}
+        />
 
         <AppCard style={styles.metaCard}>
           <View style={styles.metaHeader}>
@@ -568,19 +576,9 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
                 })}
               </Text>
             </View>
-            <AppBadge
-              label={gist.public ? t('common.public') : t('common.secret')}
-              tone={gist.public ? 'public' : 'secret'}
-            />
           </View>
 
           <View style={styles.metaStatsRow}>
-            <View style={styles.metaStatPill}>
-              <Text style={styles.metaStatText}>
-                {files.length}{' '}
-                {files.length === 1 ? t('gistDetail.fileSingular') : t('gistDetail.filePlural')}
-              </Text>
-            </View>
             <View style={styles.metaStatPill}>
               <Text style={styles.metaStatText}>
                 {commentsCountLabel ?? '0'} {t('gistDetail.commentsTitle')}
