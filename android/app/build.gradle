@@ -97,8 +97,8 @@ android {
         applicationId "com.bgist"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 12
-        versionName "0.2.10"
+        versionCode 13
+        versionName "0.2.11"
     }
     signingConfigs {
         debug {
@@ -169,6 +169,7 @@ android {
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
+    implementation("androidx.core:core:1.13.1")
     implementation("com.facebook.react:react-android")
 
     if (hermesEnabled.toBoolean()) {

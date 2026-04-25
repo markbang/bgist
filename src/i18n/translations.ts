@@ -74,7 +74,8 @@ const translations: Record<Language, Record<string, string>> = {
     'gist.fileError': 'Each file needs a filename or content',
     'gist.filenameError': 'All files must have a filename',
     'gist.saveError': 'Failed to save gist',
-    'gist.deleteConfirm': 'Are you sure you want to delete this gist? This action cannot be undone.',
+    'gist.deleteConfirm':
+      'Are you sure you want to delete this gist? This action cannot be undone.',
     'gist.starError': 'Failed to update star',
     'gist.forkSuccess': 'Gist forked!',
     'gist.forkError': 'Failed to fork gist',
@@ -83,7 +84,8 @@ const translations: Record<Language, Record<string, string>> = {
     // Home
     'home.eyebrow': 'Your feeds',
     'home.title': 'Home',
-    'home.subtitle': 'Switch between your own gists and the ones you have starred.',
+    'home.subtitle':
+      'Switch between your own gists and the ones you have starred.',
     'home.segmentMine': 'My',
     'home.segmentStarred': 'Starred',
     'home.loadingMine': 'Loading your gists',
@@ -94,9 +96,11 @@ const translations: Record<Language, Record<string, string>> = {
     'home.badgeMine': 'My Feed',
     'home.badgeStarred': 'Starred',
     'home.emptyMineTitle': 'No gists yet',
-    'home.emptyMineDescription': 'Create your first gist to start building your personal feed.',
+    'home.emptyMineDescription':
+      'Create your first gist to start building your personal feed.',
     'home.emptyStarredTitle': 'No starred gists yet',
-    'home.emptyStarredDescription': 'Star a few gists on GitHub and they will show up here.',
+    'home.emptyStarredDescription':
+      'Star a few gists on GitHub and they will show up here.',
 
     // Explore
     'explore.searchPlaceholder': 'Search gists...',
@@ -104,20 +108,24 @@ const translations: Record<Language, Record<string, string>> = {
     'explore.tryDifferent': 'Try different search terms',
     'explore.eyebrow': 'Discover',
     'explore.title': 'Explore',
-    'explore.subtitle': 'Search the public feed by description, owner, filename, or paste a gist URL.',
+    'explore.subtitle':
+      'Search the public feed by description, owner, filename, or paste a gist URL.',
     'explore.inputLabel': 'Search public gists',
     'explore.inputPlaceholder': 'Paste a gist URL or search by keyword',
     'explore.loadingTitle': 'Loading public gists',
-    'explore.loadingDescription': 'Fetching the latest public feed from GitHub.',
+    'explore.loadingDescription':
+      'Fetching the latest public feed from GitHub.',
     'explore.errorTitle': 'Could not load public gists',
     'explore.errorDescription': 'Retry to refresh the explore feed.',
     'explore.emptyTitle': 'No matching public gists',
-    'explore.emptyDescription': 'Try a different owner, description, or filename search.',
+    'explore.emptyDescription':
+      'Try a different owner, description, or filename search.',
 
     // Compose
     'compose.eyebrow': 'Create',
     'compose.title': 'Compose',
-    'compose.subtitle': 'Start a new gist draft from the tab bar, then edit files in a phone-first composer.',
+    'compose.subtitle':
+      'Start a new gist draft from the tab bar, then edit files in a phone-first composer.',
     'compose.cta': 'Create a gist',
     'compose.badge': 'Mobile flow',
     'compose.emptyTitle': 'Draft first, publish when ready',
@@ -131,9 +139,11 @@ const translations: Record<Language, Record<string, string>> = {
     'profile.following': 'Following',
     'profile.openGitHub': 'Open GitHub Profile',
     'profile.loadingTitle': 'Loading profile',
-    'profile.loadingDescription': 'Restoring your session and fetching your GitHub profile.',
+    'profile.loadingDescription':
+      'Restoring your session and fetching your GitHub profile.',
     'profile.emptyTitle': 'No signed-in user',
-    'profile.emptyDescription': 'Sign in to see your profile details in this tab.',
+    'profile.emptyDescription':
+      'Sign in to see your profile details in this tab.',
     'profile.title': 'Profile',
     'profile.settings': 'Open settings',
     'profile.publicGists': 'Public gists',
@@ -142,14 +152,16 @@ const translations: Record<Language, Record<string, string>> = {
     'profile.account': 'Account',
     'profile.openGitHubButton': 'Open GitHub profile',
     'profile.refreshingTitle': 'Refreshing profile',
-    'profile.refreshingDescription': 'Fetching the latest public GitHub profile fields.',
+    'profile.refreshingDescription':
+      'Fetching the latest public GitHub profile fields.',
     'profile.defaultDisplayName': 'GitHub user',
 
     // Settings
     'settings.title': 'Settings',
     'settings.appearanceTitle': 'Appearance',
     'settings.appearance': 'Appearance',
-    'settings.appearanceDescription': 'Choose how BGist should look on this device.',
+    'settings.appearanceDescription':
+      'Choose how BGist should look on this device.',
     'settings.themeSystem': 'System',
     'settings.themeLight': 'Light',
     'settings.themeDark': 'Dark',
@@ -159,9 +171,13 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.themePresetSunset': 'Sunset',
     'settings.themePresetCurrent': 'Current',
     'settings.themePresetDefaultDescription': 'Neutral GitHub-inspired tones.',
-    'settings.themePresetOceanDescription': 'Cool teal accents with a quieter mood.',
-    'settings.themePresetForestDescription': 'Calm green accents with softer contrast.',
-    'settings.themePresetSunsetDescription': 'Warm amber accents with gentle highlights.',
+    'settings.themePresetOceanDescription':
+      'Cool teal accents with a quieter mood.',
+    'settings.themePresetForestDescription':
+      'Calm green accents with softer contrast.',
+    'settings.themePresetSunsetDescription':
+      'Warm amber accents with gentle highlights.',
+    'settings.resetAppearance': 'Reset appearance',
     'settings.currentAppearance': 'Following system: {appearance}',
     'settings.themeCurrentSystemDark': 'Following system: dark',
     'settings.themeCurrentSystemLight': 'Following system: light',
@@ -169,36 +185,62 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.themeCurrentLight': 'Using light mode',
     'settings.languageTitle': 'Language',
     'settings.language': 'Language',
-    'settings.languageDescription': 'Choose the language used throughout the app.',
+    'settings.languageDescription':
+      'Choose the language used throughout the app.',
     'settings.updatesTitle': 'Updates',
-    'settings.updatesDescription': 'Check new releases and choose whether BGist should look for them automatically.',
+    'settings.updatesDescription':
+      'Check new releases and choose whether BGist should look for them automatically.',
     'settings.updatesStatusIdle': 'Latest version unknown',
     'settings.updatesStatusChecking': 'Checking for updates…',
+    'settings.updatesStatusDownloading': 'Downloading update…',
+    'settings.updatesStatusInstalling': 'Opening installer…',
     'settings.updatesStatusAvailable': 'Update available: {version}',
     'settings.updatesStatusUpToDate': 'Up to date with {version}',
     'settings.updatesStatusFailed': 'Could not check for updates',
     'settings.updatesLastChecked': 'Last checked {date}',
-    'settings.updateAvailableBanner': 'A newer build ({version}) is available to download.',
+    'settings.updateAvailableBanner':
+      'A newer build ({version}) is available to download.',
     'settings.autoCheckEnabled': 'Automatic update checks are on',
     'settings.autoCheckDisabled': 'Automatic update checks are off',
+    'settings.autoDownloadEnabled': 'Automatic GitHub APK install is on',
+    'settings.autoDownloadDisabled': 'Automatic GitHub APK install is off',
+    'settings.autoDownloadDescription':
+      'When a newer GitHub release is found, BGist downloads the APK and opens the Android installer.',
+    'settings.updateChannelLabel': 'Channel: {channel}',
+    'settings.updateChannelStable': 'Stable',
+    'settings.updateChannelPreview': 'Preview',
+    'settings.updateChannelDescription':
+      'Stable follows the latest GitHub release. Preview can include prereleases.',
     'settings.checkForUpdates': 'Check for updates',
     'settings.downloadLatest': 'Download latest',
+    'settings.installLatest': 'Install latest',
     'settings.openLatestRelease': 'Open latest release',
     'settings.updateAlertTitle': 'Update available',
-    'settings.updateAlertMessage': 'BGist {version} is available. Download the latest APK now?',
+    'settings.updateAlertMessage':
+      'BGist {version} is available. Download the latest APK now?',
     'settings.updateLater': 'Later',
     'settings.updateUpToDateTitle': 'You are up to date',
-    'settings.updateUpToDateMessage': 'BGist {version} is the latest available release.',
+    'settings.updateUpToDateMessage':
+      'BGist {version} is the latest available release.',
     'settings.updateCheckFailedTitle': 'Could not check for updates',
     'settings.updateCheckFailedMessage': 'Please try again in a moment.',
+    'settings.updateInstallPermissionTitle': 'Install permission needed',
+    'settings.updateInstallPermissionMessage':
+      'Allow BGist to install apps from this source, then run the update again.',
+    'settings.openInstallSettings': 'Open settings',
+    'settings.updateInstallFailedTitle': 'Could not start update',
+    'settings.updateInstallFailedMessage':
+      'Open the release page and install the APK manually.',
     'settings.accountTitle': 'Account',
     'settings.account': 'Account',
-    'settings.accountDescription': 'Manage your GitHub session and open your public profile.',
+    'settings.accountDescription':
+      'Manage your GitHub session and open your public profile.',
     'settings.accountSignedInAs': 'Signed in as @{login}',
     'settings.openGitHubProfile': 'Open GitHub profile',
     'settings.signOut': 'Sign Out',
     'settings.aboutTitle': 'About',
-    'settings.aboutDescription': 'BGist version {version}. Mobile-first GitHub Gist client.',
+    'settings.aboutDescription':
+      'BGist version {version}. Mobile-first GitHub Gist client.',
     'settings.openRepository': 'Open repository',
     'settings.versionLabel': 'Version {version}',
 
@@ -211,23 +253,30 @@ const translations: Record<Language, Record<string, string>> = {
     'userProfile.openGitHub': 'Open GitHub profile',
     'userProfile.publicRepos': 'Public repos',
     'userProfile.sectionTitle': 'Public gists',
-    'userProfile.sectionSubtitle': 'Open any published gist to inspect files, comments, and history.',
+    'userProfile.sectionSubtitle':
+      'Open any published gist to inspect files, comments, and history.',
     'userProfile.loadingTitle': 'Loading profile',
-    'userProfile.loadingDescription': 'Fetching public profile details and published gists from GitHub.',
+    'userProfile.loadingDescription':
+      'Fetching public profile details and published gists from GitHub.',
     'userProfile.errorTitle': 'Could not load this profile',
-    'userProfile.errorDescription': 'Retry to fetch the latest profile card and public gist list.',
+    'userProfile.errorDescription':
+      'Retry to fetch the latest profile card and public gist list.',
     'userProfile.emptyTitle': 'No public gists yet',
-    'userProfile.emptyDescription': 'This user has not published any public gists yet.',
+    'userProfile.emptyDescription':
+      'This user has not published any public gists yet.',
 
     // Gist detail
     'gistDetail.unknownUpdate': 'Unknown update',
     'gistDetail.loadingTitle': 'Loading gist',
-    'gistDetail.loadingDescription': 'Fetching the latest gist details from GitHub.',
+    'gistDetail.loadingDescription':
+      'Fetching the latest gist details from GitHub.',
     'gistDetail.errorTitle': 'Could not load this gist',
-    'gistDetail.errorDescription': 'Retry to fetch the gist details and try again.',
+    'gistDetail.errorDescription':
+      'Retry to fetch the gist details and try again.',
     'gistDetail.eyebrow': 'Gist detail',
     'gistDetail.titleFallback': 'Untitled gist',
-    'gistDetail.subtitle': 'Review files, comments, and quick actions without leaving the new mobile shell.',
+    'gistDetail.subtitle':
+      'Review files, comments, and quick actions without leaving the new mobile shell.',
     'gistDetail.metaSummary': 'Updated {date} · {count} {fileLabel}',
     'gistDetail.fileSingular': 'file',
     'gistDetail.filePlural': 'files',
@@ -245,15 +294,18 @@ const translations: Record<Language, Record<string, string>> = {
     'gistDetail.delete': 'Delete gist',
     'gistDetail.filesTitle': 'Files',
     'gistDetail.fileOpen': 'Open',
-    'gistDetail.largePreview': 'Preview unavailable for large files. Open the viewer to load the full content.',
+    'gistDetail.largePreview':
+      'Preview unavailable for large files. Open the viewer to load the full content.',
     'gistDetail.commentsTitle': 'Comments',
     'gistDetail.loadComments': 'Load comments',
     'gistDetail.commentsUnavailable': 'Comments failed to load.',
     'gistDetail.retryComments': 'Retry comments',
     'gistDetail.commentsLoadingTitle': 'Loading comments',
-    'gistDetail.commentsLoadingDescription': 'Checking the latest comments for this gist.',
+    'gistDetail.commentsLoadingDescription':
+      'Checking the latest comments for this gist.',
     'gistDetail.commentsEmptyTitle': 'No comments yet',
-    'gistDetail.commentsEmptyDescription': 'Start the discussion by leaving the first comment.',
+    'gistDetail.commentsEmptyDescription':
+      'Start the discussion by leaving the first comment.',
     'gistDetail.addComment': 'Add comment',
     'gistDetail.commentPlaceholder': 'Write a comment',
     'gistDetail.postComment': 'Post comment',
@@ -275,19 +327,23 @@ const translations: Record<Language, Record<string, string>> = {
     'history.openErrorTitle': 'Could not open revision',
     'history.openErrorDescription': 'Try again in a moment.',
     'history.loadingTitle': 'Loading revision history',
-    'history.loadingDescription': 'Fetching the revision timeline for this gist.',
+    'history.loadingDescription':
+      'Fetching the revision timeline for this gist.',
     'history.errorTitle': 'Could not load revision history',
     'history.errorDescription': 'Retry to fetch the latest revision list.',
     'history.emptyTitle': 'No revisions yet',
-    'history.emptyDescription': 'This gist does not expose any revision history right now.',
+    'history.emptyDescription':
+      'This gist does not expose any revision history right now.',
     'history.eyebrow': 'Timeline',
     'history.title': 'Revision history',
-    'history.subtitle': 'Inspect previous gist revisions and open the matching GitHub revision page.',
+    'history.subtitle':
+      'Inspect previous gist revisions and open the matching GitHub revision page.',
 
     // Viewer
     'viewer.filename': 'File',
     'viewer.eyebrow': 'Code viewer',
-    'viewer.subtitle': 'Read the file content, toggle line numbers, and share the source link.',
+    'viewer.subtitle':
+      'Read the file content, toggle line numbers, and share the source link.',
     'viewer.hideLines': 'Hide lines',
     'viewer.showLines': 'Show lines',
     'viewer.showPreview': 'View rendered',
@@ -297,7 +353,8 @@ const translations: Record<Language, Record<string, string>> = {
     'viewer.copyFileLink': 'Copy file link',
     'viewer.shareLink': 'Share link',
     'viewer.loadingTitle': 'Loading full file',
-    'viewer.loadingDescription': 'Fetching the complete file contents from GitHub.',
+    'viewer.loadingDescription':
+      'Fetching the complete file contents from GitHub.',
     'viewer.renderingTitle': 'Rendering preview',
     'viewer.renderingDescription': 'Building a rendered view for this file.',
     'viewer.errorTitle': 'Could not load this file',
@@ -310,27 +367,35 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Editor
     'editor.keepOneFileTitle': 'Keep one file',
-    'editor.keepOneFileDescription': 'A gist needs at least one file before you can save it.',
+    'editor.keepOneFileDescription':
+      'A gist needs at least one file before you can save it.',
     'editor.missingFilenameTitle': 'Missing filename',
-    'editor.missingFilenameDescription': 'Every file needs a filename before you can save.',
+    'editor.missingFilenameDescription':
+      'Every file needs a filename before you can save.',
     'editor.duplicateFilenameTitle': 'Duplicate filename',
-    'editor.duplicateFilenameDescription': 'Each file must use a unique filename.',
+    'editor.duplicateFilenameDescription':
+      'Each file must use a unique filename.',
     'editor.saveErrorTitle': 'Could not save gist',
     'editor.saveErrorDescription': 'Try again in a moment.',
     'editor.loadingDraftTitle': 'Loading gist draft',
-    'editor.loadingDraftDescription': 'Fetching the latest gist files before opening the editor.',
+    'editor.loadingDraftDescription':
+      'Fetching the latest gist files before opening the editor.',
     'editor.errorDraftTitle': 'Could not load gist draft',
-    'editor.errorDraftDescription': 'Retry to fetch the current gist files before editing.',
+    'editor.errorDraftDescription':
+      'Retry to fetch the current gist files before editing.',
     'editor.editEyebrow': 'Edit gist',
     'editor.createEyebrow': 'Create gist',
     'editor.editTitle': 'Update your gist',
     'editor.createTitle': 'Compose a new gist',
-    'editor.editSubtitle': 'Rename files, update code, and save the latest revision from your phone.',
-    'editor.createSubtitle': 'Draft files, choose visibility, and publish a new gist without leaving the mobile shell.',
+    'editor.editSubtitle':
+      'Rename files, update code, and save the latest revision from your phone.',
+    'editor.createSubtitle':
+      'Draft files, choose visibility, and publish a new gist without leaving the mobile shell.',
     'editor.detailsTitle': 'Details',
     'editor.descriptionPlaceholder': 'What is this gist about?',
     'editor.visibility': 'Visibility',
-    'editor.visibilityLocked': 'Visibility is fixed for existing gists, so this editor keeps the current setting.',
+    'editor.visibilityLocked':
+      'Visibility is fixed for existing gists, so this editor keeps the current setting.',
     'editor.addFile': 'Add file',
     'editor.fileTitle': 'File {index}',
     'editor.editingFile': 'Editing {filename}',
@@ -440,7 +505,8 @@ const translations: Record<Language, Record<string, string>> = {
     'home.emptyMineTitle': '还没有 Gist',
     'home.emptyMineDescription': '创建你的第一个 Gist，开始搭建自己的信息流。',
     'home.emptyStarredTitle': '还没有星标 Gist',
-    'home.emptyStarredDescription': '在 GitHub 上给一些 Gist 加星，它们就会显示在这里。',
+    'home.emptyStarredDescription':
+      '在 GitHub 上给一些 Gist 加星，它们就会显示在这里。',
 
     // Explore
     'explore.searchPlaceholder': '搜索 Gists...',
@@ -448,7 +514,8 @@ const translations: Record<Language, Record<string, string>> = {
     'explore.tryDifferent': '试试不同的搜索词',
     'explore.eyebrow': '发现',
     'explore.title': '探索',
-    'explore.subtitle': '按描述、作者、文件名搜索公开 Gist，或直接粘贴 gist URL。',
+    'explore.subtitle':
+      '按描述、作者、文件名搜索公开 Gist，或直接粘贴 gist URL。',
     'explore.inputLabel': '搜索公开 Gist',
     'explore.inputPlaceholder': '粘贴 gist URL 或输入关键词',
     'explore.loadingTitle': '正在加载公开 Gist',
@@ -461,11 +528,13 @@ const translations: Record<Language, Record<string, string>> = {
     // Compose
     'compose.eyebrow': '创建',
     'compose.title': '创作',
-    'compose.subtitle': '从底部 tab 直接开始一份新的 gist 草稿，然后进入移动端优先的编辑器。',
+    'compose.subtitle':
+      '从底部 tab 直接开始一份新的 gist 草稿，然后进入移动端优先的编辑器。',
     'compose.cta': '创建一个 Gist',
     'compose.badge': '移动流程',
     'compose.emptyTitle': '先起草，准备好再发布',
-    'compose.emptyDescription': '一键进入新编辑器，添加一个或多个文件，然后直接保存回 gist 流程。',
+    'compose.emptyDescription':
+      '一键进入新编辑器，添加一个或多个文件，然后直接保存回 gist 流程。',
 
     // Profile
     'profile.gists': 'Gists',
@@ -505,6 +574,7 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.themePresetOceanDescription': '冷调海蓝点缀，整体更沉静。',
     'settings.themePresetForestDescription': '柔和绿色点缀，对比更克制。',
     'settings.themePresetSunsetDescription': '温暖琥珀点缀，层次更柔和。',
+    'settings.resetAppearance': '重置外观',
     'settings.currentAppearance': '当前外观：{appearance}',
     'settings.themeCurrentSystemDark': '当前跟随系统：深色',
     'settings.themeCurrentSystemLight': '当前跟随系统：浅色',
@@ -514,9 +584,12 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.language': '语言',
     'settings.languageDescription': '选择整个应用使用的语言。',
     'settings.updatesTitle': '更新',
-    'settings.updatesDescription': '检查新版本，并选择是否让 BGist 自动检查更新。',
+    'settings.updatesDescription':
+      '检查新版本，并选择是否让 BGist 自动检查更新。',
     'settings.updatesStatusIdle': '暂未获取到最新版本',
     'settings.updatesStatusChecking': '正在检查更新…',
+    'settings.updatesStatusDownloading': '正在下载更新…',
+    'settings.updatesStatusInstalling': '正在打开安装器…',
     'settings.updatesStatusAvailable': '发现新版本：{version}',
     'settings.updatesStatusUpToDate': '当前已是最新：{version}',
     'settings.updatesStatusFailed': '检查更新失败',
@@ -524,16 +597,33 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.updateAvailableBanner': '发现可下载的新版本（{version}）。',
     'settings.autoCheckEnabled': '已开启自动检查更新',
     'settings.autoCheckDisabled': '已关闭自动检查更新',
+    'settings.autoDownloadEnabled': '已开启 GitHub APK 自动安装',
+    'settings.autoDownloadDisabled': '已关闭 GitHub APK 自动安装',
+    'settings.autoDownloadDescription':
+      '发现 GitHub 新版本后，BGist 会下载 APK 并打开 Android 安装器。',
+    'settings.updateChannelLabel': '渠道：{channel}',
+    'settings.updateChannelStable': '稳定版',
+    'settings.updateChannelPreview': '预览版',
+    'settings.updateChannelDescription':
+      '稳定版使用 GitHub 最新正式发布，预览版可包含 prerelease。',
     'settings.checkForUpdates': '检查更新',
     'settings.downloadLatest': '下载最新版本',
+    'settings.installLatest': '安装最新版本',
     'settings.openLatestRelease': '打开最新发布页',
     'settings.updateAlertTitle': '发现新版本',
-    'settings.updateAlertMessage': 'BGist {version} 已可下载。现在打开最新 APK 吗？',
+    'settings.updateAlertMessage':
+      'BGist {version} 已可下载。现在打开最新 APK 吗？',
     'settings.updateLater': '稍后',
     'settings.updateUpToDateTitle': '已经是最新版本',
     'settings.updateUpToDateMessage': 'BGist {version} 已是当前最新发布版本。',
     'settings.updateCheckFailedTitle': '无法检查更新',
     'settings.updateCheckFailedMessage': '请稍后再试。',
+    'settings.updateInstallPermissionTitle': '需要安装权限',
+    'settings.updateInstallPermissionMessage':
+      '请允许 BGist 安装来自此来源的应用，然后再次执行更新。',
+    'settings.openInstallSettings': '打开设置',
+    'settings.updateInstallFailedTitle': '无法启动更新',
+    'settings.updateInstallFailedMessage': '请打开发布页并手动安装 APK。',
     'settings.accountTitle': '账号',
     'settings.account': '账号',
     'settings.accountDescription': '管理 GitHub 会话，并打开你的公开主页。',
@@ -541,23 +631,27 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.openGitHubProfile': '打开 GitHub 主页',
     'settings.signOut': '退出登录',
     'settings.aboutTitle': '关于',
-    'settings.aboutDescription': 'BGist 版本 {version}。一个移动端优先的 GitHub Gist 客户端。',
+    'settings.aboutDescription':
+      'BGist 版本 {version}。一个移动端优先的 GitHub Gist 客户端。',
     'settings.openRepository': '打开仓库',
     'settings.versionLabel': '版本 {version}',
 
     // User profile
     'user.noGists': '没有公开 Gist',
     'userProfile.eyebrow': '资料',
-    'userProfile.subtitle': '在一个移动端优先的页面里查看公开 GitHub 身份、关注数据和已发布的 Gist。',
+    'userProfile.subtitle':
+      '在一个移动端优先的页面里查看公开 GitHub 身份、关注数据和已发布的 Gist。',
     'userProfile.publicProfile': '公开资料',
     'userProfile.openGitHub': '打开 GitHub 主页',
     'userProfile.publicRepos': '公开仓库',
     'userProfile.sectionTitle': '公开 Gist',
-    'userProfile.sectionSubtitle': '打开任意公开 Gist 查看文件、评论和历史记录。',
+    'userProfile.sectionSubtitle':
+      '打开任意公开 Gist 查看文件、评论和历史记录。',
     'userProfile.loadingTitle': '正在加载个人资料',
     'userProfile.loadingDescription': '正在获取公开资料和已发布的 Gist。',
     'userProfile.errorTitle': '无法加载这个用户资料',
-    'userProfile.errorDescription': '重试以获取最新的资料卡片和公开 Gist 列表。',
+    'userProfile.errorDescription':
+      '重试以获取最新的资料卡片和公开 Gist 列表。',
     'userProfile.emptyTitle': '还没有公开 Gist',
     'userProfile.emptyDescription': '这个用户暂时还没有发布公开 Gist。',
 
@@ -587,7 +681,8 @@ const translations: Record<Language, Record<string, string>> = {
     'gistDetail.delete': '删除 Gist',
     'gistDetail.filesTitle': '文件',
     'gistDetail.fileOpen': '打开',
-    'gistDetail.largePreview': '大文件暂不提供预览，打开查看器即可加载完整内容。',
+    'gistDetail.largePreview':
+      '大文件暂不提供预览，打开查看器即可加载完整内容。',
     'gistDetail.commentsTitle': '评论',
     'gistDetail.loadComments': '加载评论',
     'gistDetail.commentsUnavailable': '加载评论失败。',
@@ -660,7 +755,8 @@ const translations: Record<Language, Record<string, string>> = {
     'editor.saveErrorTitle': '无法保存 Gist',
     'editor.saveErrorDescription': '请稍后再试。',
     'editor.loadingDraftTitle': '正在加载 Gist 草稿',
-    'editor.loadingDraftDescription': '正在获取最新的 Gist 文件后再打开编辑器。',
+    'editor.loadingDraftDescription':
+      '正在获取最新的 Gist 文件后再打开编辑器。',
     'editor.errorDraftTitle': '无法加载 Gist 草稿',
     'editor.errorDraftDescription': '重试以获取当前 Gist 文件后再编辑。',
     'editor.editEyebrow': '编辑 Gist',
@@ -668,11 +764,13 @@ const translations: Record<Language, Record<string, string>> = {
     'editor.editTitle': '更新你的 Gist',
     'editor.createTitle': '编写新的 Gist',
     'editor.editSubtitle': '在手机上重命名文件、更新代码并保存最新修订。',
-    'editor.createSubtitle': '起草文件、选择可见性，并在移动端直接发布新的 Gist。',
+    'editor.createSubtitle':
+      '起草文件、选择可见性，并在移动端直接发布新的 Gist。',
     'editor.detailsTitle': '详情',
     'editor.descriptionPlaceholder': '这个 Gist 是做什么的？',
     'editor.visibility': '可见性',
-    'editor.visibilityLocked': '已有 Gist 的可见性不可修改，所以这里会保持当前设置。',
+    'editor.visibilityLocked':
+      '已有 Gist 的可见性不可修改，所以这里会保持当前设置。',
     'editor.addFile': '添加文件',
     'editor.fileTitle': '文件 {index}',
     'editor.editingFile': '正在编辑 {filename}',
@@ -689,5 +787,5 @@ const translations: Record<Language, Record<string, string>> = {
   },
 };
 
-export type {Language};
-export {translations};
+export type { Language };
+export { translations };

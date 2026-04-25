@@ -25,9 +25,13 @@ test('normalizes release tags before comparing versions', () => {
   expect(normalizeReleaseVersion('v0.2.10')).toBe('0.2.10');
   expect(compareVersionNumbers('0.2.10', '0.2.9')).toBeGreaterThan(0);
   expect(compareVersionNumbers('0.2.9', '0.2.9')).toBe(0);
+  expect(compareVersionNumbers('0.3.0-beta.1', '0.3.0')).toBeLessThan(0);
+  expect(compareVersionNumbers('0.3.0-beta.2', '0.3.0-beta.1')).toBeGreaterThan(
+    0,
+  );
 });
 
-test('prefers arm64 release assets over universal builds', () => {
+test('prefers universal release assets over ABI-specific builds', () => {
   const asset = selectPreferredReleaseAsset([
     {
       id: 1,
@@ -41,7 +45,7 @@ test('prefers arm64 release assets over universal builds', () => {
     },
   ]);
 
-  expect(asset?.browser_download_url).toBe('https://example.com/arm64.apk');
+  expect(asset?.browser_download_url).toBe('https://example.com/universal.apk');
 });
 
 test('creates an update snapshot with preferred asset download urls', () => {
@@ -59,7 +63,10 @@ test('creates an update snapshot with preferred asset download urls', () => {
   );
 
   expect(snapshot.updateAvailable).toBe(true);
+  expect(snapshot.channel).toBe('stable');
   expect(snapshot.latestVersion).toBe('0.2.10');
   expect(snapshot.downloadUrl).toBe('https://example.com/arm64.apk');
-  expect(snapshot.releaseUrl).toBe('https://github.com/markbang/bgist/releases/tag/v0.2.10');
+  expect(snapshot.releaseUrl).toBe(
+    'https://github.com/markbang/bgist/releases/tag/v0.2.10',
+  );
 });
