@@ -1,33 +1,45 @@
 import React from 'react';
-import {Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View} from 'react-native';
-import {useQuery} from '@tanstack/react-query';
-import type {MainTabScreenProps} from '../../../app/navigation/types';
-import {useAppTheme} from '../../../app/theme/context';
-import {createThemedStyles} from '../../../app/theme/tokens';
-import {SettingsIcon} from '../../../components/TabIcons';
-import {useSession} from '../../auth/session/SessionProvider';
-import {getUserInfo} from '../../gists/api/gists';
-import {useI18n} from '../../../i18n/context';
-import {queryKeys} from '../../../shared/api/queryKeys';
-import {AppCard} from '../../../shared/ui/AppCard';
-import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
-import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
-import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
-import {AppScreen} from '../../../shared/ui/AppScreen';
+import {
+  Image,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import type { MainTabScreenProps } from '../../../app/navigation/types';
+import { useAppTheme } from '../../../app/theme/context';
+import { createThemedStyles } from '../../../app/theme/tokens';
+import { SettingsIcon } from '../../../components/TabIcons';
+import { useSession } from '../../auth/session/SessionProvider';
+import { getUserInfo } from '../../gists/api/gists';
+import { useI18n } from '../../../i18n/context';
+import { queryKeys } from '../../../shared/api/queryKeys';
+import { AppCard } from '../../../shared/ui/AppCard';
+import { AppEmptyState } from '../../../shared/ui/AppEmptyState';
+import { AppLoadingState } from '../../../shared/ui/AppLoadingState';
+import { AppPageHeader } from '../../../shared/ui/AppPageHeader';
+import { AppScreen } from '../../../shared/ui/AppScreen';
 
-export function ProfileScreen({navigation}: MainTabScreenProps<'Profile'>) {
-  const {theme, themeName} = useAppTheme();
-  const {t} = useI18n();
+export function ProfileScreen({ navigation }: MainTabScreenProps<'Profile'>) {
+  const { theme, themeName } = useAppTheme();
+  const { t } = useI18n();
   const styles = getStyles(themeName);
-  const {status, user} = useSession();
+  const { status, user } = useSession();
   const userQuery = useQuery({
     queryKey: queryKeys.userProfile(user?.login ?? 'me'),
-    queryFn: ({signal}) => getUserInfo(undefined, signal),
+    queryFn: ({ signal }) => getUserInfo(undefined, signal),
     enabled: status === 'signedIn' && Boolean(user?.login),
   });
 
   const profile = userQuery.data;
-  const displayName = profile?.name ?? user?.name ?? user?.login ?? t('profile.defaultDisplayName');
+  const displayName =
+    profile?.name ??
+    user?.name ??
+    user?.login ??
+    t('profile.defaultDisplayName');
   const handleRefreshProfile = React.useCallback(() => {
     userQuery.refetch();
   }, [userQuery]);
@@ -67,18 +79,21 @@ export function ProfileScreen({navigation}: MainTabScreenProps<'Profile'>) {
             />
           ) : undefined
         }
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         <AppPageHeader
+          eyebrow={t('profile.account')}
           title={t('profile.title')}
           accessory={
             <Pressable
               accessibilityLabel={t('profile.settings')}
               accessibilityRole="button"
               onPress={() => navigation.navigate('Settings')}
-              style={({pressed}) => [
+              style={({ pressed }) => [
                 styles.settingsButton,
                 pressed ? styles.settingsButtonPressed : null,
-              ]}>
+              ]}
+            >
               <SettingsIcon color={theme.colors.textPrimary} size={18} />
             </Pressable>
           }
@@ -86,17 +101,23 @@ export function ProfileScreen({navigation}: MainTabScreenProps<'Profile'>) {
 
         <AppCard style={styles.heroCard}>
           <View style={styles.identity}>
-            {user.avatar_url ? <Image source={{uri: user.avatar_url}} style={styles.avatar} /> : null}
+            {user.avatar_url ? (
+              <Image source={{ uri: user.avatar_url }} style={styles.avatar} />
+            ) : null}
             <View style={styles.identityText}>
               <Text style={styles.name}>{displayName}</Text>
               <Text style={styles.login}>@{user.login}</Text>
-              {profile?.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
+              {profile?.bio ? (
+                <Text style={styles.bio}>{profile.bio}</Text>
+              ) : null}
             </View>
           </View>
 
           <View style={styles.stats}>
             <View style={styles.stat}>
-              <Text style={styles.statValue}>{profile?.public_gists ?? '—'}</Text>
+              <Text style={styles.statValue}>
+                {profile?.public_gists ?? '—'}
+              </Text>
               <Text style={styles.statLabel}>{t('profile.publicGists')}</Text>
             </View>
             <View style={styles.stat}>
@@ -127,9 +148,9 @@ const getStyles = createThemedStyles(theme =>
   StyleSheet.create({
     content: {
       paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.sm,
-      paddingBottom: theme.spacing.lg,
-      gap: theme.spacing.sm,
+      paddingTop: theme.spacing.md,
+      paddingBottom: theme.spacing.xl,
+      gap: theme.spacing.md,
     },
     heroCard: {
       gap: theme.spacing.sm,
@@ -137,7 +158,7 @@ const getStyles = createThemedStyles(theme =>
     settingsButton: {
       width: 40,
       height: 40,
-      borderRadius: theme.radius.md,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
@@ -147,7 +168,7 @@ const getStyles = createThemedStyles(theme =>
     },
     settingsButtonPressed: {
       opacity: 0.88,
-      transform: [{scale: 0.96}],
+      transform: [{ scale: 0.96 }],
     },
     identity: {
       flexDirection: 'row',
@@ -157,7 +178,7 @@ const getStyles = createThemedStyles(theme =>
     avatar: {
       width: 64,
       height: 64,
-      borderRadius: 32,
+      borderRadius: theme.radius.sm,
     },
     identityText: {
       flex: 1,
@@ -165,8 +186,10 @@ const getStyles = createThemedStyles(theme =>
     },
     name: {
       color: theme.colors.textPrimary,
-      fontSize: 18,
-      fontWeight: '800',
+      fontSize: 22,
+      lineHeight: 28,
+      fontWeight: '900',
+      letterSpacing: 0,
     },
     login: {
       color: theme.colors.textSecondary,
@@ -190,7 +213,7 @@ const getStyles = createThemedStyles(theme =>
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surfaceMuted,
+      backgroundColor: theme.colors.surface,
       paddingVertical: theme.spacing.xs + 2,
       paddingHorizontal: theme.spacing.sm,
       gap: 2,

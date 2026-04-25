@@ -1,17 +1,27 @@
 import React from 'react';
-import {act, fireEvent, render, screen, waitFor} from '@testing-library/react-native';
-import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Clipboard from '@react-native-clipboard/clipboard';
-import {GistViewerScreen} from '../../src/features/gists/screens/GistViewerScreen';
+import { GistViewerScreen } from '../../src/features/gists/screens/GistViewerScreen';
 
 jest.mock('../../src/features/gists/utils/renderCodePreview', () => {
-  const actual = jest.requireActual('../../src/features/gists/utils/renderCodePreview');
+  const actual = jest.requireActual(
+    '../../src/features/gists/utils/renderCodePreview',
+  );
 
   return {
     ...actual,
-    renderCodePreviewDocument: jest.fn(async ({filename}: {filename: string}) => {
-      return `<html><body><pre data-filename="${filename}">highlighted</pre></body></html>`;
-    }),
+    renderCodePreviewDocument: jest.fn(
+      async ({ filename }: { filename: string }) => {
+        return `<html><body><pre data-filename="${filename}">highlighted</pre></body></html>`;
+      },
+    ),
   };
 });
 
@@ -47,8 +57,10 @@ function createWrapper() {
   });
   testQueryClients.push(queryClient);
 
-  return function Wrapper({children}: {children: React.ReactNode}) {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return function Wrapper({ children }: { children: React.ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
   };
 }
 
@@ -70,7 +82,7 @@ test('renders an empty file in raw mode without treating it as missing remote co
 
   render(
     <GistViewerScreen
-      navigation={{goBack: jest.fn(), navigate: jest.fn()} as never}
+      navigation={{ goBack: jest.fn(), navigate: jest.fn() } as never}
       route={{
         key: 'GistViewer-empty',
         name: 'GistViewer',
@@ -100,7 +112,7 @@ test('keeps copy content disabled while remote file content is still loading', (
 
   render(
     <GistViewerScreen
-      navigation={{goBack: jest.fn(), navigate: jest.fn()} as never}
+      navigation={{ goBack: jest.fn(), navigate: jest.fn() } as never}
       route={{
         key: 'GistViewer-loading',
         name: 'GistViewer',
@@ -119,7 +131,7 @@ test('keeps copy content disabled while remote file content is still loading', (
   );
 
   expect(screen.getByText('Loading full file')).toBeTruthy();
-  const copyButton = screen.getByRole('button', {name: 'Copy content'});
+  const copyButton = screen.getByRole('button', { name: 'Copy content' });
 
   expect(copyButton.props.accessibilityState.disabled).toBe(true);
 
@@ -136,7 +148,7 @@ test('keeps copy content disabled when remote file content fails to load', async
 
   render(
     <GistViewerScreen
-      navigation={{goBack: jest.fn(), navigate: jest.fn()} as never}
+      navigation={{ goBack: jest.fn(), navigate: jest.fn() } as never}
       route={{
         key: 'GistViewer-error',
         name: 'GistViewer',
@@ -157,7 +169,7 @@ test('keeps copy content disabled when remote file content fails to load', async
   expect(await screen.findByText('Could not load this file')).toBeTruthy();
 
   await waitFor(() => {
-    const copyButton = screen.getByRole('button', {name: 'Copy content'});
+    const copyButton = screen.getByRole('button', { name: 'Copy content' });
 
     expect(copyButton.props.accessibilityState.disabled).toBe(true);
 
@@ -170,7 +182,7 @@ test('keeps copy content disabled when remote file content fails to load', async
 test('uses icon-only viewer actions while preserving accessibility labels', async () => {
   render(
     <GistViewerScreen
-      navigation={{goBack: jest.fn(), navigate: jest.fn()} as never}
+      navigation={{ goBack: jest.fn(), navigate: jest.fn() } as never}
       route={{
         key: 'GistViewer-actions',
         name: 'GistViewer',
@@ -193,16 +205,18 @@ test('uses icon-only viewer actions while preserving accessibility labels', asyn
   expect(screen.queryByText('Copy content')).toBeNull();
   expect(screen.queryByText('Share link')).toBeNull();
   expect(
-    screen.queryByText('Read the file content, toggle line numbers, and share the source link.'),
-  ).toBeNull();
-  expect(screen.getByRole('button', {name: 'Copy content'})).toBeTruthy();
-  expect(screen.getByRole('button', {name: 'Share link'})).toBeTruthy();
+    screen.getByText(
+      'Read the file content, toggle line numbers, and share the source link.',
+    ),
+  ).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Copy content' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Share link' })).toBeTruthy();
 });
 
 test('defaults code files to raw shiki highlighting', async () => {
   render(
     <GistViewerScreen
-      navigation={{goBack: jest.fn(), navigate: jest.fn()} as never}
+      navigation={{ goBack: jest.fn(), navigate: jest.fn() } as never}
       route={{
         key: 'GistViewer-typescript',
         name: 'GistViewer',
@@ -223,7 +237,7 @@ test('defaults code files to raw shiki highlighting', async () => {
 
   expect(await screen.findByTestId('gist-raw-code-view')).toBeTruthy();
   expect(screen.queryByTestId('gist-render-preview')).toBeNull();
-  expect(screen.queryByRole('button', {name: 'View rendered'})).toBeNull();
+  expect(screen.queryByRole('button', { name: 'View rendered' })).toBeNull();
 });
 
 test('renders truncated markdown from inline content before the full raw file finishes loading', async () => {
@@ -231,7 +245,7 @@ test('renders truncated markdown from inline content before the full raw file fi
 
   render(
     <GistViewerScreen
-      navigation={{goBack: jest.fn(), navigate: jest.fn()} as never}
+      navigation={{ goBack: jest.fn(), navigate: jest.fn() } as never}
       route={{
         key: 'GistViewer-truncated-inline',
         name: 'GistViewer',
@@ -253,7 +267,7 @@ test('renders truncated markdown from inline content before the full raw file fi
   expect(screen.getByTestId('app-code-block-vertical-scroll')).toBeTruthy();
   expect(screen.queryByText('Loading full file')).toBeNull();
 
-  const copyButton = screen.getByRole('button', {name: 'Copy content'});
+  const copyButton = screen.getByRole('button', { name: 'Copy content' });
   expect(copyButton.props.accessibilityState.disabled).toBe(true);
 
   expect(screen.getByText(/# Partial heading/)).toBeTruthy();
@@ -264,7 +278,7 @@ test('renders provided GitHub preview html before the raw source finishes loadin
 
   render(
     <GistViewerScreen
-      navigation={{goBack: jest.fn(), navigate: jest.fn()} as never}
+      navigation={{ goBack: jest.fn(), navigate: jest.fn() } as never}
       route={{
         key: 'GistViewer-rendered-html',
         name: 'GistViewer',
@@ -284,7 +298,7 @@ test('renders provided GitHub preview html before the raw source finishes loadin
   );
 
   expect(screen.getByText('Loading full file')).toBeTruthy();
-  fireEvent.press(screen.getByRole('button', {name: 'View rendered'}));
+  fireEvent.press(screen.getByRole('button', { name: 'View rendered' }));
   const preview = await screen.findByTestId('gist-render-preview');
   expect(preview.props.source.html).toContain('Rendered preview');
 });
@@ -292,7 +306,7 @@ test('renders provided GitHub preview html before the raw source finishes loadin
 test('renders markdown files in preview mode and allows switching back to raw', async () => {
   render(
     <GistViewerScreen
-      navigation={{goBack: jest.fn(), navigate: jest.fn()} as never}
+      navigation={{ goBack: jest.fn(), navigate: jest.fn() } as never}
       route={{
         key: 'GistViewer-markdown',
         name: 'GistViewer',
@@ -313,9 +327,9 @@ test('renders markdown files in preview mode and allows switching back to raw', 
 
   expect(screen.queryByTestId('gist-render-preview')).toBeNull();
   expect(screen.getByText(/# Hello/)).toBeTruthy();
-  fireEvent.press(screen.getByRole('button', {name: 'View rendered'}));
+  fireEvent.press(screen.getByRole('button', { name: 'View rendered' }));
   expect(await screen.findByTestId('gist-render-preview')).toBeTruthy();
-  expect(screen.getByRole('button', {name: 'View raw'})).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'View raw' })).toBeTruthy();
 });
 
 test('shows an error instead of loading forever when remote file content never resolves', async () => {
@@ -325,7 +339,7 @@ test('shows an error instead of loading forever when remote file content never r
 
   render(
     <GistViewerScreen
-      navigation={{goBack: jest.fn(), navigate: jest.fn()} as never}
+      navigation={{ goBack: jest.fn(), navigate: jest.fn() } as never}
       route={{
         key: 'GistViewer-timeout',
         name: 'GistViewer',

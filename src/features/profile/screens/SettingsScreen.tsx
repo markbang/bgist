@@ -347,7 +347,9 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
         showsVerticalScrollIndicator={false}
       >
         <AppPageHeader
+          eyebrow={t('settings.appearance')}
           title={t('settings.title')}
+          subtitle={t('settings.appearanceDescription')}
           accessory={
             <View style={styles.versionBadge}>
               <Text style={styles.versionBadgeText}>{appVersion}</Text>

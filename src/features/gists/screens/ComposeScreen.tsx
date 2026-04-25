@@ -1,19 +1,24 @@
 import React from 'react';
-import {ScrollView, StyleSheet, Text, View} from 'react-native';
-import type {MainTabScreenProps} from '../../../app/navigation/types';
-import {createThemedStyles} from '../../../app/theme/tokens';
-import {useAppTheme} from '../../../app/theme/context';
-import {MaterialSymbolIcon} from '../../../components/TabIcons';
-import {useI18n} from '../../../i18n/context';
-import {AppBadge} from '../../../shared/ui/AppBadge';
-import {AppButton} from '../../../shared/ui/AppButton';
-import {AppCard} from '../../../shared/ui/AppCard';
-import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
-import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
-import {AppScreen} from '../../../shared/ui/AppScreen';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import type { MainTabScreenProps } from '../../../app/navigation/types';
+import { createThemedStyles } from '../../../app/theme/tokens';
+import { useAppTheme } from '../../../app/theme/context';
+import { MaterialSymbolIcon } from '../../../components/TabIcons';
+import { useI18n } from '../../../i18n/context';
+import { AppBadge } from '../../../shared/ui/AppBadge';
+import { AppButton } from '../../../shared/ui/AppButton';
+import { AppCard } from '../../../shared/ui/AppCard';
+import { AppPageHeader } from '../../../shared/ui/AppPageHeader';
+import { AppScreen } from '../../../shared/ui/AppScreen';
 
-function ComposeDetail({title, description}: {title: string; description: string}) {
-  const {themeName} = useAppTheme();
+function ComposeDetail({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  const { themeName } = useAppTheme();
   const styles = getStyles(themeName);
 
   return (
@@ -24,23 +29,27 @@ function ComposeDetail({title, description}: {title: string; description: string
   );
 }
 
-export function ComposeScreen({navigation}: MainTabScreenProps<'Compose'>) {
-  const {themeName} = useAppTheme();
-  const {t} = useI18n();
+export function ComposeScreen({ navigation }: MainTabScreenProps<'Compose'>) {
+  const { themeName } = useAppTheme();
+  const { t } = useI18n();
   const styles = getStyles(themeName);
   const handleCreate = React.useCallback(() => {
-    navigation.navigate('GistEditor', {mode: 'create'});
+    navigation.navigate('GistEditor', { mode: 'create' });
   }, [navigation]);
 
   return (
     <AppScreen>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
           <AppPageHeader
+            eyebrow={t('compose.eyebrow')}
             title={t('compose.title')}
+            subtitle={t('compose.subtitle')}
             accessory={<AppBadge label={t('compose.badge')} tone="public" />}
           />
-          <Text style={styles.subtitle}>{t('compose.subtitle')}</Text>
         </View>
 
         <AppCard style={styles.heroCard}>
@@ -51,23 +60,25 @@ export function ComposeScreen({navigation}: MainTabScreenProps<'Compose'>) {
             <View style={styles.heroCopy}>
               <AppBadge label={t('compose.eyebrow')} tone="public" />
               <Text style={styles.heroTitle}>{t('compose.emptyTitle')}</Text>
-              <Text style={styles.heroDescription}>{t('compose.emptyDescription')}</Text>
+              <Text style={styles.heroDescription}>
+                {t('compose.emptyDescription')}
+              </Text>
             </View>
           </View>
 
           <View style={styles.detailsGrid}>
-            <ComposeDetail title={t('compose.badge')} description={t('compose.subtitle')} />
-            <ComposeDetail title={t('compose.title')} description={t('compose.emptyDescription')} />
+            <ComposeDetail
+              title={t('compose.badge')}
+              description={t('compose.subtitle')}
+            />
+            <ComposeDetail
+              title={t('compose.title')}
+              description={t('compose.emptyDescription')}
+            />
           </View>
 
           <AppButton label={t('compose.cta')} onPress={handleCreate} />
         </AppCard>
-
-        <AppEmptyState
-          badgeLabel={t('compose.badge')}
-          title={t('compose.emptyTitle')}
-          description={t('compose.emptyDescription')}
-        />
       </ScrollView>
     </AppScreen>
   );
@@ -79,17 +90,12 @@ const getStyles = createThemedStyles(theme =>
   StyleSheet.create({
     content: {
       paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.sm,
-      paddingBottom: theme.spacing.lg,
-      gap: theme.spacing.sm,
+      paddingTop: theme.spacing.md,
+      paddingBottom: theme.spacing.xl,
+      gap: theme.spacing.md,
     },
     header: {
       gap: theme.spacing.xs,
-    },
-    subtitle: {
-      color: theme.colors.textSecondary,
-      fontSize: 14,
-      lineHeight: 20,
     },
     heroCard: {
       gap: theme.spacing.md,
@@ -102,7 +108,7 @@ const getStyles = createThemedStyles(theme =>
     heroIcon: {
       width: 44,
       height: 44,
-      borderRadius: 14,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
@@ -116,8 +122,10 @@ const getStyles = createThemedStyles(theme =>
     },
     heroTitle: {
       color: theme.colors.textPrimary,
-      fontSize: 20,
-      fontWeight: '800',
+      fontSize: 22,
+      lineHeight: 28,
+      fontWeight: '900',
+      letterSpacing: 0,
     },
     heroDescription: {
       color: theme.colors.textSecondary,
@@ -134,6 +142,8 @@ const getStyles = createThemedStyles(theme =>
       minWidth: '47%',
       borderRadius: theme.radius.md,
       borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
       backgroundColor: theme.colors.surfaceMuted,
       paddingHorizontal: theme.spacing.sm,
       paddingVertical: theme.spacing.sm,

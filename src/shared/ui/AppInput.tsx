@@ -8,8 +8,8 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import {createThemedStyles} from '../../app/theme/tokens';
-import {useAppTheme} from '../../app/theme/context';
+import { createThemedStyles } from '../../app/theme/tokens';
+import { useAppTheme } from '../../app/theme/context';
 
 interface AppInputProps extends TextInputProps {
   label?: string;
@@ -32,10 +32,11 @@ export function AppInput({
   accessibilityHint,
   ...props
 }: AppInputProps) {
-  const {theme, themeName} = useAppTheme();
+  const { theme, themeName } = useAppTheme();
   const styles = getStyles(themeName);
   const message = errorMessage ?? helperText;
-  const inputAccessibilityLabel = accessibilityLabel ?? label ?? props.placeholder;
+  const inputAccessibilityLabel =
+    accessibilityLabel ?? label ?? props.placeholder;
   const inputAccessibilityHint = accessibilityHint ?? message;
 
   return (
@@ -47,7 +48,9 @@ export function AppInput({
         accessibilityLabel={inputAccessibilityLabel}
         editable={editable}
         multiline={multiline}
-        placeholderTextColor={placeholderTextColor ?? theme.colors.textSecondary}
+        placeholderTextColor={
+          placeholderTextColor ?? theme.colors.textSecondary
+        }
         selectionColor={selectionColor ?? theme.colors.accent}
         style={[
           styles.input,
@@ -58,7 +61,9 @@ export function AppInput({
         ]}
       />
       {message ? (
-        <Text style={[styles.message, errorMessage ? styles.messageError : null]}>
+        <Text
+          style={[styles.message, errorMessage ? styles.messageError : null]}
+        >
           {message}
         </Text>
       ) : null}
@@ -72,13 +77,15 @@ const getStyles = createThemedStyles(theme =>
       gap: theme.spacing.xs,
     },
     label: {
-      color: theme.colors.textPrimary,
-      fontSize: 14,
-      fontWeight: '600',
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+      fontWeight: '800',
+      letterSpacing: 0,
+      textTransform: 'uppercase',
     },
     input: {
-      minHeight: 52,
-      borderRadius: theme.radius.md,
+      minHeight: 50,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
@@ -86,7 +93,8 @@ const getStyles = createThemedStyles(theme =>
       color: theme.colors.textPrimary,
       paddingHorizontal: theme.spacing.md,
       paddingVertical: theme.spacing.sm + 2,
-      fontSize: 16,
+      fontSize: 15,
+      fontWeight: '600',
     },
     inputMultiline: {
       minHeight: 120,

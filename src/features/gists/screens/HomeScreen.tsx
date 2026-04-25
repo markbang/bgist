@@ -1,18 +1,18 @@
 import React from 'react';
-import {FlatList, StyleSheet, type ListRenderItem, View} from 'react-native';
-import {useAppTheme} from '../../../app/theme/context';
-import {createThemedStyles} from '../../../app/theme/tokens';
-import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
-import {AppErrorState} from '../../../shared/ui/AppErrorState';
-import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
-import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
-import {AppScreen} from '../../../shared/ui/AppScreen';
-import {AppSegmentedControl} from '../../../shared/ui/AppSegmentedControl';
-import {appFeedListProps} from '../../../shared/ui/listPresets';
-import {useI18n} from '../../../i18n/context';
-import type {Gist} from '../../../types/gist';
-import {GistCard} from '../components/GistCard';
-import {type HomeFeedSegment, useHomeFeed} from '../hooks/useHomeFeed';
+import { FlatList, StyleSheet, type ListRenderItem, View } from 'react-native';
+import { useAppTheme } from '../../../app/theme/context';
+import { createThemedStyles } from '../../../app/theme/tokens';
+import { AppEmptyState } from '../../../shared/ui/AppEmptyState';
+import { AppErrorState } from '../../../shared/ui/AppErrorState';
+import { AppLoadingState } from '../../../shared/ui/AppLoadingState';
+import { AppPageHeader } from '../../../shared/ui/AppPageHeader';
+import { AppScreen } from '../../../shared/ui/AppScreen';
+import { AppSegmentedControl } from '../../../shared/ui/AppSegmentedControl';
+import { appFeedListProps } from '../../../shared/ui/listPresets';
+import { useI18n } from '../../../i18n/context';
+import type { Gist } from '../../../types/gist';
+import { GistCard } from '../components/GistCard';
+import { type HomeFeedSegment, useHomeFeed } from '../hooks/useHomeFeed';
 
 interface HomeScreenProps {
   navigation: {
@@ -20,29 +20,37 @@ interface HomeScreenProps {
   };
 }
 
-export function HomeScreen({navigation}: HomeScreenProps) {
-  const {themeName} = useAppTheme();
-  const {t} = useI18n();
+export function HomeScreen({ navigation }: HomeScreenProps) {
+  const { themeName } = useAppTheme();
+  const { t } = useI18n();
   const styles = getStyles(themeName);
   const [isSegmentPending, startSegmentTransition] = React.useTransition();
-  const {segment, setSegment, items, isLoading, isRefreshing, isError, refetch} = useHomeFeed();
+  const {
+    segment,
+    setSegment,
+    items,
+    isLoading,
+    isRefreshing,
+    isError,
+    refetch,
+  } = useHomeFeed();
   const segments = React.useMemo(
     () =>
       [
-        {label: t('home.segmentMine'), value: 'my'},
-        {label: t('home.segmentStarred'), value: 'starred'},
-      ] satisfies {label: string; value: HomeFeedSegment}[],
+        { label: t('home.segmentMine'), value: 'my' },
+        { label: t('home.segmentStarred'), value: 'starred' },
+      ] satisfies { label: string; value: HomeFeedSegment }[],
     [t],
   );
   const keyExtractor = React.useCallback((item: Gist) => item.id, []);
   const handleOpenGist = React.useCallback(
     (gistId: string) => {
-      navigation.navigate('GistDetail', {gistId});
+      navigation.navigate('GistDetail', { gistId });
     },
     [navigation],
   );
   const renderItem = React.useCallback<ListRenderItem<Gist>>(
-    ({item}) => <GistCard gist={item} onPressGist={handleOpenGist} />,
+    ({ item }) => <GistCard gist={item} onPressGist={handleOpenGist} />,
     [handleOpenGist],
   );
   const handleRefresh = React.useCallback(() => {
@@ -62,7 +70,9 @@ export function HomeScreen({navigation}: HomeScreenProps) {
   if (isLoading) {
     content = (
       <AppLoadingState
-        label={segment === 'my' ? t('home.loadingMine') : t('home.loadingStarred')}
+        label={
+          segment === 'my' ? t('home.loadingMine') : t('home.loadingStarred')
+        }
         description={t('home.loadingDescription')}
       />
     );
@@ -79,8 +89,14 @@ export function HomeScreen({navigation}: HomeScreenProps) {
   } else if (items.length === 0) {
     content = (
       <AppEmptyState
-        badgeLabel={segment === 'my' ? t('home.badgeMine') : t('home.badgeStarred')}
-        title={segment === 'my' ? t('home.emptyMineTitle') : t('home.emptyStarredTitle')}
+        badgeLabel={
+          segment === 'my' ? t('home.badgeMine') : t('home.badgeStarred')
+        }
+        title={
+          segment === 'my'
+            ? t('home.emptyMineTitle')
+            : t('home.emptyStarredTitle')
+        }
         description={
           segment === 'my'
             ? t('home.emptyMineDescription')
@@ -108,7 +124,11 @@ export function HomeScreen({navigation}: HomeScreenProps) {
     <AppScreen>
       <View style={styles.container}>
         <View style={styles.header}>
-          <AppPageHeader title={t('home.title')} />
+          <AppPageHeader
+            eyebrow={t('home.eyebrow')}
+            title={t('home.title')}
+            subtitle={t('home.subtitle')}
+          />
           <AppSegmentedControl
             options={segments}
             value={segment}
@@ -130,18 +150,18 @@ const getStyles = createThemedStyles(theme =>
     container: {
       flex: 1,
       paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.sm,
-      gap: theme.spacing.sm,
+      paddingTop: theme.spacing.md,
+      gap: theme.spacing.md,
     },
     header: {
-      gap: theme.spacing.xs,
+      gap: theme.spacing.md,
     },
     content: {
       flex: 1,
     },
     listContent: {
-      paddingBottom: theme.spacing.lg,
-      gap: theme.spacing.sm,
+      paddingBottom: theme.spacing.xl,
+      gap: theme.spacing.md,
     },
   }),
 );

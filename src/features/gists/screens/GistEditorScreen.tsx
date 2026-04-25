@@ -10,25 +10,25 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import {useQuery} from '@tanstack/react-query';
-import {useAppTheme} from '../../../app/theme/context';
-import {createThemedStyles} from '../../../app/theme/tokens';
+import { useQuery } from '@tanstack/react-query';
+import { useAppTheme } from '../../../app/theme/context';
+import { createThemedStyles } from '../../../app/theme/tokens';
 import type {
   GistEditorDraftFile,
   RootStackScreenProps,
 } from '../../../app/navigation/types';
-import type {EditGistParams, GistFile} from '../../../types/gist';
-import {queryKeys} from '../../../shared/api/queryKeys';
-import {AppBadge} from '../../../shared/ui/AppBadge';
-import {AppButton} from '../../../shared/ui/AppButton';
-import {AppCard} from '../../../shared/ui/AppCard';
-import {AppErrorState} from '../../../shared/ui/AppErrorState';
-import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
-import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
-import {AppScreen} from '../../../shared/ui/AppScreen';
-import {useI18n} from '../../../i18n/context';
-import {getGist} from '../api/gists';
-import {useGistMutations} from '../hooks/useGistMutations';
+import type { EditGistParams, GistFile } from '../../../types/gist';
+import { queryKeys } from '../../../shared/api/queryKeys';
+import { AppBadge } from '../../../shared/ui/AppBadge';
+import { AppButton } from '../../../shared/ui/AppButton';
+import { AppCard } from '../../../shared/ui/AppCard';
+import { AppErrorState } from '../../../shared/ui/AppErrorState';
+import { AppLoadingState } from '../../../shared/ui/AppLoadingState';
+import { AppPageHeader } from '../../../shared/ui/AppPageHeader';
+import { AppScreen } from '../../../shared/ui/AppScreen';
+import { useI18n } from '../../../i18n/context';
+import { getGist } from '../api/gists';
+import { useGistMutations } from '../hooks/useGistMutations';
 
 type DraftFile = {
   id: string;
@@ -71,7 +71,9 @@ function createDraftFilesFromRoute(files?: GistEditorDraftFile[]): DraftFile[] {
   }));
 }
 
-function createDraftFilesFromGist(files: Record<string, GistFile>): DraftFile[] {
+function createDraftFilesFromGist(
+  files: Record<string, GistFile>,
+): DraftFile[] {
   return Object.values(files).map(file => ({
     id: createDraftId(),
     originalFilename: file.filename,
@@ -80,7 +82,10 @@ function createDraftFilesFromGist(files: Record<string, GistFile>): DraftFile[] 
   }));
 }
 
-function createInitialDraftState(files: GistEditorDraftFile[] | undefined, isEditMode: boolean): DraftState {
+function createInitialDraftState(
+  files: GistEditorDraftFile[] | undefined,
+  isEditMode: boolean,
+): DraftState {
   const seededFiles = createDraftFilesFromRoute(files);
 
   if (seededFiles.length > 0) {
@@ -105,14 +110,18 @@ function createInitialDraftState(files: GistEditorDraftFile[] | undefined, isEdi
   };
 }
 
-function getDraftFileLabel(file: DraftFile, index: number, t: (key: string, values?: Record<string, string | number>) => string) {
+function getDraftFileLabel(
+  file: DraftFile,
+  index: number,
+  t: (key: string, values?: Record<string, string | number>) => string,
+) {
   const trimmedFilename = file.filename.trim();
 
   if (trimmedFilename) {
     return trimmedFilename;
   }
 
-  return t('editor.untitledFile', {index: index + 1});
+  return t('editor.untitledFile', { index: index + 1 });
 }
 
 function getFileExtension(filename: string) {
@@ -126,7 +135,10 @@ function getFileExtension(filename: string) {
   return trimmedFilename.slice(extensionIndex + 1).toUpperCase();
 }
 
-function buildEditFilesPayload(files: DraftFile[], deletedOriginalFilenames: string[]): EditGistParams['files'] {
+function buildEditFilesPayload(
+  files: DraftFile[],
+  deletedOriginalFilenames: string[],
+): EditGistParams['files'] {
   const payload: EditGistParams['files'] = {};
 
   deletedOriginalFilenames.forEach(filename => {
@@ -156,9 +168,12 @@ function buildEditFilesPayload(files: DraftFile[], deletedOriginalFilenames: str
   return payload;
 }
 
-export function GistEditorScreen({navigation, route}: RootStackScreenProps<'GistEditor'>) {
-  const {theme, themeName} = useAppTheme();
-  const {t} = useI18n();
+export function GistEditorScreen({
+  navigation,
+  route,
+}: RootStackScreenProps<'GistEditor'>) {
+  const { theme, themeName } = useAppTheme();
+  const { t } = useI18n();
   const styles = getStyles(themeName);
   const isEditMode = route.params.mode === 'edit';
   const editGistId = isEditMode ? route.params.gistId : null;
@@ -166,23 +181,35 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
   const initialDraftStateRef = React.useRef<DraftState | null>(null);
 
   if (!initialDraftStateRef.current) {
-    initialDraftStateRef.current = createInitialDraftState(routeDraftFiles, isEditMode);
+    initialDraftStateRef.current = createInitialDraftState(
+      routeDraftFiles,
+      isEditMode,
+    );
   }
 
   const initialDraftState = initialDraftStateRef.current;
-  const [description, setDescription] = React.useState(route.params.description ?? '');
+  const [description, setDescription] = React.useState(
+    route.params.description ?? '',
+  );
   const [isPublic, setIsPublic] = React.useState(route.params.isPublic ?? true);
-  const [files, setFiles] = React.useState<DraftFile[]>(initialDraftState.files);
-  const [activeFileId, setActiveFileId] = React.useState<string | null>(initialDraftState.activeFileId);
-  const [deletedOriginalFilenames, setDeletedOriginalFilenames] = React.useState<string[]>([]);
+  const [files, setFiles] = React.useState<DraftFile[]>(
+    initialDraftState.files,
+  );
+  const [activeFileId, setActiveFileId] = React.useState<string | null>(
+    initialDraftState.activeFileId,
+  );
+  const [deletedOriginalFilenames, setDeletedOriginalFilenames] =
+    React.useState<string[]>([]);
   const [hasHydratedEditState, setHasHydratedEditState] = React.useState(
     !isEditMode || Boolean(routeDraftFiles?.length),
   );
-  const {createGistMutation, editGistMutation} = useGistMutations();
+  const { createGistMutation, editGistMutation } = useGistMutations();
 
   const existingGistQuery = useQuery({
-    queryKey: editGistId ? queryKeys.gistDetail(editGistId) : ['gists', 'detail', 'create'],
-    queryFn: ({signal}) => getGist(editGistId as string, signal),
+    queryKey: editGistId
+      ? queryKeys.gistDetail(editGistId)
+      : ['gists', 'detail', 'create'],
+    queryFn: ({ signal }) => getGist(editGistId as string, signal),
     enabled: Boolean(editGistId) && !hasHydratedEditState,
   });
 
@@ -191,9 +218,13 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
       return;
     }
 
-    setDescription(current => current || existingGistQuery.data?.description || '');
+    setDescription(
+      current => current || existingGistQuery.data?.description || '',
+    );
     setIsPublic(existingGistQuery.data.public);
-    const hydratedFiles = createDraftFilesFromGist(existingGistQuery.data.files);
+    const hydratedFiles = createDraftFilesFromGist(
+      existingGistQuery.data.files,
+    );
 
     setFiles(hydratedFiles);
     setActiveFileId(hydratedFiles[0]?.id ?? null);
@@ -214,11 +245,16 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
     }
   }, [activeFileId, files]);
 
-  const updateFile = React.useCallback((fileId: string, updates: Partial<DraftFile>) => {
-    setFiles(current =>
-      current.map(file => (file.id === fileId ? {...file, ...updates} : file)),
-    );
-  }, []);
+  const updateFile = React.useCallback(
+    (fileId: string, updates: Partial<DraftFile>) => {
+      setFiles(current =>
+        current.map(file =>
+          file.id === fileId ? { ...file, ...updates } : file,
+        ),
+      );
+    },
+    [],
+  );
 
   const addFile = React.useCallback(() => {
     const nextFile = createBlankFile();
@@ -227,31 +263,42 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
     setActiveFileId(nextFile.id);
   }, []);
 
-  const removeFile = React.useCallback((fileId: string) => {
-    setFiles(current => {
-      if (current.length <= 1) {
-        Alert.alert(t('editor.keepOneFileTitle'), t('editor.keepOneFileDescription'));
-        return current;
-      }
+  const removeFile = React.useCallback(
+    (fileId: string) => {
+      setFiles(current => {
+        if (current.length <= 1) {
+          Alert.alert(
+            t('editor.keepOneFileTitle'),
+            t('editor.keepOneFileDescription'),
+          );
+          return current;
+        }
 
-      const nextFile = current.find(file => file.id === fileId);
+        const nextFile = current.find(file => file.id === fileId);
 
-      if (nextFile?.originalFilename) {
-        setDeletedOriginalFilenames(previous =>
-          previous.includes(nextFile.originalFilename!)
-            ? previous
-            : [...previous, nextFile.originalFilename!],
-        );
-      }
+        if (nextFile?.originalFilename) {
+          setDeletedOriginalFilenames(previous =>
+            previous.includes(nextFile.originalFilename!)
+              ? previous
+              : [...previous, nextFile.originalFilename!],
+          );
+        }
 
-      return current.filter(file => file.id !== fileId);
-    });
-  }, [t]);
+        return current.filter(file => file.id !== fileId);
+      });
+    },
+    [t],
+  );
 
-  const currentFile = files.find(file => file.id === activeFileId) ?? files[0] ?? null;
-  const currentFileIndex = currentFile ? files.findIndex(file => file.id === currentFile.id) : -1;
+  const currentFile =
+    files.find(file => file.id === activeFileId) ?? files[0] ?? null;
+  const currentFileIndex = currentFile
+    ? files.findIndex(file => file.id === currentFile.id)
+    : -1;
   const fileCountLabel = `${files.length} ${
-    files.length === 1 ? t('gistDetail.fileSingular') : t('gistDetail.filePlural')
+    files.length === 1
+      ? t('gistDetail.fileSingular')
+      : t('gistDetail.filePlural')
   }`;
 
   const handleSubmit = React.useCallback(async () => {
@@ -259,18 +306,27 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
     const normalizedFilenames = files.map(file => file.filename.trim());
 
     if (normalizedFilenames.some(name => !name)) {
-      Alert.alert(t('editor.missingFilenameTitle'), t('editor.missingFilenameDescription'));
+      Alert.alert(
+        t('editor.missingFilenameTitle'),
+        t('editor.missingFilenameDescription'),
+      );
       return;
     }
 
     if (new Set(normalizedFilenames).size !== normalizedFilenames.length) {
-      Alert.alert(t('editor.duplicateFilenameTitle'), t('editor.duplicateFilenameDescription'));
+      Alert.alert(
+        t('editor.duplicateFilenameTitle'),
+        t('editor.duplicateFilenameDescription'),
+      );
       return;
     }
 
     try {
       if (isEditMode) {
-        const filesPayload = buildEditFilesPayload(files, deletedOriginalFilenames);
+        const filesPayload = buildEditFilesPayload(
+          files,
+          deletedOriginalFilenames,
+        );
         const result = await editGistMutation.mutateAsync({
           gistId: route.params.gistId,
           params: {
@@ -279,7 +335,7 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
           },
         });
 
-        navigation.navigate('GistDetail', {gistId: result.id});
+        navigation.navigate('GistDetail', { gistId: result.id });
         return;
       }
 
@@ -296,7 +352,7 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
         ),
       });
 
-      navigation.navigate('GistDetail', {gistId: result.id});
+      navigation.navigate('GistDetail', { gistId: result.id });
     } catch {
       Alert.alert(t('editor.saveErrorTitle'), t('editor.saveErrorDescription'));
     }
@@ -342,13 +398,27 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
     <AppScreen>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.keyboard}>
+        style={styles.keyboard}
+      >
         <View style={styles.container}>
           <ScrollView
             contentContainerStyle={styles.content}
             keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}>
-            <AppPageHeader title={isEditMode ? t('editor.editTitle') : t('editor.createTitle')} />
+            showsVerticalScrollIndicator={false}
+          >
+            <AppPageHeader
+              eyebrow={
+                isEditMode ? t('editor.editEyebrow') : t('editor.createEyebrow')
+              }
+              title={
+                isEditMode ? t('editor.editTitle') : t('editor.createTitle')
+              }
+              subtitle={
+                isEditMode
+                  ? t('editor.editSubtitle')
+                  : t('editor.createSubtitle')
+              }
+            />
 
             <View style={styles.summaryRow}>
               <View style={styles.summaryPill}>
@@ -362,7 +432,9 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
             </View>
 
             <AppCard>
-              <Text style={styles.sectionTitle}>{t('editor.detailsTitle')}</Text>
+              <Text style={styles.sectionTitle}>
+                {t('editor.detailsTitle')}
+              </Text>
               <TextInput
                 accessibilityLabel="Gist description"
                 onChangeText={setDescription}
@@ -381,9 +453,11 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
               </View>
 
               {isEditMode ? (
-                <Text style={styles.helperText}>{t('editor.visibilityLocked')}</Text>
+                <Text style={styles.helperText}>
+                  {t('editor.visibilityLocked')}
+                </Text>
               ) : (
-              <View style={styles.visibilityButtons}>
+                <View style={styles.visibilityButtons}>
                   <AppButton
                     fullWidth={false}
                     label={t('common.public')}
@@ -417,7 +491,8 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
               contentContainerStyle={styles.fileTabsContent}
               horizontal
               showsHorizontalScrollIndicator={false}
-              style={styles.fileTabsScroll}>
+              style={styles.fileTabsScroll}
+            >
               {files.map((file, index) => {
                 const isActive = file.id === currentFile?.id;
                 const label = getDraftFileLabel(file, index, t);
@@ -426,14 +501,20 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
                   <Pressable
                     key={file.id}
                     accessibilityRole="tab"
-                    accessibilityState={isActive ? {selected: true} : {}}
+                    accessibilityState={isActive ? { selected: true } : {}}
                     onPress={() => setActiveFileId(file.id)}
-                    style={({pressed}) => [
+                    style={({ pressed }) => [
                       styles.fileTab,
                       isActive ? styles.fileTabActive : null,
                       pressed ? styles.fileTabPressed : null,
-                    ]}>
-                    <Text style={[styles.fileTabLabel, isActive ? styles.fileTabLabelActive : null]}>
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.fileTabLabel,
+                        isActive ? styles.fileTabLabelActive : null,
+                      ]}
+                    >
                       {label}
                     </Text>
                   </Pressable>
@@ -446,11 +527,13 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
                 <View style={styles.fileHeader}>
                   <View style={styles.fileHeaderText}>
                     <Text style={styles.fileTitle}>
-                      {t('editor.fileTitle', {index: currentFileIndex + 1})}
+                      {t('editor.fileTitle', { index: currentFileIndex + 1 })}
                     </Text>
                     <Text style={styles.fileMeta}>
                       {currentFile.originalFilename
-                        ? t('editor.editingFile', {filename: currentFile.originalFilename})
+                        ? t('editor.editingFile', {
+                            filename: currentFile.originalFilename,
+                          })
                         : t('editor.newFile')}
                     </Text>
                   </View>
@@ -466,11 +549,17 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
 
                 <View style={styles.editorMetaRow}>
                   <View style={styles.editorMetaPill}>
-                    <Text style={styles.editorMetaPillText}>{getFileExtension(currentFile.filename)}</Text>
+                    <Text style={styles.editorMetaPillText}>
+                      {getFileExtension(currentFile.filename)}
+                    </Text>
                   </View>
-                  {currentFile.originalFilename && currentFile.originalFilename !== currentFile.filename.trim() ? (
+                  {currentFile.originalFilename &&
+                  currentFile.originalFilename !==
+                    currentFile.filename.trim() ? (
                     <View style={styles.editorMetaPill}>
-                      <Text style={styles.editorMetaPillText}>{currentFile.originalFilename}</Text>
+                      <Text style={styles.editorMetaPillText}>
+                        {currentFile.originalFilename}
+                      </Text>
                     </View>
                   ) : null}
                 </View>
@@ -479,7 +568,9 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
                   accessibilityLabel={t('editor.currentFilenameLabel')}
                   autoCapitalize="none"
                   autoCorrect={false}
-                  onChangeText={value => updateFile(currentFile.id, {filename: value})}
+                  onChangeText={value =>
+                    updateFile(currentFile.id, { filename: value })
+                  }
                   placeholder={t('editor.filenamePlaceholder')}
                   placeholderTextColor={theme.colors.textSecondary}
                   style={styles.filenameInput}
@@ -490,7 +581,9 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
                   autoCapitalize="none"
                   autoCorrect={false}
                   multiline
-                  onChangeText={value => updateFile(currentFile.id, {content: value})}
+                  onChangeText={value =>
+                    updateFile(currentFile.id, { content: value })
+                  }
                   placeholder={t('editor.contentPlaceholder')}
                   placeholderTextColor={theme.colors.textSecondary}
                   spellCheck={false}
@@ -504,8 +597,12 @@ export function GistEditorScreen({navigation, route}: RootStackScreenProps<'Gist
 
           <View style={styles.footer}>
             <AppButton
-              label={isEditMode ? t('editor.saveChanges') : t('gist.createGist')}
-              loading={createGistMutation.isPending || editGistMutation.isPending}
+              label={
+                isEditMode ? t('editor.saveChanges') : t('gist.createGist')
+              }
+              loading={
+                createGistMutation.isPending || editGistMutation.isPending
+              }
               onPress={() => {
                 handleSubmit().catch(() => {});
               }}
@@ -690,7 +787,11 @@ const getStyles = createThemedStyles(theme =>
       borderColor: theme.colors.border,
       backgroundColor: theme.colors.codeBg,
       color: theme.colors.codeText,
-      fontFamily: Platform.select({ios: 'Menlo', android: 'monospace', default: 'monospace'}),
+      fontFamily: Platform.select({
+        ios: 'Menlo',
+        android: 'monospace',
+        default: 'monospace',
+      }),
       fontSize: 14,
       lineHeight: 20,
       paddingHorizontal: theme.spacing.md,

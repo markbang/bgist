@@ -1,7 +1,7 @@
 import React from 'react';
-import {Animated, Pressable, StyleSheet, Text, View} from 'react-native';
-import {createThemedStyles} from '../../app/theme/tokens';
-import {useAppTheme} from '../../app/theme/context';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { createThemedStyles } from '../../app/theme/tokens';
+import { useAppTheme } from '../../app/theme/context';
 
 interface AppSegment<T extends string> {
   label: string;
@@ -21,13 +21,17 @@ export function AppSegmentedControl<T extends string>({
   onChange,
   disabled = false,
 }: AppSegmentedControlProps<T>) {
-  const {theme, themeName, themePreset} = useAppTheme();
+  const { theme, themeName, themePreset } = useAppTheme();
   const styles = getStyles(themeName, themePreset);
   const thumbTranslateX = React.useRef(new Animated.Value(0)).current;
   const thumbOpacity = React.useRef(new Animated.Value(0)).current;
   const [containerWidth, setContainerWidth] = React.useState(0);
   const selectedIndex = React.useMemo(
-    () => Math.max(0, options.findIndex(segment => segment.value === value)),
+    () =>
+      Math.max(
+        0,
+        options.findIndex(segment => segment.value === value),
+      ),
     [options, value],
   );
   const segmentGap = theme.spacing.xs;
@@ -37,7 +41,9 @@ export function AppSegmentedControl<T extends string>({
     }
 
     return (
-      (containerWidth - theme.spacing.xs * 2 - segmentGap * Math.max(0, options.length - 1)) /
+      (containerWidth -
+        theme.spacing.xs * 2 -
+        segmentGap * Math.max(0, options.length - 1)) /
       options.length
     );
   }, [containerWidth, options.length, segmentGap, theme.spacing.xs]);
@@ -47,7 +53,8 @@ export function AppSegmentedControl<T extends string>({
       return;
     }
 
-    const targetX = theme.spacing.xs + selectedIndex * (segmentWidth + segmentGap);
+    const targetX =
+      theme.spacing.xs + selectedIndex * (segmentWidth + segmentGap);
     const animation = Animated.parallel([
       Animated.spring(thumbTranslateX, {
         toValue: targetX,
@@ -68,14 +75,22 @@ export function AppSegmentedControl<T extends string>({
     return () => {
       animation.stop();
     };
-  }, [segmentGap, segmentWidth, selectedIndex, theme.spacing.xs, thumbOpacity, thumbTranslateX]);
+  }, [
+    segmentGap,
+    segmentWidth,
+    selectedIndex,
+    theme.spacing.xs,
+    thumbOpacity,
+    thumbTranslateX,
+  ]);
 
   return (
     <View
       onLayout={event => {
         setContainerWidth(event.nativeEvent.layout.width);
       }}
-      style={[styles.container, disabled ? styles.containerDisabled : null]}>
+      style={[styles.container, disabled ? styles.containerDisabled : null]}
+    >
       {segmentWidth ? (
         <Animated.View
           pointerEvents="none"
@@ -84,7 +99,7 @@ export function AppSegmentedControl<T extends string>({
             {
               width: segmentWidth,
               opacity: thumbOpacity,
-              transform: [{translateX: thumbTranslateX}],
+              transform: [{ translateX: thumbTranslateX }],
             },
           ]}
         />
@@ -97,18 +112,23 @@ export function AppSegmentedControl<T extends string>({
             key={segment.value}
             accessibilityRole="button"
             accessibilityLabel={segment.label}
-            accessibilityState={{disabled, selected: isSelected}}
+            accessibilityState={{ disabled, selected: isSelected }}
             disabled={disabled}
             onPress={() => {
               if (!isSelected) {
                 onChange(segment.value);
               }
             }}
-            style={({pressed}) => [
+            style={({ pressed }) => [
               styles.segment,
-              pressed && !disabled && !isSelected ? styles.segmentPressed : null,
-            ]}>
-            <Text style={[styles.label, isSelected ? styles.labelSelected : null]}>
+              pressed && !disabled && !isSelected
+                ? styles.segmentPressed
+                : null,
+            ]}
+          >
+            <Text
+              style={[styles.label, isSelected ? styles.labelSelected : null]}
+            >
               {segment.label}
             </Text>
           </Pressable>
@@ -129,7 +149,7 @@ const getStyles = createThemedStyles(theme =>
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surfaceMuted,
+      backgroundColor: theme.colors.surface,
       padding: theme.spacing.xs - 1,
       overflow: 'hidden',
     },
@@ -143,16 +163,18 @@ const getStyles = createThemedStyles(theme =>
       left: 0,
       borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
-      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
       ...theme.shadow.card,
       shadowOpacity: themeNameShadowOpacity(theme.colors.canvas),
-      shadowRadius: 10,
+      shadowRadius: 12,
       elevation: 2,
     },
     segment: {
       zIndex: 1,
       flex: 1,
-      minHeight: 40,
+      minHeight: 38,
       borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       alignItems: 'center',
@@ -166,7 +188,7 @@ const getStyles = createThemedStyles(theme =>
     label: {
       color: theme.colors.textSecondary,
       fontSize: 13,
-      fontWeight: '600',
+      fontWeight: '700',
     },
     labelSelected: {
       color: theme.colors.textPrimary,

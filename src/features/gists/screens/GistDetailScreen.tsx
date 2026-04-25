@@ -11,28 +11,28 @@ import {
   View,
 } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
-import Svg, {Circle, Path} from 'react-native-svg';
-import {WebView} from 'react-native-webview';
-import {useQuery} from '@tanstack/react-query';
-import {useAppTheme} from '../../../app/theme/context';
-import {createThemedStyles} from '../../../app/theme/tokens';
-import type {RootStackScreenProps} from '../../../app/navigation/types';
-import {useSession} from '../../auth/session/SessionProvider';
-import {AppActionSheet} from '../../../shared/ui/AppActionSheet';
-import {AppBadge} from '../../../shared/ui/AppBadge';
-import {AppBanner} from '../../../shared/ui/AppBanner';
-import {AppButton} from '../../../shared/ui/AppButton';
-import {AppCard} from '../../../shared/ui/AppCard';
-import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
-import {AppErrorState} from '../../../shared/ui/AppErrorState';
-import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
-import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
-import {AppScreen} from '../../../shared/ui/AppScreen';
-import {useI18n} from '../../../i18n/context';
-import {useGistDetail} from '../hooks/useGistDetail';
-import {useGistMutations} from '../hooks/useGistMutations';
-import {renderCodePreviewDocument} from '../utils/renderCodePreview';
-import {buildRichTextPreviewDocument} from '../utils/renderRichTextPreview';
+import Svg, { Circle, Path } from 'react-native-svg';
+import { WebView } from 'react-native-webview';
+import { useQuery } from '@tanstack/react-query';
+import { useAppTheme } from '../../../app/theme/context';
+import { createThemedStyles } from '../../../app/theme/tokens';
+import type { RootStackScreenProps } from '../../../app/navigation/types';
+import { useSession } from '../../auth/session/SessionProvider';
+import { AppActionSheet } from '../../../shared/ui/AppActionSheet';
+import { AppBadge } from '../../../shared/ui/AppBadge';
+import { AppBanner } from '../../../shared/ui/AppBanner';
+import { AppButton } from '../../../shared/ui/AppButton';
+import { AppCard } from '../../../shared/ui/AppCard';
+import { AppEmptyState } from '../../../shared/ui/AppEmptyState';
+import { AppErrorState } from '../../../shared/ui/AppErrorState';
+import { AppLoadingState } from '../../../shared/ui/AppLoadingState';
+import { AppPageHeader } from '../../../shared/ui/AppPageHeader';
+import { AppScreen } from '../../../shared/ui/AppScreen';
+import { useI18n } from '../../../i18n/context';
+import { useGistDetail } from '../hooks/useGistDetail';
+import { useGistMutations } from '../hooks/useGistMutations';
+import { renderCodePreviewDocument } from '../utils/renderCodePreview';
+import { buildRichTextPreviewDocument } from '../utils/renderRichTextPreview';
 
 function formatDate(value: string, locale: string, fallback: string) {
   const date = new Date(value);
@@ -54,7 +54,9 @@ function formatCompactCount(value: number | null | undefined) {
   }
 
   if (value >= 1000) {
-    return `${(value / 1000).toFixed(value >= 10000 ? 0 : 1).replace(/\.0$/, '')}k`;
+    return `${(value / 1000)
+      .toFixed(value >= 10000 ? 0 : 1)
+      .replace(/\.0$/, '')}k`;
   }
 
   return String(value);
@@ -70,7 +72,10 @@ function stripMarkup(value: string) {
 function estimateDocumentHeight(sourceText?: string) {
   const normalized = (sourceText ?? '').trim();
   const lineCount = normalized.length > 0 ? normalized.split('\n').length : 1;
-  const characterWeight = Math.min(Math.ceil(stripMarkup(normalized).length / 72), 10);
+  const characterWeight = Math.min(
+    Math.ceil(stripMarkup(normalized).length / 72),
+    10,
+  );
   const estimatedLines = Math.max(lineCount, characterWeight);
 
   return Math.min(Math.max(72, estimatedLines * 22 + 18), 720);
@@ -126,16 +131,44 @@ function GistActionGlyph({
           <Circle cx="7" cy="6" r="2.4" stroke={color} strokeWidth="1.8" />
           <Circle cx="17" cy="6" r="2.4" stroke={color} strokeWidth="1.8" />
           <Circle cx="12" cy="18" r="2.4" stroke={color} strokeWidth="1.8" />
-          <Path d="M7 8.6V10.2C7 11.3 7.9 12.2 9 12.2H12C13.1 12.2 14 11.3 14 10.2V8.6" stroke={color} strokeLinecap="round" strokeWidth="1.8" />
-          <Path d="M12 15.6V12.2" stroke={color} strokeLinecap="round" strokeWidth="1.8" />
+          <Path
+            d="M7 8.6V10.2C7 11.3 7.9 12.2 9 12.2H12C13.1 12.2 14 11.3 14 10.2V8.6"
+            stroke={color}
+            strokeLinecap="round"
+            strokeWidth="1.8"
+          />
+          <Path
+            d="M12 15.6V12.2"
+            stroke={color}
+            strokeLinecap="round"
+            strokeWidth="1.8"
+          />
         </Svg>
       );
     case 'history':
       return (
         <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <Path d="M4.5 12A7.5 7.5 0 1 0 7 6.4" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
-          <Path d="M4.5 4.75V9H8.75" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
-          <Path d="M12 8.5V12L14.75 13.7" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+          <Path
+            d="M4.5 12A7.5 7.5 0 1 0 7 6.4"
+            stroke={color}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.8"
+          />
+          <Path
+            d="M4.5 4.75V9H8.75"
+            stroke={color}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.8"
+          />
+          <Path
+            d="M12 8.5V12L14.75 13.7"
+            stroke={color}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.8"
+          />
         </Svg>
       );
     case 'comments':
@@ -147,7 +180,12 @@ function GistActionGlyph({
             strokeLinejoin="round"
             strokeWidth="1.8"
           />
-          <Path d="M8 10H16M8 13.5H13" stroke={color} strokeLinecap="round" strokeWidth="1.8" />
+          <Path
+            d="M8 10H16M8 13.5H13"
+            stroke={color}
+            strokeLinecap="round"
+            strokeWidth="1.8"
+          />
         </Svg>
       );
     case 'more':
@@ -182,23 +220,24 @@ function GistActionButton({
   onPress: () => void;
   testID?: string;
 }) {
-  const {themeName} = useAppTheme();
+  const { themeName } = useAppTheme();
   const styles = getStyles(themeName);
 
   return (
     <Pressable
       accessibilityLabel={label}
       accessibilityRole="button"
-      accessibilityState={{disabled, selected: active, busy: loading}}
+      accessibilityState={{ disabled, selected: active, busy: loading }}
       disabled={disabled}
       onPress={onPress}
-      style={({pressed}) => [
+      style={({ pressed }) => [
         styles.actionIconButton,
         active ? styles.actionIconButtonActive : null,
         disabled ? styles.actionIconButtonDisabled : null,
         pressed && !disabled ? styles.actionIconButtonPressed : null,
       ]}
-      testID={testID}>
+      testID={testID}
+    >
       <View style={styles.actionIconRow}>
         <View style={styles.actionIconShell}>
           {loading ? <ActivityIndicator size="small" /> : icon}
@@ -206,8 +245,12 @@ function GistActionButton({
         {count ? (
           <Text
             numberOfLines={1}
-            style={[styles.actionIconCount, active ? styles.actionIconCountActive : null]}
-            testID={testID ? `${testID}-count` : undefined}>
+            style={[
+              styles.actionIconCount,
+              active ? styles.actionIconCountActive : null,
+            ]}
+            testID={testID ? `${testID}-count` : undefined}
+          >
             {count}
           </Text>
         ) : null}
@@ -227,17 +270,22 @@ function AutoHeightDocument({
   sourceText?: string;
   testID: string;
 }) {
-  const {themeName} = useAppTheme();
+  const { themeName } = useAppTheme();
   const styles = getStyles(themeName);
-  const [height, setHeight] = React.useState(() => estimateDocumentHeight(sourceText));
+  const [height, setHeight] = React.useState(() =>
+    estimateDocumentHeight(sourceText),
+  );
 
-  const handleMessage = React.useCallback((event: {nativeEvent: {data: string}}) => {
-    const nextHeight = Number.parseInt(event.nativeEvent.data, 10);
+  const handleMessage = React.useCallback(
+    (event: { nativeEvent: { data: string } }) => {
+      const nextHeight = Number.parseInt(event.nativeEvent.data, 10);
 
-    if (Number.isFinite(nextHeight) && nextHeight > 0) {
-      setHeight(Math.max(120, nextHeight));
-    }
-  }, []);
+      if (Number.isFinite(nextHeight) && nextHeight > 0) {
+        setHeight(Math.max(120, nextHeight));
+      }
+    },
+    [],
+  );
 
   return (
     <View style={styles.filePreviewWebViewShell} testID={`${testID}-shell`}>
@@ -247,8 +295,8 @@ function AutoHeightDocument({
         onMessage={handleMessage}
         originWhitelist={['*']}
         scrollEnabled={false}
-        source={{html: content, baseUrl}}
-        style={[styles.filePreviewWebView, {height}]}
+        source={{ html: content, baseUrl }}
+        style={[styles.filePreviewWebView, { height }]}
         testID={testID}
       />
     </View>
@@ -274,7 +322,7 @@ function FilePreviewCard({
   onPress: () => void;
   openLabel: string;
 }) {
-  const {theme, themeName, isDark} = useAppTheme();
+  const { theme, themeName, isDark } = useAppTheme();
   const styles = getStyles(themeName);
   const richPreviewDocument = React.useMemo(
     () =>
@@ -310,15 +358,23 @@ function FilePreviewCard({
   });
   const previewDocument = richPreviewDocument ?? codePreviewQuery.data ?? null;
   const previewFallbackText =
-    typeof content === 'string' && content.trim().length > 0 ? content : emptyPreviewText;
+    typeof content === 'string' && content.trim().length > 0
+      ? content
+      : emptyPreviewText;
 
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={filename} onPress={onPress}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={filename}
+      onPress={onPress}
+    >
       <AppCard style={styles.fileCard}>
         <View style={styles.fileHeader}>
           <View style={styles.fileHeaderText}>
             <Text style={styles.fileName}>{filename}</Text>
-            {language ? <Text style={styles.fileLanguage}>{language}</Text> : null}
+            {language ? (
+              <Text style={styles.fileLanguage}>{language}</Text>
+            ) : null}
           </View>
           <Text style={styles.fileLink}>{openLabel}</Text>
         </View>
@@ -350,13 +406,17 @@ function CommentRow({
   dateLabel: string;
   onPressAuthor?: () => void;
 }) {
-  const {themeName} = useAppTheme();
+  const { themeName } = useAppTheme();
   const styles = getStyles(themeName);
 
   return (
     <AppCard>
       {onPressAuthor ? (
-        <Pressable accessibilityRole="button" accessibilityLabel={`Open ${author} profile`} onPress={onPressAuthor}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Open ${author} profile`}
+          onPress={onPressAuthor}
+        >
           <Text style={styles.commentAuthor}>@{author}</Text>
         </Pressable>
       ) : (
@@ -368,17 +428,21 @@ function CommentRow({
   );
 }
 
-export function GistDetailScreen({navigation, route}: RootStackScreenProps<'GistDetail'>) {
-  const {theme, themeName} = useAppTheme();
-  const {language, t} = useI18n();
+export function GistDetailScreen({
+  navigation,
+  route,
+}: RootStackScreenProps<'GistDetail'>) {
+  const { theme, themeName } = useAppTheme();
+  const { language, t } = useI18n();
   const styles = getStyles(themeName);
   const locale = language === 'zh' ? 'zh-CN' : 'en-US';
-  const {gistId} = route.params;
-  const {user} = useSession();
+  const { gistId } = route.params;
+  const { user } = useSession();
   const [commentsEnabled, setCommentsEnabled] = React.useState(false);
-  const {gistQuery, supportQuery, commentsQuery, gist, support, comments} = useGistDetail(gistId, {
-    loadComments: commentsEnabled,
-  });
+  const { gistQuery, supportQuery, commentsQuery, gist, support, comments } =
+    useGistDetail(gistId, {
+      loadComments: commentsEnabled,
+    });
   const {
     addCommentMutation,
     deleteGistMutation,
@@ -396,7 +460,9 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
   const starredErrorMessage =
     support?.starredError ??
     (supportQuery.isError ? 'Star status is unavailable right now.' : null);
-  const commentsErrorMessage = commentsQuery.isError ? t('gistDetail.commentsUnavailable') : null;
+  const commentsErrorMessage = commentsQuery.isError
+    ? t('gistDetail.commentsUnavailable')
+    : null;
   const canToggleStar = typeof support?.starred === 'boolean';
   const gistUrl = gist?.html_url ?? '';
 
@@ -406,9 +472,12 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
         return;
       }
 
-      await Share.share({message: gistUrl});
+      await Share.share({ message: gistUrl });
     } catch {
-      Alert.alert(t('gistDetail.shareErrorTitle'), t('gistDetail.shareErrorDescription'));
+      Alert.alert(
+        t('gistDetail.shareErrorTitle'),
+        t('gistDetail.shareErrorDescription'),
+      );
     }
   }, [gistUrl, t]);
 
@@ -428,13 +497,16 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
       }
 
       if (support.starred) {
-        await unstarGistMutation.mutateAsync({gistId});
+        await unstarGistMutation.mutateAsync({ gistId });
         return;
       }
 
-      await starGistMutation.mutateAsync({gistId});
+      await starGistMutation.mutateAsync({ gistId });
     } catch {
-      Alert.alert(t('gistDetail.starErrorTitle'), t('gistDetail.shareErrorDescription'));
+      Alert.alert(
+        t('gistDetail.starErrorTitle'),
+        t('gistDetail.shareErrorDescription'),
+      );
     }
   }, [canToggleStar, gistId, starGistMutation, support, t, unstarGistMutation]);
 
@@ -446,33 +518,43 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
         return;
       }
 
-      await addCommentMutation.mutateAsync({gistId, body: trimmed});
+      await addCommentMutation.mutateAsync({ gistId, body: trimmed });
       setCommentBody('');
       setCommentsEnabled(true);
       commentsQuery.refetch();
     } catch {
-      Alert.alert(t('gistDetail.commentErrorTitle'), t('gistDetail.shareErrorDescription'));
+      Alert.alert(
+        t('gistDetail.commentErrorTitle'),
+        t('gistDetail.shareErrorDescription'),
+      );
     }
   }, [addCommentMutation, commentBody, commentsQuery, gistId, t]);
 
   const handleDelete = React.useCallback(() => {
-    Alert.alert(t('gistDetail.deleteTitle'), t('gistDetail.deleteDescription'), [
-      {text: t('common.cancel'), style: 'cancel'},
-      {
-        text: t('common.delete'),
-        style: 'destructive',
-        onPress: () => {
-          (async () => {
-            try {
-              await deleteGistMutation.mutateAsync({gistId});
-              navigation.goBack();
-            } catch {
-              Alert.alert(t('gistDetail.deleteErrorTitle'), t('gistDetail.shareErrorDescription'));
-            }
-          })().catch(() => {});
+    Alert.alert(
+      t('gistDetail.deleteTitle'),
+      t('gistDetail.deleteDescription'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: () => {
+            (async () => {
+              try {
+                await deleteGistMutation.mutateAsync({ gistId });
+                navigation.goBack();
+              } catch {
+                Alert.alert(
+                  t('gistDetail.deleteErrorTitle'),
+                  t('gistDetail.shareErrorDescription'),
+                );
+              }
+            })().catch(() => {});
+          },
         },
-      },
-    ]);
+      ],
+    );
   }, [deleteGistMutation, gistId, navigation, t]);
 
   if (gistQuery.isLoading) {
@@ -507,8 +589,8 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
   const starActionLabel = !canToggleStar
     ? t('gistDetail.starUnavailable')
     : support?.starred
-      ? t('gistDetail.unstar')
-      : t('common.star');
+    ? t('gistDetail.unstar')
+    : t('common.star');
 
   const sheetActions = [
     {
@@ -543,8 +625,12 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
 
   return (
     <AppScreen>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
         <AppPageHeader
+          eyebrow={t('gistDetail.eyebrow')}
           accessory={
             <AppBadge
               label={gist.public ? t('common.public') : t('common.secret')}
@@ -552,6 +638,7 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
             />
           }
           title={gist.description?.trim() || t('gistDetail.titleFallback')}
+          subtitle={t('gistDetail.subtitle')}
         />
 
         <AppCard style={styles.metaCard}>
@@ -561,7 +648,10 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={`Open ${ownerLogin} profile`}
-                  onPress={() => navigation.navigate('UserProfile', {username: ownerLogin})}>
+                  onPress={() =>
+                    navigation.navigate('UserProfile', { username: ownerLogin })
+                  }
+                >
                   <Text style={styles.owner}>@{ownerLogin}</Text>
                 </Pressable>
               ) : (
@@ -569,10 +659,16 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
               )}
               <Text style={styles.metaText}>
                 {t('gistDetail.metaSummary', {
-                  date: formatDate(gist.updated_at, locale, t('gistDetail.unknownUpdate')),
+                  date: formatDate(
+                    gist.updated_at,
+                    locale,
+                    t('gistDetail.unknownUpdate'),
+                  ),
                   count: files.length,
                   fileLabel:
-                    files.length === 1 ? t('gistDetail.fileSingular') : t('gistDetail.filePlural'),
+                    files.length === 1
+                      ? t('gistDetail.fileSingular')
+                      : t('gistDetail.filePlural'),
                 })}
               </Text>
             </View>
@@ -595,7 +691,8 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
             contentContainerStyle={styles.actions}
             horizontal
             nestedScrollEnabled
-            showsHorizontalScrollIndicator={false}>
+            showsHorizontalScrollIndicator={false}
+          >
             <GistActionButton
               active={support?.starred === true}
               count={starCountLabel}
@@ -603,13 +700,19 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
               icon={
                 <GistActionGlyph
                   color={
-                    support?.starred === true ? theme.colors.accentContrast : theme.colors.textPrimary
+                    support?.starred === true
+                      ? theme.colors.accentContrast
+                      : theme.colors.textPrimary
                   }
                   name="star"
                 />
               }
               label={starActionLabel}
-              loading={isSupportLoading || starGistMutation.isPending || unstarGistMutation.isPending}
+              loading={
+                isSupportLoading ||
+                starGistMutation.isPending ||
+                unstarGistMutation.isPending
+              }
               onPress={() => {
                 handleToggleStar().catch(() => {});
               }}
@@ -617,16 +720,23 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
             />
             <GistActionButton
               count={forkCountLabel}
-              icon={<GistActionGlyph color={theme.colors.textPrimary} name="fork" />}
+              icon={
+                <GistActionGlyph color={theme.colors.textPrimary} name="fork" />
+              }
               label={t('gistDetail.fork')}
               loading={forkGistMutation.isPending}
               onPress={() => {
                 (async () => {
                   try {
-                    const nextGist = await forkGistMutation.mutateAsync({gistId});
-                    navigation.navigate('GistDetail', {gistId: nextGist.id});
+                    const nextGist = await forkGistMutation.mutateAsync({
+                      gistId,
+                    });
+                    navigation.navigate('GistDetail', { gistId: nextGist.id });
                   } catch {
-                    Alert.alert(t('gistDetail.forkErrorTitle'), t('gistDetail.shareErrorDescription'));
+                    Alert.alert(
+                      t('gistDetail.forkErrorTitle'),
+                      t('gistDetail.shareErrorDescription'),
+                    );
                   }
                 })().catch(() => {});
               }}
@@ -634,27 +744,41 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
             />
             <GistActionButton
               count={historyCountLabel}
-              icon={<GistActionGlyph color={theme.colors.textPrimary} name="history" />}
+              icon={
+                <GistActionGlyph
+                  color={theme.colors.textPrimary}
+                  name="history"
+                />
+              }
               label={t('gistDetail.history')}
-              onPress={() => navigation.navigate('GistHistory', {gistId})}
+              onPress={() => navigation.navigate('GistHistory', { gistId })}
               testID="gist-action-history"
             />
             <GistActionButton
               count={commentsCountLabel}
-              icon={<GistActionGlyph color={theme.colors.textPrimary} name="comments" />}
+              icon={
+                <GistActionGlyph
+                  color={theme.colors.textPrimary}
+                  name="comments"
+                />
+              }
               label={t('common.comments')}
               onPress={() => setCommentsEnabled(true)}
               testID="gist-action-comments"
             />
             <GistActionButton
-              icon={<GistActionGlyph color={theme.colors.textPrimary} name="more" />}
+              icon={
+                <GistActionGlyph color={theme.colors.textPrimary} name="more" />
+              }
               label={t('gistDetail.more')}
               onPress={() => setSheetVisible(true)}
               testID="gist-action-more"
             />
           </ScrollView>
 
-          {starredErrorMessage ? <AppBanner message={starredErrorMessage} tone="warning" /> : null}
+          {starredErrorMessage ? (
+            <AppBanner message={starredErrorMessage} tone="warning" />
+          ) : null}
         </AppCard>
 
         <View style={styles.section}>
@@ -688,7 +812,9 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('gistDetail.commentsTitle')}</Text>
+          <Text style={styles.sectionTitle}>
+            {t('gistDetail.commentsTitle')}
+          </Text>
           {commentsErrorMessage ? (
             <View style={styles.commentsError}>
               <AppBanner message={commentsErrorMessage} tone="warning" />
@@ -727,10 +853,17 @@ export function GistDetailScreen({navigation, route}: RootStackScreenProps<'Gist
                   key={comment.id}
                   author={comment.user?.login ?? 'unknown'}
                   body={comment.body}
-                  dateLabel={formatDate(comment.created_at, locale, t('gistDetail.unknownUpdate'))}
+                  dateLabel={formatDate(
+                    comment.created_at,
+                    locale,
+                    t('gistDetail.unknownUpdate'),
+                  )}
                   onPressAuthor={
                     comment.user?.login
-                      ? () => navigation.navigate('UserProfile', {username: comment.user.login})
+                      ? () =>
+                          navigation.navigate('UserProfile', {
+                            username: comment.user.login,
+                          })
                       : undefined
                   }
                 />
@@ -854,7 +987,7 @@ const getStyles = createThemedStyles(theme =>
     },
     actionIconButtonPressed: {
       opacity: 0.9,
-      transform: [{scale: 0.98}],
+      transform: [{ scale: 0.98 }],
     },
     actionIconRow: {
       flexDirection: 'row',

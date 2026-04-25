@@ -1,7 +1,7 @@
 import React from 'react';
-import {StyleSheet, Text, View} from 'react-native';
-import {createThemedStyles} from '../../app/theme/tokens';
-import {useAppTheme} from '../../app/theme/context';
+import { StyleSheet, Text, View } from 'react-native';
+import { createThemedStyles } from '../../app/theme/tokens';
+import { useAppTheme } from '../../app/theme/context';
 
 type AppBadgeTone = 'public' | 'secret';
 
@@ -10,8 +10,8 @@ interface AppBadgeProps {
   tone?: AppBadgeTone;
 }
 
-export function AppBadge({label, tone = 'public'}: AppBadgeProps) {
-  const {theme, themeName} = useAppTheme();
+export function AppBadge({ label, tone = 'public' }: AppBadgeProps) {
+  const { theme, themeName } = useAppTheme();
   const styles = getStyles(themeName);
   const colors = {
     public: {
@@ -34,8 +34,9 @@ export function AppBadge({label, tone = 'public'}: AppBadgeProps) {
           backgroundColor: colors.backgroundColor,
           borderColor: colors.borderColor,
         },
-      ]}>
-      <Text style={[styles.label, {color: colors.textColor}]}>{label}</Text>
+      ]}
+    >
+      <Text style={[styles.label, { color: colors.textColor }]}>{label}</Text>
     </View>
   );
 }
@@ -46,13 +47,13 @@ const getStyles = createThemedStyles(() =>
       alignSelf: 'flex-start',
       borderRadius: 999,
       borderWidth: 1,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
+      paddingHorizontal: 9,
+      paddingVertical: 5,
     },
     label: {
-      fontSize: 12,
-      fontWeight: '700',
-      letterSpacing: 0.3,
+      fontSize: 11,
+      fontWeight: '800',
+      letterSpacing: 0,
       textTransform: 'uppercase',
     },
   }),

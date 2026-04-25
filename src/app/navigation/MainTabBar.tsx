@@ -1,11 +1,11 @@
 import React from 'react';
-import type {BottomTabBarProps} from '@react-navigation/bottom-tabs';
-import {Animated, Pressable, StyleSheet, View} from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {useAppTheme} from '../theme/context';
-import {createThemedStyles} from '../theme/tokens';
-import type {MainTabParamList} from './types';
-import {TabBarIcon, type AppTabGlyphName} from '../../components/TabIcons';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAppTheme } from '../theme/context';
+import { createThemedStyles } from '../theme/tokens';
+import type { MainTabParamList } from './types';
+import { TabBarIcon, type AppTabGlyphName } from '../../components/TabIcons';
 
 export type MainTabBarItemConfig = {
   label: string;
@@ -16,9 +16,14 @@ type MainTabBarProps = BottomTabBarProps & {
   config: Record<keyof MainTabParamList, MainTabBarItemConfig>;
 };
 
-export function MainTabBar({state, descriptors, navigation, config}: MainTabBarProps) {
+export function MainTabBar({
+  state,
+  descriptors,
+  navigation,
+  config,
+}: MainTabBarProps) {
   const insets = useSafeAreaInsets();
-  const {theme, themeName} = useAppTheme();
+  const { theme, themeName } = useAppTheme();
   const styles = getStyles(themeName);
 
   return (
@@ -29,7 +34,8 @@ export function MainTabBar({state, descriptors, navigation, config}: MainTabBarP
         {
           paddingBottom: Math.max(insets.bottom, theme.spacing.xs + 2),
         },
-      ]}>
+      ]}
+    >
       <View style={styles.inner} testID="main-tab-bar">
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
@@ -64,7 +70,10 @@ export function MainTabBar({state, descriptors, navigation, config}: MainTabBarP
               onLongPress={onLongPress}
               onPress={onPress}
               options={options}
-              testID={options?.tabBarButtonTestID ?? `main-tab-${route.name.toLowerCase()}`}
+              testID={
+                options?.tabBarButtonTestID ??
+                `main-tab-${route.name.toLowerCase()}`
+              }
             />
           );
         })}
@@ -90,7 +99,7 @@ function MainTabBarItem({
   options: BottomTabBarProps['descriptors'][string]['options'];
   testID: string;
 }) {
-  const {theme, themeName} = useAppTheme();
+  const { theme, themeName } = useAppTheme();
   const styles = getStyles(themeName);
   const progress = React.useRef(new Animated.Value(isFocused ? 1 : 0)).current;
 
@@ -110,7 +119,9 @@ function MainTabBarItem({
     };
   }, [isFocused, progress]);
 
-  const iconColor = isFocused ? theme.colors.accent : theme.colors.textSecondary;
+  const iconColor = isFocused
+    ? theme.colors.accent
+    : theme.colors.textSecondary;
   const iconAnimatedStyle = {
     transform: [
       {
@@ -157,14 +168,15 @@ function MainTabBarItem({
     <Pressable
       accessibilityLabel={options?.tabBarAccessibilityLabel ?? label}
       accessibilityRole="tab"
-      accessibilityState={isFocused ? {selected: true} : {}}
+      accessibilityState={isFocused ? { selected: true } : {}}
       onLongPress={onLongPress}
       onPress={onPress}
-      style={({pressed}) => [
+      style={({ pressed }) => [
         styles.item,
         pressed ? styles.itemPressed : null,
       ]}
-      testID={testID}>
+      testID={testID}
+    >
       <Animated.View
         pointerEvents="none"
         style={[styles.activeBackdrop, activeBackdropStyle]}
@@ -172,11 +184,15 @@ function MainTabBarItem({
       />
       <Animated.View
         style={[styles.iconWrap, iconAnimatedStyle]}
-        testID={`${testID}-icon-wrap`}>
-        <View
-          testID={`${testID}-icon-slot`}
-          style={styles.iconSlot}>
-          <TabBarIcon active={isFocused} color={iconColor} icon={icon} size={23} />
+        testID={`${testID}-icon-wrap`}
+      >
+        <View testID={`${testID}-icon-slot`} style={styles.iconSlot}>
+          <TabBarIcon
+            active={isFocused}
+            color={iconColor}
+            icon={icon}
+            size={23}
+          />
         </View>
       </Animated.View>
       <Animated.View
@@ -198,21 +214,21 @@ const getStyles = createThemedStyles(theme =>
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: theme.spacing.xs,
-      borderRadius: theme.radius.lg + 6,
+      borderRadius: theme.radius.lg,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
       backgroundColor: theme.colors.surface,
-      paddingHorizontal: theme.spacing.xs,
-      paddingTop: theme.spacing.xs,
-      paddingBottom: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.xs - 1,
+      paddingTop: theme.spacing.xs - 1,
+      paddingBottom: theme.spacing.xs - 1,
       ...theme.shadow.card,
     },
     item: {
       position: 'relative',
       flex: 1,
-      minHeight: 50,
-      borderRadius: theme.radius.lg,
+      minHeight: 48,
+      borderRadius: theme.radius.md,
       borderCurve: 'continuous',
       alignItems: 'center',
       justifyContent: 'center',
@@ -226,7 +242,7 @@ const getStyles = createThemedStyles(theme =>
     },
     activeBackdrop: {
       ...StyleSheet.absoluteFillObject,
-      borderRadius: theme.radius.lg,
+      borderRadius: theme.radius.md,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.accentSoft,
@@ -245,7 +261,7 @@ const getStyles = createThemedStyles(theme =>
     },
     indicator: {
       zIndex: 1,
-      width: 18,
+      width: 16,
       height: 3,
       borderRadius: 999,
       backgroundColor: theme.colors.accent,

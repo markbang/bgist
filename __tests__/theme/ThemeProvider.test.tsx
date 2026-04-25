@@ -1,13 +1,23 @@
 import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ReactNative from 'react-native';
-import {fireEvent, render, screen, waitFor} from '@testing-library/react-native';
-import {ThemeProvider, useAppTheme, useThemePreference} from '../../src/app/theme/context';
-import {createThemedStyles} from '../../src/app/theme/tokens';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
+import {
+  ThemeProvider,
+  useAppTheme,
+  useThemePreference,
+} from '../../src/app/theme/context';
+import { createThemedStyles } from '../../src/app/theme/tokens';
 
 function ThemeProbe() {
   const theme = useAppTheme();
-  const {colorMode, preset, resolvedScheme, setColorMode, setPreset} = useThemePreference();
+  const { colorMode, preset, resolvedScheme, setColorMode, setPreset } =
+    useThemePreference();
 
   return (
     <>
@@ -15,19 +25,22 @@ function ThemeProbe() {
       <ReactNative.Pressable
         accessibilityRole="button"
         accessibilityLabel="set-dark"
-        onPress={() => setColorMode('dark')}>
+        onPress={() => setColorMode('dark')}
+      >
         <ReactNative.Text>Set dark</ReactNative.Text>
       </ReactNative.Pressable>
       <ReactNative.Pressable
         accessibilityRole="button"
         accessibilityLabel="set-light"
-        onPress={() => setColorMode('light')}>
+        onPress={() => setColorMode('light')}
+      >
         <ReactNative.Text>Set light</ReactNative.Text>
       </ReactNative.Pressable>
       <ReactNative.Pressable
         accessibilityRole="button"
         accessibilityLabel="set-ocean"
-        onPress={() => setPreset('ocean')}>
+        onPress={() => setPreset('ocean')}
+      >
         <ReactNative.Text>Set ocean</ReactNative.Text>
       </ReactNative.Pressable>
     </>
@@ -45,11 +58,13 @@ const getStyledProbeStyles = createThemedStyles(theme =>
 );
 
 function ThemeStyleProbe() {
-  const {themeName} = useAppTheme();
+  const { themeName } = useAppTheme();
   const styles = getStyledProbeStyles(themeName);
   const resolved = ReactNative.StyleSheet.flatten(styles.box);
 
-  return <ReactNative.Text>{`styled:${resolved.backgroundColor}:${resolved.borderColor}`}</ReactNative.Text>;
+  return (
+    <ReactNative.Text>{`styled:${resolved.backgroundColor}:${resolved.borderColor}`}</ReactNative.Text>
+  );
 }
 
 afterEach(() => {
@@ -66,7 +81,7 @@ test('persists the selected appearance mode and resolves the active theme', asyn
     .mockImplementation(jest.fn());
   jest
     .spyOn(ReactNative.Appearance, 'addChangeListener')
-    .mockReturnValue({remove: jest.fn()} as never);
+    .mockReturnValue({ remove: jest.fn() } as never);
 
   render(
     <ThemeProvider>
@@ -76,25 +91,25 @@ test('persists the selected appearance mode and resolves the active theme', asyn
   );
 
   await waitFor(() => {
-    expect(screen.getByText('system:default:dark:#0b1220')).toBeTruthy();
-    expect(screen.getByText('styled:#172032:#263349')).toBeTruthy();
+    expect(screen.getByText('system:default:dark:#090e18')).toBeTruthy();
+    expect(screen.getByText('styled:#151f30:#263245')).toBeTruthy();
   });
 
-  fireEvent.press(screen.getByRole('button', {name: 'set-light'}));
+  fireEvent.press(screen.getByRole('button', { name: 'set-light' }));
 
   await waitFor(() => {
-    expect(screen.getByText('light:default:light:#f5f7fb')).toBeTruthy();
-    expect(screen.getByText('styled:#eef2f8:#d5ddeb')).toBeTruthy();
+    expect(screen.getByText('light:default:light:#f7f8fb')).toBeTruthy();
+    expect(screen.getByText('styled:#f0f3f8:#d9e0ea')).toBeTruthy();
   });
 
-  fireEvent.press(screen.getByRole('button', {name: 'set-dark'}));
+  fireEvent.press(screen.getByRole('button', { name: 'set-dark' }));
 
   await waitFor(() => {
-    expect(screen.getByText('dark:default:dark:#0b1220')).toBeTruthy();
-    expect(screen.getByText('styled:#172032:#263349')).toBeTruthy();
+    expect(screen.getByText('dark:default:dark:#090e18')).toBeTruthy();
+    expect(screen.getByText('styled:#151f30:#263245')).toBeTruthy();
   });
 
-  fireEvent.press(screen.getByRole('button', {name: 'set-ocean'}));
+  fireEvent.press(screen.getByRole('button', { name: 'set-ocean' }));
 
   await waitFor(() => {
     expect(screen.getByText('dark:ocean:dark:#09161b')).toBeTruthy();

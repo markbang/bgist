@@ -1,22 +1,30 @@
 import React from 'react';
-import {Alert, FlatList, Linking, StyleSheet, Text, type ListRenderItem, View} from 'react-native';
-import {useQuery} from '@tanstack/react-query';
-import type {RootStackScreenProps} from '../../../app/navigation/types';
-import {useAppTheme} from '../../../app/theme/context';
-import {createThemedStyles} from '../../../app/theme/tokens';
-import {useI18n} from '../../../i18n/context';
-import {queryKeys} from '../../../shared/api/queryKeys';
-import {AppBadge} from '../../../shared/ui/AppBadge';
-import {AppButton} from '../../../shared/ui/AppButton';
-import {AppCard} from '../../../shared/ui/AppCard';
-import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
-import {AppErrorState} from '../../../shared/ui/AppErrorState';
-import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
-import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
-import {AppScreen} from '../../../shared/ui/AppScreen';
-import {appFeedListProps} from '../../../shared/ui/listPresets';
-import type {GistHistoryEntry} from '../../../types/gist';
-import {getGist} from '../api/gists';
+import {
+  Alert,
+  FlatList,
+  Linking,
+  StyleSheet,
+  Text,
+  type ListRenderItem,
+  View,
+} from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import type { RootStackScreenProps } from '../../../app/navigation/types';
+import { useAppTheme } from '../../../app/theme/context';
+import { createThemedStyles } from '../../../app/theme/tokens';
+import { useI18n } from '../../../i18n/context';
+import { queryKeys } from '../../../shared/api/queryKeys';
+import { AppBadge } from '../../../shared/ui/AppBadge';
+import { AppButton } from '../../../shared/ui/AppButton';
+import { AppCard } from '../../../shared/ui/AppCard';
+import { AppEmptyState } from '../../../shared/ui/AppEmptyState';
+import { AppErrorState } from '../../../shared/ui/AppErrorState';
+import { AppLoadingState } from '../../../shared/ui/AppLoadingState';
+import { AppPageHeader } from '../../../shared/ui/AppPageHeader';
+import { AppScreen } from '../../../shared/ui/AppScreen';
+import { appFeedListProps } from '../../../shared/ui/listPresets';
+import type { GistHistoryEntry } from '../../../types/gist';
+import { getGist } from '../api/gists';
 
 function formatRevisionDate(value: string, locale: string, fallback: string) {
   const date = new Date(value);
@@ -45,29 +53,41 @@ const HistoryCard = React.memo(function HistoryCard({
   onOpenRevision: (version: string) => void;
   t: (key: string, values?: Record<string, string | number>) => string;
 }) {
-  const {themeName} = useAppTheme();
+  const { themeName } = useAppTheme();
   const styles = getStyles(themeName);
-  const committedAt = formatRevisionDate(entry.committed_at, locale, t('history.unknownDate'));
+  const committedAt = formatRevisionDate(
+    entry.committed_at,
+    locale,
+    t('history.unknownDate'),
+  );
 
   return (
     <AppCard style={styles.historyCard}>
       <View style={styles.historyHeader}>
         <View style={styles.historyTitleWrap}>
           <AppBadge
-            label={t('history.revisionTitle', {version: entry.version.slice(0, 7)})}
+            label={t('history.revisionTitle', {
+              version: entry.version.slice(0, 7),
+            })}
             tone="secret"
           />
           <Text style={styles.historyMeta}>{committedAt}</Text>
         </View>
-        <Text style={styles.historyAuthor}>@{entry.user?.login ?? t('common.unknown')}</Text>
+        <Text style={styles.historyAuthor}>
+          @{entry.user?.login ?? t('common.unknown')}
+        </Text>
       </View>
 
       <View style={styles.changeRow}>
         <View style={styles.changePill}>
-          <Text style={styles.changePillText}>+{entry.change_status.additions}</Text>
+          <Text style={styles.changePillText}>
+            +{entry.change_status.additions}
+          </Text>
         </View>
         <View style={styles.changePill}>
-          <Text style={styles.changePillText}>-{entry.change_status.deletions}</Text>
+          <Text style={styles.changePillText}>
+            -{entry.change_status.deletions}
+          </Text>
         </View>
         <View style={styles.changePill}>
           <Text style={styles.changePillText}>{entry.change_status.total}</Text>
@@ -87,30 +107,39 @@ const HistoryCard = React.memo(function HistoryCard({
   );
 });
 
-export function GistHistoryScreen({route}: RootStackScreenProps<'GistHistory'>) {
-  const {themeName} = useAppTheme();
-  const {t, language} = useI18n();
+export function GistHistoryScreen({
+  route,
+}: RootStackScreenProps<'GistHistory'>) {
+  const { themeName } = useAppTheme();
+  const { t, language } = useI18n();
   const styles = getStyles(themeName);
   const locale = language === 'zh' ? 'zh-CN' : 'en-US';
-  const {gistId} = route.params;
+  const { gistId } = route.params;
   const historyQuery = useQuery({
     queryKey: queryKeys.gistHistory(gistId),
-    queryFn: ({signal}) => getGist(gistId, signal),
+    queryFn: ({ signal }) => getGist(gistId, signal),
   });
-  const gistUrl = historyQuery.data?.html_url ?? `https://gist.github.com/${gistId}`;
+  const gistUrl =
+    historyQuery.data?.html_url ?? `https://gist.github.com/${gistId}`;
   const revisionCount = historyQuery.data?.history.length ?? 0;
   const latestRevision = historyQuery.data?.history[0];
   const handleOpenRevision = React.useCallback(
     (version: string) => {
       Linking.openURL(`${gistUrl}/${version}`).catch(() => {
-        Alert.alert(t('history.openErrorTitle'), t('history.openErrorDescription'));
+        Alert.alert(
+          t('history.openErrorTitle'),
+          t('history.openErrorDescription'),
+        );
       });
     },
     [gistUrl, t],
   );
-  const keyExtractor = React.useCallback((item: GistHistoryEntry) => item.version, []);
+  const keyExtractor = React.useCallback(
+    (item: GistHistoryEntry) => item.version,
+    [],
+  );
   const renderItem = React.useCallback<ListRenderItem<GistHistoryEntry>>(
-    ({item}) => (
+    ({ item }) => (
       <HistoryCard
         entry={item}
         locale={locale}
@@ -170,7 +199,11 @@ export function GistHistoryScreen({route}: RootStackScreenProps<'GistHistory'>) 
     <AppScreen>
       <View style={styles.container}>
         <View style={styles.header}>
-          <AppPageHeader title={t('history.title')} />
+          <AppPageHeader
+            eyebrow={t('history.eyebrow')}
+            title={t('history.title')}
+            subtitle={t('history.subtitle')}
+          />
           <Text style={styles.subtitle}>{t('history.subtitle')}</Text>
           {historyQuery.data ? (
             <AppCard style={styles.summaryCard}>
@@ -178,17 +211,29 @@ export function GistHistoryScreen({route}: RootStackScreenProps<'GistHistory'>) 
               <View style={styles.summaryRow}>
                 <View style={styles.summaryPill}>
                   <Text style={styles.summaryPillValue}>{revisionCount}</Text>
-                  <Text style={styles.summaryPillText}>{t('history.title')}</Text>
+                  <Text style={styles.summaryPillText}>
+                    {t('history.title')}
+                  </Text>
                 </View>
                 <View style={styles.summaryPill}>
-                  <Text style={styles.summaryPillValue}>gist/{gistId.slice(0, 7)}</Text>
-                  <Text style={styles.summaryPillText}>{t('history.version')}</Text>
+                  <Text style={styles.summaryPillValue}>
+                    gist/{gistId.slice(0, 7)}
+                  </Text>
+                  <Text style={styles.summaryPillText}>
+                    {t('history.version')}
+                  </Text>
                 </View>
                 {latestRevision ? (
                   <View style={styles.summaryPill}>
-                    <Text style={styles.summaryPillValue}>@{latestRevision.user?.login ?? t('common.unknown')}</Text>
+                    <Text style={styles.summaryPillValue}>
+                      @{latestRevision.user?.login ?? t('common.unknown')}
+                    </Text>
                     <Text style={styles.summaryPillText}>
-                      {formatRevisionDate(latestRevision.committed_at, locale, t('history.unknownDate'))}
+                      {formatRevisionDate(
+                        latestRevision.committed_at,
+                        locale,
+                        t('history.unknownDate'),
+                      )}
                     </Text>
                   </View>
                 ) : null}

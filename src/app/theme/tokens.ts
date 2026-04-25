@@ -40,7 +40,7 @@ export type AppTheme = {
   shadow: {
     card: {
       shadowColor: string;
-      shadowOffset: {width: number; height: number};
+      shadowOffset: { width: number; height: number };
       shadowOpacity: number;
       shadowRadius: number;
       elevation: number;
@@ -66,9 +66,9 @@ export type ThemePreset = 'default' | 'ocean' | 'forest' | 'sunset';
 let activeThemePreset: ThemePreset = 'default';
 
 const sharedRadius = {
-  sm: 10,
-  md: 14,
-  lg: 18,
+  sm: 8,
+  md: 12,
+  lg: 16,
 } as const;
 
 const sharedSpacing = {
@@ -81,28 +81,28 @@ const sharedSpacing = {
 
 export const lightAppTheme: AppTheme = {
   colors: {
-    canvas: '#f5f7fb',
+    canvas: '#f7f8fb',
     surface: '#ffffff',
-    surfaceMuted: '#eef2f8',
-    border: '#d5ddeb',
-    textPrimary: '#111827',
-    textSecondary: '#5b6474',
-    placeholder: '#7b8797',
-    accent: '#2563eb',
-    accentSoft: '#dbeafe',
+    surfaceMuted: '#f0f3f8',
+    border: '#d9e0ea',
+    textPrimary: '#0c1222',
+    textSecondary: '#5f6878',
+    placeholder: '#8a94a5',
+    accent: '#1d4ed8',
+    accentSoft: '#e6efff',
     accentContrast: '#ffffff',
-    success: '#059669',
-    successSoft: '#d1fae5',
-    warning: '#d97706',
-    warningSoft: '#fffbeb',
-    warningBorder: '#fde68a',
+    success: '#047857',
+    successSoft: '#daf8e7',
+    warning: '#b45309',
+    warningSoft: '#fff7df',
+    warningBorder: '#f6df99',
     danger: '#dc2626',
     dangerSoft: '#fee2e2',
     dangerBorder: '#fecaca',
-    infoSoft: '#eff6ff',
-    infoBorder: '#bfdbfe',
-    secretSoft: '#f3f4f6',
-    secretBorder: '#e5e7eb',
+    infoSoft: '#eaf2ff',
+    infoBorder: '#c4d7fb',
+    secretSoft: '#f2f4f7',
+    secretBorder: '#dfe4ec',
     secretText: '#374151',
     badgeSecretBg: '#f3f4f6',
     badgeSecretBorder: '#e5e7eb',
@@ -114,17 +114,17 @@ export const lightAppTheme: AppTheme = {
     bannerDangerBg: '#fee2e2',
     bannerDangerBorder: '#fecaca',
     errorSurface: '#fee2e2',
-    codeBg: '#0f172a',
-    codeText: '#e2e8f0',
-    overlay: 'rgba(15, 23, 42, 0.48)',
+    codeBg: '#0a1020',
+    codeText: '#edf3ff',
+    overlay: 'rgba(8, 13, 27, 0.5)',
   },
   shadow: {
     card: {
       shadowColor: '#0f172a',
-      shadowOffset: {width: 0, height: 6},
-      shadowOpacity: 0.06,
-      shadowRadius: 12,
-      elevation: 3,
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.05,
+      shadowRadius: 20,
+      elevation: 2,
     },
   },
   radius: sharedRadius,
@@ -133,16 +133,16 @@ export const lightAppTheme: AppTheme = {
 
 export const darkAppTheme: AppTheme = {
   colors: {
-    canvas: '#0b1220',
-    surface: '#111827',
-    surfaceMuted: '#172032',
-    border: '#263349',
-    textPrimary: '#f3f6fb',
-    textSecondary: '#9aa6b6',
-    placeholder: '#7d8898',
-    accent: '#60a5fa',
-    accentSoft: '#10233f',
-    accentContrast: '#08111f',
+    canvas: '#090e18',
+    surface: '#101826',
+    surfaceMuted: '#151f30',
+    border: '#263245',
+    textPrimary: '#f4f7fb',
+    textSecondary: '#9ba7ba',
+    placeholder: '#7f8a9c',
+    accent: '#6ea8ff',
+    accentSoft: '#112949',
+    accentContrast: '#06101e',
     success: '#34d399',
     successSoft: '#0f2a24',
     warning: '#f59e0b',
@@ -166,17 +166,17 @@ export const darkAppTheme: AppTheme = {
     bannerDangerBg: '#35191c',
     bannerDangerBorder: '#7f1d1d',
     errorSurface: '#35191c',
-    codeBg: '#060b16',
+    codeBg: '#050914',
     codeText: '#e2e8f0',
     overlay: 'rgba(2, 6, 23, 0.72)',
   },
   shadow: {
     card: {
       shadowColor: '#020617',
-      shadowOffset: {width: 0, height: 8},
-      shadowOpacity: 0.18,
-      shadowRadius: 16,
-      elevation: 5,
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.22,
+      shadowRadius: 24,
+      elevation: 4,
     },
   },
   radius: sharedRadius,
@@ -265,7 +265,10 @@ const presetOverrides: Record<ThemePreset, Record<ThemeName, ThemeOverride>> = {
   },
 };
 
-export function getTheme(themeName: ThemeName, preset: ThemePreset = 'default') {
+export function getTheme(
+  themeName: ThemeName,
+  preset: ThemePreset = 'default',
+) {
   activeThemePreset = preset;
   const baseTheme = themeMap[themeName];
   const overrides = presetOverrides[preset]?.[themeName] ?? {};

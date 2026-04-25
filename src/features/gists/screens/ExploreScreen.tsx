@@ -1,21 +1,21 @@
 import React from 'react';
-import {FlatList, StyleSheet, type ListRenderItem, View} from 'react-native';
-import {useQuery} from '@tanstack/react-query';
-import {useAppTheme} from '../../../app/theme/context';
-import {createThemedStyles} from '../../../app/theme/tokens';
-import {queryKeys} from '../../../shared/api/queryKeys';
-import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
-import {AppErrorState} from '../../../shared/ui/AppErrorState';
-import {AppInput} from '../../../shared/ui/AppInput';
-import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
-import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
-import {AppScreen} from '../../../shared/ui/AppScreen';
-import {appFeedListProps} from '../../../shared/ui/listPresets';
-import {useI18n} from '../../../i18n/context';
-import type {Gist} from '../../../types/gist';
-import {GistCard} from '../components/GistCard';
-import {getPublicGists, searchGists} from '../api/gists';
-import {parseGistReference} from '../utils/parseGistReference';
+import { FlatList, StyleSheet, type ListRenderItem, View } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import { useAppTheme } from '../../../app/theme/context';
+import { createThemedStyles } from '../../../app/theme/tokens';
+import { queryKeys } from '../../../shared/api/queryKeys';
+import { AppEmptyState } from '../../../shared/ui/AppEmptyState';
+import { AppErrorState } from '../../../shared/ui/AppErrorState';
+import { AppInput } from '../../../shared/ui/AppInput';
+import { AppLoadingState } from '../../../shared/ui/AppLoadingState';
+import { AppPageHeader } from '../../../shared/ui/AppPageHeader';
+import { AppScreen } from '../../../shared/ui/AppScreen';
+import { appFeedListProps } from '../../../shared/ui/listPresets';
+import { useI18n } from '../../../i18n/context';
+import type { Gist } from '../../../types/gist';
+import { GistCard } from '../components/GistCard';
+import { getPublicGists, searchGists } from '../api/gists';
+import { parseGistReference } from '../utils/parseGistReference';
 
 interface ExploreScreenProps {
   navigation: {
@@ -23,9 +23,9 @@ interface ExploreScreenProps {
   };
 }
 
-export function ExploreScreen({navigation}: ExploreScreenProps) {
-  const {themeName} = useAppTheme();
-  const {t} = useI18n();
+export function ExploreScreen({ navigation }: ExploreScreenProps) {
+  const { themeName } = useAppTheme();
+  const { t } = useI18n();
   const styles = getStyles(themeName);
   const [query, setQuery] = React.useState('');
   const deferredQuery = React.useDeferredValue(query);
@@ -37,18 +37,21 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
   );
   const normalizedQuery = query.trim().toLowerCase();
   const deferredNormalizedQuery = deferredQuery.trim().toLowerCase();
-  const isSearchMode = deferredNormalizedQuery.length > 0 && !deferredGistReference;
+  const isSearchMode =
+    deferredNormalizedQuery.length > 0 && !deferredGistReference;
   const gistReferenceId = gistReference?.gistId;
   const exploreQuery = useQuery({
-    queryKey: isSearchMode ? queryKeys.searchGists(deferredNormalizedQuery) : queryKeys.publicGists,
-    queryFn: ({signal}) =>
+    queryKey: isSearchMode
+      ? queryKeys.searchGists(deferredNormalizedQuery)
+      : queryKeys.publicGists,
+    queryFn: ({ signal }) =>
       isSearchMode
         ? searchGists(deferredQuery.trim(), 1, 30, signal)
         : getPublicGists(1, 30, signal),
   });
   const handleOpenGist = React.useCallback(
     (gistId: string) => {
-      navigation.navigate('GistDetail', {gistId});
+      navigation.navigate('GistDetail', { gistId });
     },
     [navigation],
   );
@@ -68,12 +71,12 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
     }
 
     lastAutoNavigatedQueryRef.current = normalizedQuery;
-    navigation.navigate('GistDetail', {gistId: gistReferenceId});
+    navigation.navigate('GistDetail', { gistId: gistReferenceId });
   }, [gistReferenceId, navigation, normalizedQuery]);
 
   const gists = exploreQuery.data ?? [];
   const renderItem = React.useCallback<ListRenderItem<Gist>>(
-    ({item}) => <GistCard gist={item} onPressGist={handleOpenGist} />,
+    ({ item }) => <GistCard gist={item} onPressGist={handleOpenGist} />,
     [handleOpenGist],
   );
 
@@ -82,7 +85,11 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
   if (exploreQuery.isLoading) {
     content = (
       <AppLoadingState
-        label={isSearchMode ? t('explore.searchPlaceholder') : t('explore.loadingTitle')}
+        label={
+          isSearchMode
+            ? t('explore.searchPlaceholder')
+            : t('explore.loadingTitle')
+        }
         description={t('explore.loadingDescription')}
       />
     );
@@ -123,7 +130,11 @@ export function ExploreScreen({navigation}: ExploreScreenProps) {
     <AppScreen>
       <View style={styles.container}>
         <View style={styles.header}>
-          <AppPageHeader title={t('explore.title')} />
+          <AppPageHeader
+            eyebrow={t('explore.eyebrow')}
+            title={t('explore.title')}
+            subtitle={t('explore.subtitle')}
+          />
           <AppInput
             label={t('explore.inputLabel')}
             placeholder={t('explore.inputPlaceholder')}
@@ -147,18 +158,18 @@ const getStyles = createThemedStyles(theme =>
     container: {
       flex: 1,
       paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.sm,
-      gap: theme.spacing.sm,
+      paddingTop: theme.spacing.md,
+      gap: theme.spacing.md,
     },
     header: {
-      gap: theme.spacing.xs,
+      gap: theme.spacing.md,
     },
     content: {
       flex: 1,
     },
     listContent: {
-      paddingBottom: theme.spacing.lg,
-      gap: theme.spacing.sm,
+      paddingBottom: theme.spacing.xl,
+      gap: theme.spacing.md,
     },
   }),
 );
