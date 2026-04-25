@@ -149,7 +149,7 @@ test('supports native pull-to-refresh on the home feed list', () => {
   expect(refetch).toHaveBeenCalled();
 });
 
-test('renders the refined home header with context copy', () => {
+test('renders the compact reference-style home header', () => {
   (useHomeFeed as jest.Mock).mockReturnValue({
     segment: 'my',
     setSegment: jest.fn(),
@@ -162,12 +162,10 @@ test('renders the refined home header with context copy', () => {
 
   render(<HomeScreen navigation={{ navigate: jest.fn() }} />);
 
-  expect(screen.getByText('Home')).toBeTruthy();
-  expect(
-    screen.getByText(
-      'Switch between your own gists and the ones you have starred.',
-    ),
-  ).toBeTruthy();
+  expect(screen.getByText('Gist')).toBeTruthy();
+  expect(screen.getByRole('button', { name: '+' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'My' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Starred' })).toBeTruthy();
 });
 
 test('parses gist ids from gist URLs and raw id input', () => {

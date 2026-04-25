@@ -26,8 +26,8 @@ import { AppCard } from '../../../shared/ui/AppCard';
 import { AppEmptyState } from '../../../shared/ui/AppEmptyState';
 import { AppErrorState } from '../../../shared/ui/AppErrorState';
 import { AppLoadingState } from '../../../shared/ui/AppLoadingState';
-import { AppPageHeader } from '../../../shared/ui/AppPageHeader';
 import { AppScreen } from '../../../shared/ui/AppScreen';
+import { GistMobileHeader } from '../../../shared/ui/GistMobileHeader';
 import { useI18n } from '../../../i18n/context';
 import { useGistDetail } from '../hooks/useGistDetail';
 import { useGistMutations } from '../hooks/useGistMutations';
@@ -629,16 +629,11 @@ export function GistDetailScreen({
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <AppPageHeader
-          eyebrow={t('gistDetail.eyebrow')}
-          accessory={
-            <AppBadge
-              label={gist.public ? t('common.public') : t('common.secret')}
-              tone={gist.public ? 'public' : 'secret'}
-            />
-          }
-          title={gist.description?.trim() || t('gistDetail.titleFallback')}
+        <GistMobileHeader
+          leftAction={{ label: '<', onPress: () => navigation.goBack() }}
+          rightAction={{ label: '...', onPress: () => setSheetVisible(true) }}
           subtitle={t('gistDetail.subtitle')}
+          title={gist.description?.trim() || t('gistDetail.titleFallback')}
         />
 
         <AppCard style={styles.metaCard}>
@@ -672,6 +667,10 @@ export function GistDetailScreen({
                 })}
               </Text>
             </View>
+            <AppBadge
+              label={gist.public ? t('common.public') : t('common.secret')}
+              tone={gist.public ? 'public' : 'secret'}
+            />
           </View>
 
           <View style={styles.metaStatsRow}>
@@ -910,21 +909,25 @@ export default GistDetailScreen;
 const getStyles = createThemedStyles(theme =>
   StyleSheet.create({
     container: {
-      paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
+      paddingTop: 0,
       paddingBottom: theme.spacing.xl,
-      gap: theme.spacing.sm,
+      gap: theme.spacing.xs,
     },
     metaHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
+      alignItems: 'flex-start',
       gap: theme.spacing.sm,
     },
     metaCard: {
       gap: theme.spacing.sm,
       paddingTop: theme.spacing.xs + 2,
       paddingBottom: theme.spacing.xs + 2,
-      borderRadius: theme.radius.md,
+      borderRadius: 0,
+      borderLeftWidth: 0,
+      borderRightWidth: 0,
+      borderTopWidth: 0,
       backgroundColor: theme.colors.canvas,
       shadowOpacity: 0,
       elevation: 0,
@@ -1015,7 +1018,7 @@ const getStyles = createThemedStyles(theme =>
     },
     sectionTitle: {
       color: theme.colors.textPrimary,
-      fontSize: 18,
+      fontSize: 14,
       fontWeight: '800',
     },
     sectionContent: {
@@ -1028,7 +1031,7 @@ const getStyles = createThemedStyles(theme =>
     },
     fileCard: {
       gap: theme.spacing.sm,
-      borderRadius: theme.radius.md,
+      borderRadius: theme.radius.sm,
       backgroundColor: theme.colors.canvas,
       shadowOpacity: 0,
       elevation: 0,

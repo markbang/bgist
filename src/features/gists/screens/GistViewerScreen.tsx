@@ -5,7 +5,6 @@ import {
   ScrollView,
   Share,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
@@ -18,8 +17,8 @@ import { AppCard } from '../../../shared/ui/AppCard';
 import { AppCodeBlock } from '../../../shared/ui/AppCodeBlock';
 import { AppErrorState } from '../../../shared/ui/AppErrorState';
 import { AppLoadingState } from '../../../shared/ui/AppLoadingState';
-import { AppPageHeader } from '../../../shared/ui/AppPageHeader';
 import { AppScreen } from '../../../shared/ui/AppScreen';
+import { GistMobileHeader } from '../../../shared/ui/GistMobileHeader';
 import type { RootStackScreenProps } from '../../../app/navigation/types';
 import { useI18n } from '../../../i18n/context';
 import { renderCodePreviewDocument } from '../utils/renderCodePreview';
@@ -297,6 +296,7 @@ function ViewerActionButton({
 }
 
 export function GistViewerScreen({
+  navigation,
   route,
 }: RootStackScreenProps<'GistViewer'>) {
   const { theme, themeName, isDark } = useAppTheme();
@@ -420,14 +420,10 @@ export function GistViewerScreen({
   return (
     <AppScreen>
       <View style={styles.container}>
-        <AppPageHeader
-          eyebrow={t('viewer.eyebrow')}
-          accessory={
-            language ? (
-              <View style={styles.metaPill}>
-                <Text style={styles.metaPillText}>{language}</Text>
-              </View>
-            ) : undefined
+        <GistMobileHeader
+          leftAction={{ label: '<', onPress: () => navigation.goBack() }}
+          rightAction={
+            language ? { label: language, disabled: true } : undefined
           }
           subtitle={t('viewer.subtitle')}
           title={filename}
@@ -549,28 +545,10 @@ const getStyles = createThemedStyles(theme =>
   StyleSheet.create({
     container: {
       flex: 1,
-      paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.sm,
-      paddingBottom: theme.spacing.xl,
-      gap: theme.spacing.sm,
-    },
-    metaRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: theme.spacing.xs,
-    },
-    metaPill: {
-      borderRadius: 999,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surfaceMuted,
       paddingHorizontal: theme.spacing.sm,
-      paddingVertical: theme.spacing.xs,
-    },
-    metaPillText: {
-      color: theme.colors.textSecondary,
-      fontSize: 12,
-      fontWeight: '700',
+      paddingTop: 0,
+      paddingBottom: theme.spacing.sm,
+      gap: theme.spacing.sm,
     },
     actions: {
       alignItems: 'center',
@@ -603,6 +581,8 @@ const getStyles = createThemedStyles(theme =>
       flex: 1,
       minHeight: 0,
       padding: theme.spacing.xs,
+      borderRadius: theme.radius.sm,
+      backgroundColor: theme.colors.codeBg,
     },
     preview: {
       flex: 1,

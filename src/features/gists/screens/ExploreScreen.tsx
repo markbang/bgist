@@ -8,8 +8,8 @@ import { AppEmptyState } from '../../../shared/ui/AppEmptyState';
 import { AppErrorState } from '../../../shared/ui/AppErrorState';
 import { AppInput } from '../../../shared/ui/AppInput';
 import { AppLoadingState } from '../../../shared/ui/AppLoadingState';
-import { AppPageHeader } from '../../../shared/ui/AppPageHeader';
 import { AppScreen } from '../../../shared/ui/AppScreen';
+import { GistMobileHeader } from '../../../shared/ui/GistMobileHeader';
 import { appFeedListProps } from '../../../shared/ui/listPresets';
 import { useI18n } from '../../../i18n/context';
 import type { Gist } from '../../../types/gist';
@@ -130,10 +130,13 @@ export function ExploreScreen({ navigation }: ExploreScreenProps) {
     <AppScreen>
       <View style={styles.container}>
         <View style={styles.header}>
-          <AppPageHeader
-            eyebrow={t('explore.eyebrow')}
+          <GistMobileHeader
+            leftAction={{
+              label: '<',
+              onPress: () => navigation.navigate('Home'),
+            }}
+            showMark
             title={t('explore.title')}
-            subtitle={t('explore.subtitle')}
           />
           <AppInput
             label={t('explore.inputLabel')}
@@ -157,12 +160,12 @@ const getStyles = createThemedStyles(theme =>
   StyleSheet.create({
     container: {
       flex: 1,
-      paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.md,
-      gap: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
+      paddingTop: 0,
+      gap: theme.spacing.xs,
     },
     header: {
-      gap: theme.spacing.md,
+      gap: theme.spacing.sm,
     },
     content: {
       flex: 1,

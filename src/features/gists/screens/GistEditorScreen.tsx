@@ -24,8 +24,8 @@ import { AppButton } from '../../../shared/ui/AppButton';
 import { AppCard } from '../../../shared/ui/AppCard';
 import { AppErrorState } from '../../../shared/ui/AppErrorState';
 import { AppLoadingState } from '../../../shared/ui/AppLoadingState';
-import { AppPageHeader } from '../../../shared/ui/AppPageHeader';
 import { AppScreen } from '../../../shared/ui/AppScreen';
+import { GistMobileHeader } from '../../../shared/ui/GistMobileHeader';
 import { useI18n } from '../../../i18n/context';
 import { getGist } from '../api/gists';
 import { useGistMutations } from '../hooks/useGistMutations';
@@ -300,6 +300,7 @@ export function GistEditorScreen({
       ? t('gistDetail.fileSingular')
       : t('gistDetail.filePlural')
   }`;
+  const isSaving = createGistMutation.isPending || editGistMutation.isPending;
 
   const handleSubmit = React.useCallback(async () => {
     const trimmedDescription = description.trim();
@@ -406,17 +407,26 @@ export function GistEditorScreen({
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <AppPageHeader
-              eyebrow={
-                isEditMode ? t('editor.editEyebrow') : t('editor.createEyebrow')
-              }
+            <GistMobileHeader
+              leftAction={{
+                label: t('common.cancel'),
+                onPress: () => navigation.goBack(),
+              }}
+              rightAction={{
+                label: isEditMode
+                  ? t('editor.saveChanges')
+                  : t('gist.createGist'),
+                loading: isSaving,
+                onPress: () => {
+                  handleSubmit().catch(() => {});
+                },
+              }}
+              showMark={!isEditMode}
               title={
                 isEditMode ? t('editor.editTitle') : t('editor.createTitle')
               }
               subtitle={
-                isEditMode
-                  ? t('editor.editSubtitle')
-                  : t('editor.createSubtitle')
+                isEditMode ? t('editor.editEyebrow') : t('editor.createEyebrow')
               }
             />
 
@@ -594,20 +604,6 @@ export function GistEditorScreen({
               </AppCard>
             ) : null}
           </ScrollView>
-
-          <View style={styles.footer}>
-            <AppButton
-              label={
-                isEditMode ? t('editor.saveChanges') : t('gist.createGist')
-              }
-              loading={
-                createGistMutation.isPending || editGistMutation.isPending
-              }
-              onPress={() => {
-                handleSubmit().catch(() => {});
-              }}
-            />
-          </View>
         </View>
       </KeyboardAvoidingView>
     </AppScreen>
@@ -625,9 +621,9 @@ const getStyles = createThemedStyles(theme =>
       flex: 1,
     },
     content: {
-      paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.sm,
-      paddingBottom: 120,
+      paddingHorizontal: theme.spacing.sm,
+      paddingTop: 0,
+      paddingBottom: theme.spacing.lg,
       gap: theme.spacing.xs,
     },
     summaryRow: {
@@ -665,12 +661,12 @@ const getStyles = createThemedStyles(theme =>
       lineHeight: 20,
     },
     descriptionInput: {
-      minHeight: 56,
-      borderRadius: theme.radius.lg,
+      minHeight: 44,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
-      backgroundColor: theme.colors.canvas,
+      backgroundColor: theme.colors.surfaceMuted,
       color: theme.colors.textPrimary,
       fontSize: 15,
       paddingHorizontal: theme.spacing.md,
@@ -706,7 +702,7 @@ const getStyles = createThemedStyles(theme =>
     },
     fileTab: {
       minHeight: 38,
-      borderRadius: theme.radius.md,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
@@ -768,12 +764,12 @@ const getStyles = createThemedStyles(theme =>
       fontWeight: '700',
     },
     filenameInput: {
-      minHeight: 56,
-      borderRadius: theme.radius.lg,
+      minHeight: 44,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
-      backgroundColor: theme.colors.canvas,
+      backgroundColor: theme.colors.surfaceMuted,
       color: theme.colors.textPrimary,
       fontSize: 15,
       paddingHorizontal: theme.spacing.md,
@@ -781,7 +777,7 @@ const getStyles = createThemedStyles(theme =>
     },
     contentInput: {
       minHeight: 320,
-      borderRadius: theme.radius.lg,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
@@ -796,14 +792,6 @@ const getStyles = createThemedStyles(theme =>
       lineHeight: 20,
       paddingHorizontal: theme.spacing.md,
       paddingVertical: theme.spacing.md,
-    },
-    footer: {
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.border,
-      backgroundColor: theme.colors.surface,
-      paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.sm,
-      paddingBottom: theme.spacing.md,
     },
   }),
 );

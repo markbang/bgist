@@ -5,9 +5,9 @@ import { createThemedStyles } from '../../../app/theme/tokens';
 import { AppEmptyState } from '../../../shared/ui/AppEmptyState';
 import { AppErrorState } from '../../../shared/ui/AppErrorState';
 import { AppLoadingState } from '../../../shared/ui/AppLoadingState';
-import { AppPageHeader } from '../../../shared/ui/AppPageHeader';
 import { AppScreen } from '../../../shared/ui/AppScreen';
 import { AppSegmentedControl } from '../../../shared/ui/AppSegmentedControl';
+import { GistMobileHeader } from '../../../shared/ui/GistMobileHeader';
 import { appFeedListProps } from '../../../shared/ui/listPresets';
 import { useI18n } from '../../../i18n/context';
 import type { Gist } from '../../../types/gist';
@@ -124,10 +124,15 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     <AppScreen>
       <View style={styles.container}>
         <View style={styles.header}>
-          <AppPageHeader
-            eyebrow={t('home.eyebrow')}
-            title={t('home.title')}
-            subtitle={t('home.subtitle')}
+          <GistMobileHeader
+            leftAction={{ label: '=' }}
+            rightAction={{
+              label: '+',
+              onPress: () =>
+                navigation.navigate('GistEditor', { mode: 'create' }),
+            }}
+            showMark
+            title="Gist"
           />
           <AppSegmentedControl
             options={segments}
@@ -149,12 +154,12 @@ const getStyles = createThemedStyles(theme =>
   StyleSheet.create({
     container: {
       flex: 1,
-      paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.md,
-      gap: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
+      paddingTop: 0,
+      gap: theme.spacing.xs,
     },
     header: {
-      gap: theme.spacing.md,
+      gap: 0,
     },
     content: {
       flex: 1,

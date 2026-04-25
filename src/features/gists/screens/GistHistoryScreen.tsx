@@ -20,8 +20,8 @@ import { AppCard } from '../../../shared/ui/AppCard';
 import { AppEmptyState } from '../../../shared/ui/AppEmptyState';
 import { AppErrorState } from '../../../shared/ui/AppErrorState';
 import { AppLoadingState } from '../../../shared/ui/AppLoadingState';
-import { AppPageHeader } from '../../../shared/ui/AppPageHeader';
 import { AppScreen } from '../../../shared/ui/AppScreen';
+import { GistMobileHeader } from '../../../shared/ui/GistMobileHeader';
 import { appFeedListProps } from '../../../shared/ui/listPresets';
 import type { GistHistoryEntry } from '../../../types/gist';
 import { getGist } from '../api/gists';
@@ -108,6 +108,7 @@ const HistoryCard = React.memo(function HistoryCard({
 });
 
 export function GistHistoryScreen({
+  navigation,
   route,
 }: RootStackScreenProps<'GistHistory'>) {
   const { themeName } = useAppTheme();
@@ -199,12 +200,11 @@ export function GistHistoryScreen({
     <AppScreen>
       <View style={styles.container}>
         <View style={styles.header}>
-          <AppPageHeader
-            eyebrow={t('history.eyebrow')}
+          <GistMobileHeader
+            leftAction={{ label: '<', onPress: () => navigation.goBack() }}
+            subtitle={`${revisionCount} ${t('history.version')}`}
             title={t('history.title')}
-            subtitle={t('history.subtitle')}
           />
-          <Text style={styles.subtitle}>{t('history.subtitle')}</Text>
           {historyQuery.data ? (
             <AppCard style={styles.summaryCard}>
               <AppBadge label={t('history.eyebrow')} tone="public" />
@@ -254,8 +254,8 @@ const getStyles = createThemedStyles(theme =>
   StyleSheet.create({
     container: {
       flex: 1,
-      paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.sm,
+      paddingTop: 0,
       gap: theme.spacing.sm,
     },
     header: {
@@ -275,6 +275,8 @@ const getStyles = createThemedStyles(theme =>
     },
     summaryCard: {
       gap: theme.spacing.sm,
+      borderRadius: theme.radius.sm,
+      backgroundColor: theme.colors.canvas,
     },
     summaryRow: {
       flexDirection: 'row',
@@ -305,6 +307,13 @@ const getStyles = createThemedStyles(theme =>
     },
     historyCard: {
       gap: theme.spacing.sm,
+      borderLeftWidth: 0,
+      borderRightWidth: 0,
+      borderTopWidth: 0,
+      borderRadius: 0,
+      backgroundColor: 'transparent',
+      shadowOpacity: 0,
+      elevation: 0,
     },
     historyHeader: {
       flexDirection: 'row',
