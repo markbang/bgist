@@ -145,12 +145,12 @@ const getStyles = createThemedStyles(theme =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: theme.spacing.xs,
-      borderRadius: theme.radius.md,
-      borderCurve: 'continuous',
-      borderWidth: 1,
+      borderBottomWidth: 1,
       borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surface,
-      padding: theme.spacing.xs - 1,
+      backgroundColor: 'transparent',
+      paddingHorizontal: 0,
+      paddingTop: 0,
+      paddingBottom: 0,
       overflow: 'hidden',
     },
     containerDisabled: {
@@ -158,29 +158,20 @@ const getStyles = createThemedStyles(theme =>
     },
     thumb: {
       position: 'absolute',
-      top: theme.spacing.xs,
-      bottom: theme.spacing.xs,
+      bottom: 0,
       left: 0,
-      borderRadius: theme.radius.sm,
-      borderCurve: 'continuous',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surfaceMuted,
-      ...theme.shadow.card,
-      shadowOpacity: themeNameShadowOpacity(theme.colors.canvas),
-      shadowRadius: 12,
-      elevation: 2,
+      height: 2,
+      borderRadius: 1,
+      backgroundColor: theme.colors.accent,
     },
     segment: {
       zIndex: 1,
       flex: 1,
-      minHeight: 38,
-      borderRadius: theme.radius.sm,
-      borderCurve: 'continuous',
+      minHeight: 42,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: theme.spacing.sm,
-      paddingVertical: theme.spacing.xs - 1,
+      paddingVertical: theme.spacing.sm,
     },
     segmentPressed: {
       opacity: 0.8,
@@ -192,13 +183,7 @@ const getStyles = createThemedStyles(theme =>
     },
     labelSelected: {
       color: theme.colors.textPrimary,
-      fontWeight: '700',
+      fontWeight: '800',
     },
   }),
 );
-
-function themeNameShadowOpacity(canvas: string) {
-  return canvas === lightCanvas ? 0.06 : 0.18;
-}
-
-const lightCanvas = '#f5f7fb';

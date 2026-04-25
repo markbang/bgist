@@ -72,10 +72,12 @@ export function AppCodeBlock({
 const getStyles = createThemedStyles(theme =>
   StyleSheet.create({
     shell: {
-      borderRadius: theme.radius.lg,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       overflow: 'hidden',
       backgroundColor: theme.colors.codeBg,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
     },
     header: {
       borderBottomWidth: StyleSheet.hairlineWidth,
@@ -95,7 +97,7 @@ const getStyles = createThemedStyles(theme =>
     },
     content: {
       minWidth: '100%',
-      paddingHorizontal: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
       paddingVertical: theme.spacing.sm,
       gap: 2,
     },
@@ -108,22 +110,22 @@ const getStyles = createThemedStyles(theme =>
       paddingRight: theme.spacing.sm,
       color: 'rgba(226, 232, 240, 0.45)',
       fontFamily: monoFont,
-      fontSize: 13,
-      lineHeight: 20,
+      fontSize: 12,
+      lineHeight: 21,
       textAlign: 'right',
     },
     line: {
       flexShrink: 0,
       color: theme.colors.codeText,
       fontFamily: monoFont,
-      fontSize: 13,
-      lineHeight: 20,
+      fontSize: 12,
+      lineHeight: 21,
     },
     block: {
       color: theme.colors.codeText,
       fontFamily: monoFont,
-      fontSize: 13,
-      lineHeight: 20,
+      fontSize: 12,
+      lineHeight: 21,
     },
   }),
 );

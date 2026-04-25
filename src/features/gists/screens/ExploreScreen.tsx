@@ -169,7 +169,7 @@ const getStyles = createThemedStyles(theme =>
     },
     listContent: {
       paddingBottom: theme.spacing.xl,
-      gap: theme.spacing.md,
+      gap: 0,
     },
   }),
 );

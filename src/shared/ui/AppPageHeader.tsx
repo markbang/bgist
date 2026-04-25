@@ -40,11 +40,13 @@ export function AppPageHeader({
 const getStyles = createThemedStyles(theme =>
   StyleSheet.create({
     header: {
-      gap: theme.spacing.sm,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.colors.border,
+      paddingBottom: theme.spacing.sm,
     },
     row: {
       flexDirection: 'row',
-      alignItems: 'flex-start',
+      alignItems: 'center',
       justifyContent: 'space-between',
       gap: theme.spacing.md,
     },
@@ -53,23 +55,23 @@ const getStyles = createThemedStyles(theme =>
       gap: theme.spacing.xs,
     },
     eyebrow: {
-      color: theme.colors.accent,
-      fontSize: 11,
-      fontWeight: '800',
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+      fontWeight: '700',
       letterSpacing: 0,
       textTransform: 'uppercase',
     },
     title: {
       color: theme.colors.textPrimary,
-      fontSize: 28,
-      lineHeight: 33,
-      fontWeight: '900',
+      fontSize: 18,
+      lineHeight: 24,
+      fontWeight: '800',
       letterSpacing: 0,
     },
     subtitle: {
       color: theme.colors.textSecondary,
-      fontSize: 14,
-      lineHeight: 20,
+      fontSize: 13,
+      lineHeight: 18,
     },
     accessory: {
       flexShrink: 0,
