@@ -2,6 +2,7 @@ import React from 'react';
 import {StatusBar, StyleSheet, Text, View} from 'react-native';
 import {NavigationContainer, DarkTheme, DefaultTheme} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {MaterialSymbolIcon} from '../../components/TabIcons';
 import LoginScreen from '../../features/auth/screens/LoginScreen';
 import {useSession} from '../../features/auth/session/SessionProvider';
 import {GistDetailScreen} from '../../features/gists/screens/GistDetailScreen';
@@ -10,6 +11,9 @@ import {GistHistoryScreen} from '../../features/gists/screens/GistHistoryScreen'
 import {GistViewerScreen} from '../../features/gists/screens/GistViewerScreen';
 import {SettingsScreen} from '../../features/profile/screens/SettingsScreen';
 import {UserProfileScreen} from '../../features/profile/screens/UserProfileScreen';
+import {AppBadge} from '../../shared/ui/AppBadge';
+import {AppCard} from '../../shared/ui/AppCard';
+import {AppScreen} from '../../shared/ui/AppScreen';
 import {useAppTheme} from '../theme/context';
 import {createThemedStyles} from '../theme/tokens';
 import {MainTabs} from './MainTabs';
@@ -28,10 +32,18 @@ function PlaceholderScreen({
   const styles = getStyles(themeName);
 
   return (
-    <View style={styles.placeholder}>
-      <Text style={styles.placeholderTitle}>{title}</Text>
-      <Text style={styles.placeholderDescription}>{description}</Text>
-    </View>
+    <AppScreen>
+      <View style={styles.placeholder}>
+        <AppCard style={styles.placeholderCard}>
+          <View style={styles.placeholderIcon}>
+            <MaterialSymbolIcon icon="description-rounded" size={24} />
+          </View>
+          <AppBadge label="BGist" tone="public" />
+          <Text style={styles.placeholderTitle}>{title}</Text>
+          <Text style={styles.placeholderDescription}>{description}</Text>
+        </AppCard>
+      </View>
+    </AppScreen>
   );
 }
 
@@ -95,14 +107,29 @@ const getStyles = createThemedStyles(theme =>
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.colors.canvas,
       paddingHorizontal: theme.spacing.lg,
+    },
+    placeholderCard: {
+      width: '100%',
+      maxWidth: 340,
+      alignItems: 'center',
       gap: theme.spacing.sm,
+    },
+    placeholderIcon: {
+      width: 52,
+      height: 52,
+      borderRadius: theme.radius.md,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     placeholderTitle: {
       color: theme.colors.textPrimary,
-      fontSize: 24,
-      fontWeight: '800',
+      fontSize: 22,
+      fontWeight: '900',
       textAlign: 'center',
     },
     placeholderDescription: {

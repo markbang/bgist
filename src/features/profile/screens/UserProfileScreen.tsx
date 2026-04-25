@@ -46,7 +46,12 @@ const ProfileHero = React.memo(function ProfileHero({
 
   return (
     <View style={styles.header}>
-      <AppPageHeader title={profile.name ?? username} />
+      <AppPageHeader
+        eyebrow={t('userProfile.eyebrow')}
+        title={profile.name ?? username}
+        subtitle={t('userProfile.subtitle')}
+        accessory={<AppBadge label={`@${profile.login}`} tone="public" />}
+      />
 
       <AppCard style={styles.heroCard}>
         <View style={styles.identity}>
