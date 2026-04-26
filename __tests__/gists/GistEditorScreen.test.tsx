@@ -1,11 +1,16 @@
 import React from 'react';
-import {fireEvent, render, screen, waitFor} from '@testing-library/react-native';
-import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
-import type {MainTabScreenProps} from '../../src/app/navigation/types';
-import {ComposeScreen} from '../../src/features/gists/screens/ComposeScreen';
-import {GistEditorScreen} from '../../src/features/gists/screens/GistEditorScreen';
-import {useGistMutations} from '../../src/features/gists/hooks/useGistMutations';
-import {getGist} from '../../src/features/gists/api/gists';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { MainTabScreenProps } from '../../src/app/navigation/types';
+import { ComposeScreen } from '../../src/features/gists/screens/ComposeScreen';
+import { GistEditorScreen } from '../../src/features/gists/screens/GistEditorScreen';
+import { useGistMutations } from '../../src/features/gists/hooks/useGistMutations';
+import { getGist } from '../../src/features/gists/api/gists';
 
 jest.mock('../../src/features/gists/hooks/useGistMutations', () => ({
   useGistMutations: jest.fn(),
@@ -28,12 +33,14 @@ function createWrapper() {
     },
   });
 
-  return function Wrapper({children}: {children: React.ReactNode}) {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return function Wrapper({ children }: { children: React.ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
   };
 }
 
-function createMutationResult(result: unknown = {id: 'gist-1'}) {
+function createMutationResult(result: unknown = { id: 'gist-1' }) {
   return {
     mutateAsync: jest.fn().mockResolvedValue(result),
     isPending: false,
@@ -43,9 +50,9 @@ function createMutationResult(result: unknown = {id: 'gist-1'}) {
 beforeEach(() => {
   (useGistMutations as jest.Mock).mockReturnValue({
     addCommentMutation: createMutationResult(),
-    createGistMutation: createMutationResult({id: 'created-gist'}),
+    createGistMutation: createMutationResult({ id: 'created-gist' }),
     deleteGistMutation: createMutationResult(),
-    editGistMutation: createMutationResult({id: 'edited-gist'}),
+    editGistMutation: createMutationResult({ id: 'edited-gist' }),
     forkGistMutation: createMutationResult(),
     starGistMutation: createMutationResult(),
     unstarGistMutation: createMutationResult(),
@@ -61,13 +68,13 @@ test('submits a new gist from create mode', async () => {
     goBack: jest.fn(),
     navigate: jest.fn(),
   };
-  const createGistMutation = createMutationResult({id: 'created-gist'});
+  const createGistMutation = createMutationResult({ id: 'created-gist' });
 
   (useGistMutations as jest.Mock).mockReturnValue({
     addCommentMutation: createMutationResult(),
     createGistMutation,
     deleteGistMutation: createMutationResult(),
-    editGistMutation: createMutationResult({id: 'edited-gist'}),
+    editGistMutation: createMutationResult({ id: 'edited-gist' }),
     forkGistMutation: createMutationResult(),
     starGistMutation: createMutationResult(),
     unstarGistMutation: createMutationResult(),
@@ -76,7 +83,13 @@ test('submits a new gist from create mode', async () => {
   render(
     <GistEditorScreen
       navigation={navigation as never}
-      route={{key: 'GistEditor-create', name: 'GistEditor', params: {mode: 'create'}} as never}
+      route={
+        {
+          key: 'GistEditor-create',
+          name: 'GistEditor',
+          params: { mode: 'create' },
+        } as never
+      }
     />,
     {
       wrapper: createWrapper(),
@@ -86,7 +99,7 @@ test('submits a new gist from create mode', async () => {
   fireEvent.changeText(screen.getByLabelText('Gist description'), 'Demo gist');
   fireEvent.changeText(screen.getByLabelText('Current filename'), 'index.ts');
   fireEvent.changeText(screen.getByLabelText('Current content'), 'export {}');
-  fireEvent.press(screen.getByRole('button', {name: 'Create Gist'}));
+  fireEvent.press(screen.getByRole('button', { name: 'Create Gist' }));
 
   await waitFor(() => {
     expect(createGistMutation.mutateAsync).toHaveBeenCalledWith({
@@ -100,7 +113,9 @@ test('submits a new gist from create mode', async () => {
     });
   });
 
-  expect(navigation.navigate).toHaveBeenCalledWith('GistDetail', {gistId: 'created-gist'});
+  expect(navigation.navigate).toHaveBeenCalledWith('GistDetail', {
+    gistId: 'created-gist',
+  });
 });
 
 test('loads an existing gist in edit mode and submits changed files', async () => {
@@ -108,11 +123,11 @@ test('loads an existing gist in edit mode and submits changed files', async () =
     goBack: jest.fn(),
     navigate: jest.fn(),
   };
-  const editGistMutation = createMutationResult({id: 'edited-gist'});
+  const editGistMutation = createMutationResult({ id: 'edited-gist' });
 
   (useGistMutations as jest.Mock).mockReturnValue({
     addCommentMutation: createMutationResult(),
-    createGistMutation: createMutationResult({id: 'created-gist'}),
+    createGistMutation: createMutationResult({ id: 'created-gist' }),
     deleteGistMutation: createMutationResult(),
     editGistMutation,
     forkGistMutation: createMutationResult(),
@@ -138,7 +153,13 @@ test('loads an existing gist in edit mode and submits changed files', async () =
   render(
     <GistEditorScreen
       navigation={navigation as never}
-      route={{key: 'GistEditor-edit', name: 'GistEditor', params: {mode: 'edit', gistId: 'gist-1'}} as never}
+      route={
+        {
+          key: 'GistEditor-edit',
+          name: 'GistEditor',
+          params: { mode: 'edit', gistId: 'gist-1' },
+        } as never
+      }
     />,
     {
       wrapper: createWrapper(),
@@ -149,8 +170,11 @@ test('loads an existing gist in edit mode and submits changed files', async () =
   expect(screen.getByDisplayValue('hello.ts')).toBeTruthy();
 
   fireEvent.changeText(screen.getByLabelText('Current filename'), 'main.ts');
-  fireEvent.changeText(screen.getByLabelText('Current content'), 'console.log("updated")');
-  fireEvent.press(screen.getByRole('button', {name: 'Save changes'}));
+  fireEvent.changeText(
+    screen.getByLabelText('Current content'),
+    'console.log("updated")',
+  );
+  fireEvent.press(screen.getByRole('button', { name: 'Save changes' }));
 
   await waitFor(() => {
     expect(editGistMutation.mutateAsync).toHaveBeenCalledWith({
@@ -167,7 +191,9 @@ test('loads an existing gist in edit mode and submits changed files', async () =
     });
   });
 
-  expect(navigation.navigate).toHaveBeenCalledWith('GistDetail', {gistId: 'edited-gist'});
+  expect(navigation.navigate).toHaveBeenCalledWith('GistDetail', {
+    gistId: 'edited-gist',
+  });
 });
 
 test('switches between files, preserves draft changes, and removes the active file', async () => {
@@ -175,13 +201,13 @@ test('switches between files, preserves draft changes, and removes the active fi
     goBack: jest.fn(),
     navigate: jest.fn(),
   };
-  const createGistMutation = createMutationResult({id: 'created-gist'});
+  const createGistMutation = createMutationResult({ id: 'created-gist' });
 
   (useGistMutations as jest.Mock).mockReturnValue({
     addCommentMutation: createMutationResult(),
     createGistMutation,
     deleteGistMutation: createMutationResult(),
-    editGistMutation: createMutationResult({id: 'edited-gist'}),
+    editGistMutation: createMutationResult({ id: 'edited-gist' }),
     forkGistMutation: createMutationResult(),
     starGistMutation: createMutationResult(),
     unstarGistMutation: createMutationResult(),
@@ -190,18 +216,20 @@ test('switches between files, preserves draft changes, and removes the active fi
   render(
     <GistEditorScreen
       navigation={navigation as never}
-      route={{
-        key: 'GistEditor-create',
-        name: 'GistEditor',
-        params: {
-          mode: 'create',
-          description: 'Two files',
-          files: [
-            {filename: 'alpha.ts', content: 'export const alpha = 1;'},
-            {filename: 'beta.ts', content: 'export const beta = 1;'},
-          ],
-        },
-      } as never}
+      route={
+        {
+          key: 'GistEditor-create',
+          name: 'GistEditor',
+          params: {
+            mode: 'create',
+            description: 'Two files',
+            files: [
+              { filename: 'alpha.ts', content: 'export const alpha = 1;' },
+              { filename: 'beta.ts', content: 'export const beta = 1;' },
+            ],
+          },
+        } as never
+      }
     />,
     {
       wrapper: createWrapper(),
@@ -216,17 +244,20 @@ test('switches between files, preserves draft changes, and removes the active fi
 
   expect(screen.getByDisplayValue('beta.ts')).toBeTruthy();
 
-  fireEvent.changeText(screen.getByLabelText('Current content'), 'export const beta = 2;');
+  fireEvent.changeText(
+    screen.getByLabelText('Current content'),
+    'export const beta = 2;',
+  );
   fireEvent.press(screen.getByText('alpha.ts'));
   fireEvent.press(screen.getByText('beta.ts'));
 
   expect(screen.getByDisplayValue('export const beta = 2;')).toBeTruthy();
 
-  fireEvent.press(screen.getByRole('button', {name: 'Remove current file'}));
+  fireEvent.press(screen.getByRole('button', { name: 'Remove current file' }));
 
   expect(screen.getByDisplayValue('alpha.ts')).toBeTruthy();
 
-  fireEvent.press(screen.getByRole('button', {name: 'Create Gist'}));
+  fireEvent.press(screen.getByRole('button', { name: 'Create Gist' }));
 
   await waitFor(() => {
     expect(createGistMutation.mutateAsync).toHaveBeenCalledWith({
@@ -249,11 +280,13 @@ test('compose screen opens the create editor flow', () => {
   render(
     <ComposeScreen
       navigation={navigation}
-      route={{key: 'Compose', name: 'Compose'}}
+      route={{ key: 'Compose', name: 'Compose' }}
     />,
   );
 
-  fireEvent.press(screen.getByRole('button', {name: 'Create a gist'}));
+  fireEvent.press(screen.getByRole('button', { name: 'Create a gist' }));
 
-  expect(navigation.navigate).toHaveBeenCalledWith('GistEditor', {mode: 'create'});
+  expect(navigation.navigate).toHaveBeenCalledWith('GistEditor', {
+    mode: 'create',
+  });
 });

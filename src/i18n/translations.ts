@@ -396,6 +396,11 @@ const translations: Record<Language, Record<string, string>> = {
     'editor.visibility': 'Visibility',
     'editor.visibilityLocked':
       'Visibility is fixed for existing gists, so this editor keeps the current setting.',
+    'editor.publicGistLabel': 'Public gist',
+    'editor.secretGistLabel': 'Secret gist',
+    'editor.publicGistDescription': 'Anyone can see this gist.',
+    'editor.secretGistDescription':
+      'Only people with the link can see this gist.',
     'editor.addFile': 'Add file',
     'editor.fileTitle': 'File {index}',
     'editor.editingFile': 'Editing {filename}',
@@ -771,6 +776,10 @@ const translations: Record<Language, Record<string, string>> = {
     'editor.visibility': '可见性',
     'editor.visibilityLocked':
       '已有 Gist 的可见性不可修改，所以这里会保持当前设置。',
+    'editor.publicGistLabel': '公开 Gist',
+    'editor.secretGistLabel': '私密 Gist',
+    'editor.publicGistDescription': '任何人都可以看到这个 Gist。',
+    'editor.secretGistDescription': '只有拿到链接的人可以看到这个 Gist。',
     'editor.addFile': '添加文件',
     'editor.fileTitle': '文件 {index}',
     'editor.editingFile': '正在编辑 {filename}',

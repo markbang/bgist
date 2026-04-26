@@ -19,9 +19,6 @@ import type {
 } from '../../../app/navigation/types';
 import type { EditGistParams, GistFile } from '../../../types/gist';
 import { queryKeys } from '../../../shared/api/queryKeys';
-import { AppBadge } from '../../../shared/ui/AppBadge';
-import { AppButton } from '../../../shared/ui/AppButton';
-import { AppCard } from '../../../shared/ui/AppCard';
 import { AppErrorState } from '../../../shared/ui/AppErrorState';
 import { AppLoadingState } from '../../../shared/ui/AppLoadingState';
 import { AppScreen } from '../../../shared/ui/AppScreen';
@@ -295,11 +292,6 @@ export function GistEditorScreen({
   const currentFileIndex = currentFile
     ? files.findIndex(file => file.id === currentFile.id)
     : -1;
-  const fileCountLabel = `${files.length} ${
-    files.length === 1
-      ? t('gistDetail.fileSingular')
-      : t('gistDetail.filePlural')
-  }`;
   const isSaving = createGistMutation.isPending || editGistMutation.isPending;
 
   const handleSubmit = React.useCallback(async () => {
@@ -430,21 +422,8 @@ export function GistEditorScreen({
               }
             />
 
-            <View style={styles.summaryRow}>
-              <View style={styles.summaryPill}>
-                <Text style={styles.summaryPillText}>
-                  {isPublic ? t('common.public') : t('common.secret')}
-                </Text>
-              </View>
-              <View style={styles.summaryPill}>
-                <Text style={styles.summaryPillText}>{fileCountLabel}</Text>
-              </View>
-            </View>
-
-            <AppCard>
-              <Text style={styles.sectionTitle}>
-                {t('editor.detailsTitle')}
-              </Text>
+            <View style={styles.formSection}>
+              <Text style={styles.fieldLabel}>{t('editor.detailsTitle')}</Text>
               <TextInput
                 accessibilityLabel="Gist description"
                 onChangeText={setDescription}
@@ -453,111 +432,124 @@ export function GistEditorScreen({
                 style={styles.descriptionInput}
                 value={description}
               />
-
-              <View style={styles.visibilityHeader}>
-                <Text style={styles.label}>{t('editor.visibility')}</Text>
-                <AppBadge
-                  label={isPublic ? t('common.public') : t('common.secret')}
-                  tone={isPublic ? 'public' : 'secret'}
-                />
-              </View>
-
-              {isEditMode ? (
-                <Text style={styles.helperText}>
-                  {t('editor.visibilityLocked')}
-                </Text>
-              ) : (
-                <View style={styles.visibilityButtons}>
-                  <AppButton
-                    fullWidth={false}
-                    label={t('common.public')}
-                    onPress={() => setIsPublic(true)}
-                    size="compact"
-                    variant={isPublic ? 'primary' : 'secondary'}
-                  />
-                  <AppButton
-                    fullWidth={false}
-                    label={t('common.secret')}
-                    onPress={() => setIsPublic(false)}
-                    size="compact"
-                    variant={!isPublic ? 'primary' : 'secondary'}
-                  />
-                </View>
-              )}
-            </AppCard>
-
-            <View style={styles.fileSectionHeader}>
-              <Text style={styles.sectionTitle}>{t('common.files')}</Text>
-              <AppButton
-                fullWidth={false}
-                label={t('editor.addFile')}
-                onPress={addFile}
-                size="compact"
-                variant="secondary"
-              />
             </View>
 
-            <ScrollView
-              contentContainerStyle={styles.fileTabsContent}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.fileTabsScroll}
-            >
+            <View style={styles.formSection}>
+              <Pressable
+                accessibilityLabel={t('editor.visibility')}
+                accessibilityRole={isEditMode ? undefined : 'switch'}
+                accessibilityState={
+                  isEditMode ? { disabled: true } : { checked: isPublic }
+                }
+                disabled={isEditMode}
+                onPress={() => setIsPublic(current => !current)}
+                style={({ pressed }) => [
+                  styles.visibilityRow,
+                  pressed && !isEditMode ? styles.rowPressed : null,
+                ]}
+              >
+                <View style={styles.visibilityCopy}>
+                  <Text style={styles.rowTitle}>
+                    {isPublic
+                      ? t('editor.publicGistLabel')
+                      : t('editor.secretGistLabel')}
+                  </Text>
+                  <Text style={styles.helperText}>
+                    {isEditMode
+                      ? t('editor.visibilityLocked')
+                      : isPublic
+                      ? t('editor.publicGistDescription')
+                      : t('editor.secretGistDescription')}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.switchTrack,
+                    isPublic ? styles.switchTrackEnabled : null,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.switchThumb,
+                      isPublic ? styles.switchThumbEnabled : null,
+                    ]}
+                  />
+                </View>
+              </Pressable>
+            </View>
+
+            <View style={styles.formSection}>
+              <Text style={styles.fieldLabel}>{t('editor.addFile')}</Text>
               {files.map((file, index) => {
                 const isActive = file.id === currentFile?.id;
                 const label = getDraftFileLabel(file, index, t);
 
                 return (
-                  <Pressable
+                  <View
                     key={file.id}
-                    accessibilityRole="tab"
-                    accessibilityState={isActive ? { selected: true } : {}}
-                    onPress={() => setActiveFileId(file.id)}
-                    style={({ pressed }) => [
-                      styles.fileTab,
+                    style={[
+                      styles.fileRow,
                       isActive ? styles.fileTabActive : null,
-                      pressed ? styles.fileTabPressed : null,
                     ]}
                   >
-                    <Text
-                      style={[
-                        styles.fileTabLabel,
-                        isActive ? styles.fileTabLabelActive : null,
+                    <Pressable
+                      accessibilityLabel={label}
+                      accessibilityRole="button"
+                      accessibilityState={isActive ? { selected: true } : {}}
+                      onPress={() => setActiveFileId(file.id)}
+                      style={({ pressed }) => [
+                        styles.fileSelectButton,
+                        pressed ? styles.rowPressed : null,
                       ]}
                     >
-                      {label}
-                    </Text>
-                  </Pressable>
+                      <Text
+                        style={[
+                          styles.fileRowText,
+                          isActive ? styles.fileTabLabelActive : null,
+                        ]}
+                      >
+                        {label}
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      accessibilityLabel={
+                        isActive
+                          ? t('editor.removeCurrentFile')
+                          : t('editor.removeFileLabel', {
+                              index: index + 1,
+                            })
+                      }
+                      accessibilityRole="button"
+                      onPress={() => removeFile(file.id)}
+                      style={({ pressed }) => [
+                        styles.removeFileButton,
+                        pressed ? styles.rowPressed : null,
+                      ]}
+                    >
+                      <Text style={styles.removeFileText}>x</Text>
+                    </Pressable>
+                  </View>
                 );
               })}
-            </ScrollView>
+              <Pressable
+                accessibilityLabel={t('editor.addFile')}
+                accessibilityRole="button"
+                onPress={addFile}
+                style={({ pressed }) => [
+                  styles.addFileRow,
+                  pressed ? styles.rowPressed : null,
+                ]}
+              >
+                <Text style={styles.addFileText}>+ {t('editor.addFile')}</Text>
+              </Pressable>
+            </View>
 
             {currentFile ? (
-              <AppCard>
-                <View style={styles.fileHeader}>
-                  <View style={styles.fileHeaderText}>
-                    <Text style={styles.fileTitle}>
-                      {t('editor.fileTitle', { index: currentFileIndex + 1 })}
-                    </Text>
-                    <Text style={styles.fileMeta}>
-                      {currentFile.originalFilename
-                        ? t('editor.editingFile', {
-                            filename: currentFile.originalFilename,
-                          })
-                        : t('editor.newFile')}
-                    </Text>
-                  </View>
-                  <AppButton
-                    accessibilityLabel={t('editor.removeCurrentFile')}
-                    fullWidth={false}
-                    label={t('editor.remove')}
-                    onPress={() => removeFile(currentFile.id)}
-                    size="compact"
-                    variant="danger"
-                  />
-                </View>
-
+              <View style={styles.editorSection}>
                 <View style={styles.editorMetaRow}>
+                  <Text style={styles.editorSectionTitle}>
+                    {t('editor.fileTitle', { index: currentFileIndex + 1 })}
+                  </Text>
                   <View style={styles.editorMetaPill}>
                     <Text style={styles.editorMetaPillText}>
                       {getFileExtension(currentFile.filename)}
@@ -601,7 +593,7 @@ export function GistEditorScreen({
                   textAlignVertical="top"
                   value={currentFile.content}
                 />
-              </AppCard>
+              </View>
             ) : null}
           </ScrollView>
         </View>
@@ -624,41 +616,21 @@ const getStyles = createThemedStyles(theme =>
       paddingHorizontal: theme.spacing.sm,
       paddingTop: 0,
       paddingBottom: theme.spacing.lg,
-      gap: theme.spacing.xs,
-    },
-    summaryRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: theme.spacing.xs,
-    },
-    summaryPill: {
-      maxWidth: '100%',
-      borderRadius: 999,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surfaceMuted,
-      paddingHorizontal: theme.spacing.sm,
-      paddingVertical: theme.spacing.xs,
-    },
-    summaryPillText: {
-      color: theme.colors.textSecondary,
-      fontSize: 12,
-      fontWeight: '700',
-    },
-    sectionTitle: {
-      color: theme.colors.textPrimary,
-      fontSize: 18,
-      fontWeight: '800',
-    },
-    label: {
-      color: theme.colors.textPrimary,
-      fontSize: 14,
-      fontWeight: '700',
+      gap: theme.spacing.sm,
     },
     helperText: {
       color: theme.colors.textSecondary,
-      fontSize: 13,
-      lineHeight: 20,
+      fontSize: 12,
+      lineHeight: 17,
+    },
+    formSection: {
+      gap: theme.spacing.xs,
+    },
+    fieldLabel: {
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+      fontWeight: '800',
+      paddingHorizontal: theme.spacing.xs,
     },
     descriptionInput: {
       minHeight: 44,
@@ -672,82 +644,129 @@ const getStyles = createThemedStyles(theme =>
       paddingHorizontal: theme.spacing.md,
       paddingVertical: theme.spacing.sm + 3,
     },
-    visibilityHeader: {
+    visibilityRow: {
+      minHeight: 56,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: theme.spacing.sm,
-    },
-    visibilityButtons: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: theme.spacing.sm,
-    },
-    fileSectionHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: theme.spacing.sm,
-    },
-    fileSectionCopy: {
-      flex: 1,
-      gap: theme.spacing.xs,
-    },
-    fileTabsScroll: {
-      marginHorizontal: -theme.spacing.xs,
-    },
-    fileTabsContent: {
-      gap: theme.spacing.xs,
-      paddingHorizontal: theme.spacing.xs,
-    },
-    fileTab: {
-      minHeight: 38,
       borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
       backgroundColor: theme.colors.surface,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+    },
+    visibilityCopy: {
+      flex: 1,
+      minWidth: 0,
+      gap: 2,
+    },
+    rowTitle: {
+      color: theme.colors.textPrimary,
+      fontSize: 14,
+      lineHeight: 19,
+      fontWeight: '800',
+    },
+    switchTrack: {
+      width: 42,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      padding: 2,
+    },
+    switchTrackEnabled: {
+      borderColor: theme.colors.success,
+      backgroundColor: theme.colors.success,
+    },
+    switchThumb: {
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: theme.colors.surface,
+    },
+    switchThumbEnabled: {
+      transform: [{ translateX: 18 }],
+    },
+    fileRow: {
+      minHeight: 40,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+      borderRadius: theme.radius.sm,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      paddingLeft: theme.spacing.md,
+      paddingRight: theme.spacing.xs,
+      paddingVertical: theme.spacing.xs,
+    },
+    fileSelectButton: {
+      flex: 1,
+      minHeight: 32,
       justifyContent: 'center',
-      paddingHorizontal: theme.spacing.sm + 2,
-      paddingVertical: theme.spacing.xs + 1,
     },
     fileTabActive: {
       borderColor: theme.colors.accent,
-      backgroundColor: theme.colors.accentSoft,
+      backgroundColor: theme.colors.surface,
     },
-    fileTabPressed: {
-      opacity: 0.9,
+    rowPressed: {
+      opacity: 0.82,
     },
-    fileTabLabel: {
+    fileRowText: {
+      flex: 1,
       color: theme.colors.textSecondary,
-      fontSize: 12,
+      fontSize: 14,
+      lineHeight: 19,
       fontWeight: '700',
     },
     fileTabLabelActive: {
-      color: theme.colors.accent,
-    },
-    fileHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      gap: theme.spacing.sm,
-    },
-    fileHeaderText: {
-      flex: 1,
-      gap: theme.spacing.xs,
-    },
-    fileTitle: {
       color: theme.colors.textPrimary,
+    },
+    removeFileButton: {
+      width: 32,
+      height: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    removeFileText: {
+      color: theme.colors.textSecondary,
       fontSize: 16,
+      lineHeight: 20,
       fontWeight: '800',
     },
-    fileMeta: {
-      color: theme.colors.textSecondary,
+    addFileRow: {
+      minHeight: 40,
+      justifyContent: 'center',
+      borderRadius: theme.radius.sm,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.canvas,
+      paddingHorizontal: theme.spacing.md,
+    },
+    addFileText: {
+      color: theme.colors.accent,
+      fontSize: 14,
+      fontWeight: '800',
+    },
+    editorSection: {
+      gap: theme.spacing.xs,
+    },
+    editorSectionTitle: {
+      color: theme.colors.textPrimary,
       fontSize: 13,
+      lineHeight: 18,
+      fontWeight: '800',
     },
     editorMetaRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
+      alignItems: 'center',
       gap: theme.spacing.xs,
     },
     editorMetaPill: {
