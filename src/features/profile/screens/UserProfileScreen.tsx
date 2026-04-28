@@ -1,26 +1,39 @@
 import React from 'react';
-import {FlatList, Image, Linking, StyleSheet, type ListRenderItem, Text, View} from 'react-native';
-import {useQuery} from '@tanstack/react-query';
-import type {RootStackScreenProps} from '../../../app/navigation/types';
-import {useAppTheme} from '../../../app/theme/context';
-import {createThemedStyles} from '../../../app/theme/tokens';
-import {queryKeys} from '../../../shared/api/queryKeys';
-import {AppBadge} from '../../../shared/ui/AppBadge';
-import {AppButton} from '../../../shared/ui/AppButton';
-import {AppCard} from '../../../shared/ui/AppCard';
-import {AppEmptyState} from '../../../shared/ui/AppEmptyState';
-import {AppErrorState} from '../../../shared/ui/AppErrorState';
-import {AppLoadingState} from '../../../shared/ui/AppLoadingState';
-import {AppPageHeader} from '../../../shared/ui/AppPageHeader';
-import {AppScreen} from '../../../shared/ui/AppScreen';
-import {appFeedListProps} from '../../../shared/ui/listPresets';
-import {useI18n} from '../../../i18n/context';
-import type {Gist, UserInfo} from '../../../types/gist';
-import {GistCard} from '../../gists/components/GistCard';
-import {getUserGists, getUserInfo} from '../../gists/api/gists';
+import {
+  FlatList,
+  Image,
+  Linking,
+  StyleSheet,
+  type ListRenderItem,
+  Text,
+  View,
+} from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import type { RootStackScreenProps } from '../../../app/navigation/types';
+import { useAppTheme } from '../../../app/theme/context';
+import { createThemedStyles } from '../../../app/theme/tokens';
+import { queryKeys } from '../../../shared/api/queryKeys';
+import { AppBadge } from '../../../shared/ui/AppBadge';
+import { AppButton } from '../../../shared/ui/AppButton';
+import { AppEmptyState } from '../../../shared/ui/AppEmptyState';
+import { AppErrorState } from '../../../shared/ui/AppErrorState';
+import { AppLoadingState } from '../../../shared/ui/AppLoadingState';
+import { AppPageHeader } from '../../../shared/ui/AppPageHeader';
+import { AppScreen } from '../../../shared/ui/AppScreen';
+import { appFeedListProps } from '../../../shared/ui/listPresets';
+import { useI18n } from '../../../i18n/context';
+import type { Gist, UserInfo } from '../../../types/gist';
+import { GistCard } from '../../gists/components/GistCard';
+import { getUserGists, getUserInfo } from '../../gists/api/gists';
 
-const StatCard = React.memo(function StatCard({label, value}: {label: string; value: number}) {
-  const {themeName} = useAppTheme();
+const StatCard = React.memo(function StatCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: number;
+}) {
+  const { themeName } = useAppTheme();
   const styles = getStyles(themeName);
 
   return (
@@ -40,9 +53,11 @@ const ProfileHero = React.memo(function ProfileHero({
   username: string;
   t: (key: string) => string;
 }) {
-  const {themeName} = useAppTheme();
+  const { themeName } = useAppTheme();
   const styles = getStyles(themeName);
-  const metaItems = [profile.company, profile.location, profile.blog].filter(Boolean) as string[];
+  const metaItems = [profile.company, profile.location, profile.blog].filter(
+    Boolean,
+  ) as string[];
 
   return (
     <View style={styles.header}>
@@ -53,9 +68,9 @@ const ProfileHero = React.memo(function ProfileHero({
         accessory={<AppBadge label={`@${profile.login}`} tone="public" />}
       />
 
-      <AppCard style={styles.heroCard}>
+      <View style={styles.heroPanel}>
         <View style={styles.identity}>
-          <Image source={{uri: profile.avatar_url}} style={styles.avatar} />
+          <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
           <View style={styles.identityCopy}>
             <View style={styles.identityHeading}>
               <Text style={styles.name}>{profile.name ?? username}</Text>
@@ -77,42 +92,54 @@ const ProfileHero = React.memo(function ProfileHero({
         ) : null}
 
         <View style={styles.statsGrid}>
-          <StatCard label={t('profile.publicGists')} value={profile.public_gists} />
+          <StatCard
+            label={t('profile.publicGists')}
+            value={profile.public_gists}
+          />
           <StatCard label={t('profile.followers')} value={profile.followers} />
           <StatCard label={t('profile.following')} value={profile.following} />
-          <StatCard label={t('userProfile.publicRepos')} value={profile.public_repos} />
+          <StatCard
+            label={t('userProfile.publicRepos')}
+            value={profile.public_repos}
+          />
         </View>
 
         <AppButton
           fullWidth={false}
+          icon="explore-outline-rounded"
           label={t('userProfile.openGitHub')}
           onPress={() => {
             Linking.openURL(profile.html_url).catch(() => {});
           }}
           variant="secondary"
         />
-      </AppCard>
+      </View>
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>{t('userProfile.sectionTitle')}</Text>
-        <Text style={styles.sectionSubtitle}>{t('userProfile.sectionSubtitle')}</Text>
+        <Text style={styles.sectionSubtitle}>
+          {t('userProfile.sectionSubtitle')}
+        </Text>
       </View>
     </View>
   );
 });
 
-export function UserProfileScreen({navigation, route}: RootStackScreenProps<'UserProfile'>) {
-  const {themeName} = useAppTheme();
-  const {t} = useI18n();
+export function UserProfileScreen({
+  navigation,
+  route,
+}: RootStackScreenProps<'UserProfile'>) {
+  const { themeName } = useAppTheme();
+  const { t } = useI18n();
   const styles = getStyles(themeName);
-  const {username} = route.params;
+  const { username } = route.params;
   const profileQuery = useQuery({
     queryKey: queryKeys.userProfile(username),
-    queryFn: ({signal}) => getUserInfo(username, signal),
+    queryFn: ({ signal }) => getUserInfo(username, signal),
   });
   const gistsQuery = useQuery({
     queryKey: queryKeys.userGists(username),
-    queryFn: ({signal}) => getUserGists(username, 1, 30, signal),
+    queryFn: ({ signal }) => getUserGists(username, 1, 30, signal),
   });
 
   const handleRetry = React.useCallback(() => {
@@ -121,13 +148,13 @@ export function UserProfileScreen({navigation, route}: RootStackScreenProps<'Use
   }, [gistsQuery, profileQuery]);
   const handleOpenGist = React.useCallback(
     (gistId: string) => {
-      navigation.navigate('GistDetail', {gistId});
+      navigation.navigate('GistDetail', { gistId });
     },
     [navigation],
   );
   const keyExtractor = React.useCallback((item: Gist) => item.id, []);
   const renderItem = React.useCallback<ListRenderItem<Gist>>(
-    ({item}) => <GistCard gist={item} onPressGist={handleOpenGist} />,
+    ({ item }) => <GistCard gist={item} onPressGist={handleOpenGist} />,
     [handleOpenGist],
   );
   const listHeader = React.useMemo(
@@ -148,7 +175,10 @@ export function UserProfileScreen({navigation, route}: RootStackScreenProps<'Use
     [t],
   );
 
-  if ((profileQuery.isLoading && !profileQuery.data) || (gistsQuery.isLoading && !gistsQuery.data)) {
+  if (
+    (profileQuery.isLoading && !profileQuery.data) ||
+    (gistsQuery.isLoading && !gistsQuery.data)
+  ) {
     return (
       <AppScreen>
         <AppLoadingState
@@ -159,7 +189,12 @@ export function UserProfileScreen({navigation, route}: RootStackScreenProps<'Use
     );
   }
 
-  if (profileQuery.isError || gistsQuery.isError || !profileQuery.data || !gistsQuery.data) {
+  if (
+    profileQuery.isError ||
+    gistsQuery.isError ||
+    !profileQuery.data ||
+    !gistsQuery.data
+  ) {
     return (
       <AppScreen>
         <AppErrorState
@@ -202,7 +237,14 @@ const getStyles = createThemedStyles(theme =>
     header: {
       gap: theme.spacing.sm,
     },
-    heroCard: {
+    heroPanel: {
+      borderRadius: theme.radius.sm,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: theme.spacing.sm + 2,
+      paddingVertical: theme.spacing.sm,
       gap: theme.spacing.sm,
     },
     identity: {
@@ -211,9 +253,9 @@ const getStyles = createThemedStyles(theme =>
       gap: theme.spacing.sm,
     },
     avatar: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
       backgroundColor: theme.colors.surfaceMuted,
     },
     identityCopy: {
@@ -228,7 +270,7 @@ const getStyles = createThemedStyles(theme =>
     },
     name: {
       color: theme.colors.textPrimary,
-      fontSize: 18,
+      fontSize: 16,
       fontWeight: '800',
     },
     login: {
@@ -238,8 +280,8 @@ const getStyles = createThemedStyles(theme =>
     },
     bio: {
       color: theme.colors.textPrimary,
-      fontSize: 13,
-      lineHeight: 18,
+      fontSize: 12,
+      lineHeight: 17,
     },
     metaRow: {
       flexDirection: 'row',
@@ -247,7 +289,7 @@ const getStyles = createThemedStyles(theme =>
       gap: theme.spacing.sm,
     },
     metaPill: {
-      borderRadius: 999,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
@@ -279,12 +321,12 @@ const getStyles = createThemedStyles(theme =>
     },
     statValue: {
       color: theme.colors.textPrimary,
-      fontSize: 18,
+      fontSize: 16,
       fontWeight: '800',
     },
     statLabel: {
       color: theme.colors.textSecondary,
-      fontSize: 12,
+      fontSize: 11,
       fontWeight: '600',
     },
     sectionHeader: {

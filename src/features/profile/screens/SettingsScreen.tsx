@@ -25,7 +25,6 @@ import { useI18n } from '../../../i18n/context';
 import { appRepositoryUrl, appVersion } from '../../../shared/appInfo';
 import { AppBanner } from '../../../shared/ui/AppBanner';
 import { AppButton } from '../../../shared/ui/AppButton';
-import { AppCard } from '../../../shared/ui/AppCard';
 import { AppPageHeader } from '../../../shared/ui/AppPageHeader';
 import { AppSegmentedControl } from '../../../shared/ui/AppSegmentedControl';
 import { AppScreen } from '../../../shared/ui/AppScreen';
@@ -51,7 +50,7 @@ function SettingsSection({
   const styles = getStyles(themeName);
 
   return (
-    <AppCard>
+    <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionIcon}>
           <MaterialSymbolIcon icon={icon} size={20} />
@@ -61,8 +60,8 @@ function SettingsSection({
           <Text style={styles.sectionDescription}>{description}</Text>
         </View>
       </View>
-      {children}
-    </AppCard>
+      <View style={styles.sectionBody}>{children}</View>
+    </View>
   );
 }
 
@@ -357,7 +356,7 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
           }
         />
 
-        <AppCard style={styles.overviewCard}>
+        <View style={styles.overviewCard}>
           <View style={styles.overviewGrid}>
             <View style={styles.overviewTile}>
               <View style={styles.overviewIcon}>
@@ -407,7 +406,7 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
               <Text style={styles.overviewValue}>{appVersion}</Text>
             </View>
           </View>
-        </AppCard>
+        </View>
 
         <SettingsSection
           description={t('settings.appearanceDescription')}
@@ -468,6 +467,7 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
           <View style={styles.actionRow}>
             <AppButton
               fullWidth={false}
+              icon="auto-mode-rounded"
               label={t('settings.resetAppearance')}
               onPress={() => {
                 Promise.all([
@@ -605,6 +605,7 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
           <View style={styles.actionRow}>
             <AppButton
               fullWidth={false}
+              icon="search-rounded"
               label={t('settings.checkForUpdates')}
               loading={isChecking}
               onPress={() => {
@@ -617,6 +618,7 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
             {updateAvailable ? (
               <AppButton
                 fullWidth={false}
+                icon="auto-mode-rounded"
                 label={t('settings.installLatest')}
                 loading={installStatus === 'downloading'}
                 onPress={() => {
@@ -628,6 +630,7 @@ export function SettingsScreen({}: RootStackScreenProps<'Settings'>) {
             ) : latestVersion ? (
               <AppButton
                 fullWidth={false}
+                icon="explore-outline-rounded"
                 label={t('settings.openLatestRelease')}
                 onPress={() => {
                   Promise.resolve(openRelease()).catch(() => {});
@@ -706,46 +709,50 @@ export default SettingsScreen;
 const getStyles = createThemedStyles(theme =>
   StyleSheet.create({
     content: {
-      paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
+      paddingTop: theme.spacing.sm,
       paddingBottom: theme.spacing.xl,
-      gap: theme.spacing.lg,
+      gap: theme.spacing.sm,
     },
     overviewCard: {
-      padding: theme.spacing.sm,
+      borderRadius: theme.radius.sm,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      overflow: 'hidden',
     },
     overviewGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: theme.spacing.sm,
     },
     overviewTile: {
-      flexBasis: '48%',
+      flexBasis: '50%',
       flexGrow: 1,
-      borderRadius: theme.radius.md,
-      borderCurve: 'continuous',
-      borderWidth: 1,
+      minHeight: 92,
+      borderRightWidth: StyleSheet.hairlineWidth,
+      borderBottomWidth: StyleSheet.hairlineWidth,
       borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surfaceMuted,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.md,
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: theme.spacing.sm + 2,
+      paddingVertical: theme.spacing.sm,
       gap: theme.spacing.xs,
     },
     overviewIcon: {
-      width: 32,
-      height: 32,
-      borderRadius: 10,
+      width: 28,
+      height: 28,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.colors.surface,
+      backgroundColor: theme.colors.surfaceMuted,
     },
     overviewLabel: {
       color: theme.colors.textSecondary,
-      fontSize: 12,
+      fontSize: 11,
       fontWeight: '700',
       textTransform: 'uppercase',
-      letterSpacing: 0.4,
+      letterSpacing: 0,
     },
     overviewValue: {
       color: theme.colors.textPrimary,
@@ -766,22 +773,38 @@ const getStyles = createThemedStyles(theme =>
       fontSize: 12,
       fontWeight: '800',
     },
+    section: {
+      borderRadius: theme.radius.sm,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      overflow: 'hidden',
+    },
     sectionHeader: {
       flexDirection: 'row',
       alignItems: 'flex-start',
-      gap: theme.spacing.md,
+      gap: theme.spacing.sm,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.colors.border,
+      paddingHorizontal: theme.spacing.sm + 2,
+      paddingVertical: theme.spacing.sm,
+    },
+    sectionBody: {
+      gap: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.sm + 2,
+      paddingVertical: theme.spacing.sm,
     },
     sectionIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
+      width: 30,
+      height: 30,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
       backgroundColor: theme.colors.surfaceMuted,
       alignItems: 'center',
       justifyContent: 'center',
-      marginTop: 2,
     },
     sectionCopy: {
       flex: 1,
@@ -789,13 +812,13 @@ const getStyles = createThemedStyles(theme =>
     },
     sectionTitle: {
       color: theme.colors.textPrimary,
-      fontSize: 18,
+      fontSize: 15,
       fontWeight: '800',
     },
     sectionDescription: {
       color: theme.colors.textSecondary,
-      fontSize: 14,
-      lineHeight: 21,
+      fontSize: 12,
+      lineHeight: 17,
     },
     optionBlock: {
       gap: theme.spacing.sm,
@@ -808,7 +831,7 @@ const getStyles = createThemedStyles(theme =>
       color: theme.colors.textSecondary,
       fontSize: 12,
       lineHeight: 18,
-      marginTop: theme.spacing.sm,
+      marginTop: theme.spacing.xs,
     },
     optionPill: {
       flexDirection: 'row',
@@ -819,7 +842,7 @@ const getStyles = createThemedStyles(theme =>
       borderColor: theme.colors.border,
       backgroundColor: theme.colors.surfaceMuted,
       paddingHorizontal: theme.spacing.sm,
-      paddingVertical: theme.spacing.xs,
+      paddingVertical: theme.spacing.xs - 1,
     },
     optionPillText: {
       color: theme.colors.textPrimary,
@@ -835,7 +858,7 @@ const getStyles = createThemedStyles(theme =>
       flexBasis: '48%',
       flexGrow: 1,
       minWidth: 140,
-      borderRadius: theme.radius.md,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
@@ -846,9 +869,6 @@ const getStyles = createThemedStyles(theme =>
     presetCardSelected: {
       borderColor: theme.colors.accent,
       backgroundColor: theme.colors.surface,
-      ...theme.shadow.card,
-      shadowOpacity: 0.12,
-      elevation: 3,
     },
     presetCardPressed: {
       opacity: 0.9,
@@ -858,7 +878,7 @@ const getStyles = createThemedStyles(theme =>
       borderCurve: 'continuous',
       borderWidth: 1,
       overflow: 'hidden',
-      minHeight: 72,
+      minHeight: 56,
     },
     presetPreviewTop: {
       flexDirection: 'row',
@@ -874,7 +894,7 @@ const getStyles = createThemedStyles(theme =>
     },
     presetPreviewAccent: {
       width: 28,
-      height: 8,
+      height: 6,
       borderRadius: 999,
     },
     presetPreviewBody: {
@@ -929,19 +949,19 @@ const getStyles = createThemedStyles(theme =>
       gap: theme.spacing.sm,
     },
     rowGroup: {
-      borderRadius: theme.radius.lg,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       overflow: 'hidden',
       borderWidth: 1,
       borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surfaceMuted,
+      backgroundColor: theme.colors.surface,
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: theme.spacing.sm,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm + 2,
+      paddingVertical: theme.spacing.sm,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: theme.colors.border,
     },
@@ -952,11 +972,11 @@ const getStyles = createThemedStyles(theme =>
       opacity: 0.88,
     },
     rowIcon: {
-      width: 36,
-      height: 36,
-      borderRadius: 12,
+      width: 28,
+      height: 28,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
-      backgroundColor: theme.colors.surface,
+      backgroundColor: theme.colors.surfaceMuted,
       alignItems: 'center',
       justifyContent: 'center',
     },

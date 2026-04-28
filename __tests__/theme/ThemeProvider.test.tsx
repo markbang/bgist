@@ -91,22 +91,22 @@ test('persists the selected appearance mode and resolves the active theme', asyn
   );
 
   await waitFor(() => {
-    expect(screen.getByText('system:default:dark:#081018')).toBeTruthy();
-    expect(screen.getByText('styled:#151d27:#26313d')).toBeTruthy();
+    expect(screen.getByText('system:default:dark:#0d1117')).toBeTruthy();
+    expect(screen.getByText('styled:#21262d:#30363d')).toBeTruthy();
   });
 
   fireEvent.press(screen.getByRole('button', { name: 'set-light' }));
 
   await waitFor(() => {
-    expect(screen.getByText('light:default:light:#f3f6fa')).toBeTruthy();
-    expect(screen.getByText('styled:#eef3f8:#d7e0ea')).toBeTruthy();
+    expect(screen.getByText('light:default:light:#f7f8fa')).toBeTruthy();
+    expect(screen.getByText('styled:#f1f3f5:#d8dee4')).toBeTruthy();
   });
 
   fireEvent.press(screen.getByRole('button', { name: 'set-dark' }));
 
   await waitFor(() => {
-    expect(screen.getByText('dark:default:dark:#081018')).toBeTruthy();
-    expect(screen.getByText('styled:#151d27:#26313d')).toBeTruthy();
+    expect(screen.getByText('dark:default:dark:#0d1117')).toBeTruthy();
+    expect(screen.getByText('styled:#21262d:#30363d')).toBeTruthy();
   });
 
   fireEvent.press(screen.getByRole('button', { name: 'set-ocean' }));

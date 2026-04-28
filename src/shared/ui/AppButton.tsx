@@ -9,14 +9,20 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import {createThemedStyles} from '../../app/theme/tokens';
-import {useAppTheme} from '../../app/theme/context';
+import { createThemedStyles } from '../../app/theme/tokens';
+import { useAppTheme } from '../../app/theme/context';
+import {
+  MaterialSymbolIcon,
+  type MaterialSymbolName,
+} from '../../components/TabIcons';
 
-type AppButtonVariant = 'primary' | 'secondary' | 'danger';
+type AppButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 type AppButtonSize = 'default' | 'compact';
 
 interface AppButtonProps extends Omit<PressableProps, 'children' | 'style'> {
   label: string;
+  icon?: MaterialSymbolName;
+  iconPosition?: 'leading' | 'trailing';
   onPress?: () => void;
   variant?: AppButtonVariant;
   size?: AppButtonSize;
@@ -28,6 +34,8 @@ interface AppButtonProps extends Omit<PressableProps, 'children' | 'style'> {
 
 export function AppButton({
   label,
+  icon,
+  iconPosition = 'leading',
   onPress,
   variant = 'primary',
   size = 'default',
@@ -40,7 +48,7 @@ export function AppButton({
   accessibilityState,
   ...pressableProps
 }: AppButtonProps) {
-  const {theme, themeName, themePreset} = useAppTheme();
+  const { theme, themeName, themePreset } = useAppTheme();
   const styles = getStyles(themeName, themePreset);
   const isDisabled = disabled || loading;
   const buttonColors = {
@@ -53,6 +61,12 @@ export function AppButton({
     secondary: {
       backgroundColor: theme.colors.surface,
       borderColor: theme.colors.border,
+      textColor: theme.colors.textPrimary,
+      spinnerColor: theme.colors.accent,
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+      borderColor: 'transparent',
       textColor: theme.colors.textPrimary,
       spinnerColor: theme.colors.accent,
     },
@@ -76,7 +90,7 @@ export function AppButton({
       }}
       disabled={isDisabled}
       onPress={onPress}
-      style={({pressed}) => [
+      style={({ pressed }) => [
         styles.buttonBase,
         fullWidth ? styles.fullWidth : styles.autoWidth,
         size === 'compact' ? styles.buttonCompact : styles.buttonDefault,
@@ -87,19 +101,35 @@ export function AppButton({
         pressed && !isDisabled ? styles.buttonPressed : null,
         isDisabled ? styles.buttonDisabled : null,
         style,
-      ]}>
+      ]}
+    >
       <View style={styles.content}>
         {loading ? (
           <ActivityIndicator color={buttonColors.spinnerColor} size="small" />
+        ) : null}
+        {icon && iconPosition === 'leading' && !loading ? (
+          <MaterialSymbolIcon
+            color={buttonColors.textColor}
+            icon={icon}
+            size={size === 'compact' ? 16 : 18}
+          />
         ) : null}
         <Text
           style={[
             styles.labelBase,
             size === 'compact' ? styles.labelCompact : styles.labelDefault,
-            {color: buttonColors.textColor},
-          ]}>
+            { color: buttonColors.textColor },
+          ]}
+        >
           {label}
         </Text>
+        {icon && iconPosition === 'trailing' && !loading ? (
+          <MaterialSymbolIcon
+            color={buttonColors.textColor}
+            icon={icon}
+            size={size === 'compact' ? 16 : 18}
+          />
+        ) : null}
       </View>
     </Pressable>
   );
@@ -115,14 +145,14 @@ const getStyles = createThemedStyles(theme =>
       alignItems: 'center',
     },
     buttonDefault: {
-      minHeight: 48,
-      paddingHorizontal: theme.spacing.md + 2,
-      paddingVertical: theme.spacing.sm + 1,
+      minHeight: 42,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.xs + 2,
     },
     buttonCompact: {
-      minHeight: 40,
-      paddingHorizontal: theme.spacing.sm + 4,
-      paddingVertical: theme.spacing.xs,
+      minHeight: 34,
+      paddingHorizontal: theme.spacing.sm + 2,
+      paddingVertical: theme.spacing.xs - 1,
       borderRadius: theme.radius.sm,
     },
     fullWidth: {
@@ -142,14 +172,14 @@ const getStyles = createThemedStyles(theme =>
       letterSpacing: 0,
     },
     labelDefault: {
-      fontSize: 15,
+      fontSize: 14,
     },
     labelCompact: {
-      fontSize: 13,
+      fontSize: 12,
     },
     buttonPressed: {
       opacity: 0.9,
-      transform: [{scale: 0.98}],
+      transform: [{ scale: 0.98 }],
     },
     buttonDisabled: {
       opacity: 0.6,

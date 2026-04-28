@@ -1,7 +1,7 @@
 import React from 'react';
-import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
-import {createThemedStyles} from '../../app/theme/tokens';
-import {useAppTheme} from '../../app/theme/context';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { createThemedStyles } from '../../app/theme/tokens';
+import { useAppTheme } from '../../app/theme/context';
 
 interface AppLoadingStateProps {
   label?: string;
@@ -12,7 +12,7 @@ export function AppLoadingState({
   label = 'Loading',
   description = 'Fetching the latest data for this screen.',
 }: AppLoadingStateProps) {
-  const {theme, themeName} = useAppTheme();
+  const { theme, themeName } = useAppTheme();
   const styles = getStyles(themeName);
 
   return (
@@ -34,15 +34,15 @@ const getStyles = createThemedStyles(theme =>
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
       gap: theme.spacing.xs,
     },
     panel: {
       width: '100%',
-      maxWidth: 340,
+      maxWidth: 360,
       alignItems: 'center',
       gap: theme.spacing.xs,
-      borderRadius: theme.radius.md,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
@@ -51,9 +51,9 @@ const getStyles = createThemedStyles(theme =>
       paddingVertical: theme.spacing.sm + 2,
     },
     spinnerWrap: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
+      width: 32,
+      height: 32,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
@@ -63,13 +63,13 @@ const getStyles = createThemedStyles(theme =>
     },
     label: {
       color: theme.colors.textPrimary,
-      fontSize: 16,
+      fontSize: 14,
       fontWeight: '800',
     },
     description: {
       color: theme.colors.textSecondary,
-      fontSize: 13,
-      lineHeight: 18,
+      fontSize: 12,
+      lineHeight: 17,
       textAlign: 'center',
     },
   }),

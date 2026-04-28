@@ -1,14 +1,14 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Clipboard from '@react-native-clipboard/clipboard';
-import {Linking, ScrollView, StyleSheet, Text, View} from 'react-native';
-import {createThemedStyles} from '../../../app/theme/tokens';
-import {useAppTheme} from '../../../app/theme/context';
-import {MaterialSymbolIcon} from '../../../components/TabIcons';
-import {AppBadge} from '../../../shared/ui/AppBadge';
-import {AppButton} from '../../../shared/ui/AppButton';
-import {AppCard} from '../../../shared/ui/AppCard';
-import {AppScreen} from '../../../shared/ui/AppScreen';
-import {useSession} from '../session/SessionProvider';
+import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { createThemedStyles } from '../../../app/theme/tokens';
+import { useAppTheme } from '../../../app/theme/context';
+import { MaterialSymbolIcon } from '../../../components/TabIcons';
+import { AppBadge } from '../../../shared/ui/AppBadge';
+import { AppButton } from '../../../shared/ui/AppButton';
+import { AppCard } from '../../../shared/ui/AppCard';
+import { AppScreen } from '../../../shared/ui/AppScreen';
+import { useSession } from '../session/SessionProvider';
 
 type VerificationState = {
   userCode: string;
@@ -34,8 +34,16 @@ function getSignInErrorMessage(error: unknown) {
   }
 }
 
-function AuthStep({index, title, description}: {index: string; title: string; description: string}) {
-  const {themeName} = useAppTheme();
+function AuthStep({
+  index,
+  title,
+  description,
+}: {
+  index: string;
+  title: string;
+  description: string;
+}) {
+  const { themeName } = useAppTheme();
   const styles = getStyles(themeName);
 
   return (
@@ -52,12 +60,14 @@ function AuthStep({index, title, description}: {index: string; title: string; de
 }
 
 export default function LoginScreen() {
-  const {themeName} = useAppTheme();
+  const { themeName } = useAppTheme();
   const styles = getStyles(themeName);
-  const {signIn} = useSession();
+  const { signIn } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [verification, setVerification] = useState<VerificationState | null>(null);
+  const [verification, setVerification] = useState<VerificationState | null>(
+    null,
+  );
   const isMountedRef = useRef(true);
 
   useEffect(() => {
@@ -68,7 +78,10 @@ export default function LoginScreen() {
 
   return (
     <AppScreen>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.hero}>
           <View style={styles.heroBadge}>
             <MaterialSymbolIcon icon="description-rounded" size={18} />
@@ -76,7 +89,8 @@ export default function LoginScreen() {
           </View>
           <Text style={styles.title}>BGist</Text>
           <Text style={styles.subtitle}>
-            Sign in once, then browse, search, read, and edit gists with a compact native workflow.
+            Sign in once, then browse, search, read, and edit gists with a
+            compact native workflow.
           </Text>
         </View>
 
@@ -99,7 +113,8 @@ export default function LoginScreen() {
             <AppBadge label="Device flow" tone="public" />
             <Text style={styles.cardTitle}>Connect your GitHub account</Text>
             <Text style={styles.helper}>
-              BGist uses GitHub Device Flow, so you can approve login from the browser and come back here instantly.
+              BGist uses GitHub Device Flow, so you can approve login from the
+              browser and come back here instantly.
             </Text>
           </View>
 
@@ -123,12 +138,13 @@ export default function LoginScreen() {
 
           <AppButton
             disabled={isSubmitting}
+            icon="account-circle-outline"
             label={
               isSubmitting && verification
                 ? 'Waiting for GitHub authorization…'
                 : isSubmitting
-                  ? 'Starting GitHub device sign-in…'
-                  : 'Sign in with GitHub'
+                ? 'Starting GitHub device sign-in…'
+                : 'Sign in with GitHub'
             }
             loading={isSubmitting && !verification}
             onPress={() => {
@@ -176,7 +192,8 @@ export default function LoginScreen() {
               <AppBadge label="Authorize now" tone="secret" />
               <Text style={styles.cardTitle}>Authorize on GitHub</Text>
               <Text style={styles.helper}>
-                Open GitHub, enter this one-time code, and keep this screen open while BGist waits for approval.
+                Open GitHub, enter this one-time code, and keep this screen open
+                while BGist waits for approval.
               </Text>
             </View>
 
@@ -203,6 +220,7 @@ export default function LoginScreen() {
             <View style={styles.actions}>
               <AppButton
                 fullWidth={false}
+                icon="code-rounded"
                 label="Copy code"
                 onPress={() => {
                   Clipboard.setString(verification.userCode);
@@ -211,6 +229,7 @@ export default function LoginScreen() {
               />
               <AppButton
                 fullWidth={false}
+                icon="explore-outline-rounded"
                 label="Open GitHub verification"
                 onPress={() => {
                   Linking.openURL(verification.verificationUri).catch(() => {
@@ -232,11 +251,18 @@ const getStyles = createThemedStyles(theme =>
     content: {
       flexGrow: 1,
       justifyContent: 'center',
-      paddingHorizontal: theme.spacing.lg,
-      paddingVertical: theme.spacing.lg,
-      gap: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.md,
+      gap: theme.spacing.sm,
     },
     hero: {
+      borderRadius: theme.radius.sm,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.md,
       gap: theme.spacing.xs,
     },
     heroBadge: {
@@ -247,9 +273,9 @@ const getStyles = createThemedStyles(theme =>
       borderRadius: 999,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surfaceMuted,
+      backgroundColor: theme.colors.surface,
       paddingHorizontal: theme.spacing.sm,
-      paddingVertical: theme.spacing.xs,
+      paddingVertical: theme.spacing.xs - 1,
     },
     heroBadgeText: {
       color: theme.colors.textSecondary,
@@ -257,14 +283,14 @@ const getStyles = createThemedStyles(theme =>
       fontWeight: '700',
     },
     title: {
-      fontSize: 36,
+      fontSize: 28,
       fontWeight: '800',
       color: theme.colors.textPrimary,
     },
     subtitle: {
       color: theme.colors.textSecondary,
-      fontSize: 14,
-      lineHeight: 20,
+      fontSize: 13,
+      lineHeight: 18,
     },
     errorCard: {
       borderColor: theme.colors.dangerBorder,
@@ -304,27 +330,27 @@ const getStyles = createThemedStyles(theme =>
       lineHeight: 20,
     },
     authCard: {
-      gap: theme.spacing.md,
+      gap: theme.spacing.sm,
     },
     verificationCard: {
-      gap: theme.spacing.md,
+      gap: theme.spacing.sm,
     },
     cardHeader: {
       gap: theme.spacing.xs,
     },
     cardTitle: {
       color: theme.colors.textPrimary,
-      fontSize: 18,
+      fontSize: 16,
       fontWeight: '800',
     },
     helper: {
       color: theme.colors.textSecondary,
-      fontSize: 14,
-      lineHeight: 21,
+      fontSize: 13,
+      lineHeight: 18,
     },
     stepsCard: {
       gap: theme.spacing.sm,
-      borderRadius: theme.radius.md,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       backgroundColor: theme.colors.surfaceMuted,
       paddingHorizontal: theme.spacing.sm,
@@ -383,7 +409,7 @@ const getStyles = createThemedStyles(theme =>
     },
     codeValue: {
       color: theme.colors.textPrimary,
-      fontSize: 30,
+      fontSize: 28,
       fontWeight: '900',
       letterSpacing: 1.4,
     },
@@ -395,7 +421,7 @@ const getStyles = createThemedStyles(theme =>
     metaPill: {
       flexGrow: 1,
       minWidth: '47%',
-      borderRadius: theme.radius.md,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       backgroundColor: theme.colors.surfaceMuted,
       paddingHorizontal: theme.spacing.sm,

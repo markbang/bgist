@@ -1,64 +1,41 @@
 import React from 'react';
-import {StatusBar, StyleSheet, Text, View} from 'react-native';
-import {NavigationContainer, DarkTheme, DefaultTheme} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {MaterialSymbolIcon} from '../../components/TabIcons';
+import { StatusBar } from 'react-native';
+import {
+  NavigationContainer,
+  DarkTheme,
+  DefaultTheme,
+} from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from '../../features/auth/screens/LoginScreen';
-import {useSession} from '../../features/auth/session/SessionProvider';
-import {GistDetailScreen} from '../../features/gists/screens/GistDetailScreen';
-import {GistEditorScreen} from '../../features/gists/screens/GistEditorScreen';
-import {GistHistoryScreen} from '../../features/gists/screens/GistHistoryScreen';
-import {GistViewerScreen} from '../../features/gists/screens/GistViewerScreen';
-import {SettingsScreen} from '../../features/profile/screens/SettingsScreen';
-import {UserProfileScreen} from '../../features/profile/screens/UserProfileScreen';
-import {AppBadge} from '../../shared/ui/AppBadge';
-import {AppCard} from '../../shared/ui/AppCard';
-import {AppScreen} from '../../shared/ui/AppScreen';
-import {useAppTheme} from '../theme/context';
-import {createThemedStyles} from '../theme/tokens';
-import {MainTabs} from './MainTabs';
-import type {RootStackParamList} from './types';
+import { useSession } from '../../features/auth/session/SessionProvider';
+import { GistDetailScreen } from '../../features/gists/screens/GistDetailScreen';
+import { GistEditorScreen } from '../../features/gists/screens/GistEditorScreen';
+import { GistHistoryScreen } from '../../features/gists/screens/GistHistoryScreen';
+import { GistViewerScreen } from '../../features/gists/screens/GistViewerScreen';
+import { SettingsScreen } from '../../features/profile/screens/SettingsScreen';
+import { UserProfileScreen } from '../../features/profile/screens/UserProfileScreen';
+import { AppScreen } from '../../shared/ui/AppScreen';
+import { AppLoadingState } from '../../shared/ui/AppLoadingState';
+import { useAppTheme } from '../theme/context';
+import { MainTabs } from './MainTabs';
+import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-function PlaceholderScreen({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  const {themeName} = useAppTheme();
-  const styles = getStyles(themeName);
-
+function LoadingScreen() {
   return (
     <AppScreen>
-      <View style={styles.placeholder}>
-        <AppCard style={styles.placeholderCard}>
-          <View style={styles.placeholderIcon}>
-            <MaterialSymbolIcon icon="description-rounded" size={24} />
-          </View>
-          <AppBadge label="BGist" tone="public" />
-          <Text style={styles.placeholderTitle}>{title}</Text>
-          <Text style={styles.placeholderDescription}>{description}</Text>
-        </AppCard>
-      </View>
+      <AppLoadingState
+        label="Restoring session"
+        description="Checking for a saved GitHub session before loading the app."
+      />
     </AppScreen>
   );
 }
 
-function LoadingScreen() {
-  return (
-    <PlaceholderScreen
-      title="Restoring session"
-      description="Checking for a saved GitHub session before loading the app."
-    />
-  );
-}
-
 export function RootNavigator() {
-  const {theme, themeName, isDark} = useAppTheme();
-  const {status} = useSession();
+  const { theme, themeName, isDark } = useAppTheme();
+  const { status } = useSession();
 
   return (
     <>
@@ -78,8 +55,9 @@ export function RootNavigator() {
             primary: theme.colors.accent,
             text: theme.colors.textPrimary,
           },
-        }}>
-        <Stack.Navigator screenOptions={{headerShown: false}}>
+        }}
+      >
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
           {status === 'signedIn' ? (
             <>
               <Stack.Screen name="MainTabs" component={MainTabs} />
@@ -100,43 +78,3 @@ export function RootNavigator() {
     </>
   );
 }
-
-const getStyles = createThemedStyles(theme =>
-  StyleSheet.create({
-    placeholder: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: theme.spacing.lg,
-    },
-    placeholderCard: {
-      width: '100%',
-      maxWidth: 340,
-      alignItems: 'center',
-      gap: theme.spacing.sm,
-    },
-    placeholderIcon: {
-      width: 52,
-      height: 52,
-      borderRadius: theme.radius.md,
-      borderCurve: 'continuous',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surfaceMuted,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    placeholderTitle: {
-      color: theme.colors.textPrimary,
-      fontSize: 22,
-      fontWeight: '900',
-      textAlign: 'center',
-    },
-    placeholderDescription: {
-      color: theme.colors.textSecondary,
-      fontSize: 15,
-      lineHeight: 22,
-      textAlign: 'center',
-    },
-  }),
-);

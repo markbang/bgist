@@ -81,15 +81,15 @@ const sharedSpacing = {
 
 export const lightAppTheme: AppTheme = {
   colors: {
-    canvas: '#f3f6fa',
+    canvas: '#f7f8fa',
     surface: '#ffffff',
-    surfaceMuted: '#eef3f8',
-    border: '#d7e0ea',
-    textPrimary: '#111827',
-    textSecondary: '#64748b',
-    placeholder: '#94a3b8',
-    accent: '#2f81f7',
-    accentSoft: '#dbeafe',
+    surfaceMuted: '#f1f3f5',
+    border: '#d8dee4',
+    textPrimary: '#101418',
+    textSecondary: '#68717d',
+    placeholder: '#8c959f',
+    accent: '#0969da',
+    accentSoft: '#ddf4ff',
     accentContrast: '#ffffff',
     success: '#047857',
     successSoft: '#daf8e7',
@@ -121,9 +121,9 @@ export const lightAppTheme: AppTheme = {
   shadow: {
     card: {
       shadowColor: '#0f172a',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.03,
-      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.02,
+      shadowRadius: 3,
       elevation: 0,
     },
   },
@@ -133,13 +133,13 @@ export const lightAppTheme: AppTheme = {
 
 export const darkAppTheme: AppTheme = {
   colors: {
-    canvas: '#081018',
-    surface: '#0b141d',
-    surfaceMuted: '#151d27',
-    border: '#26313d',
-    textPrimary: '#f2f6fb',
-    textSecondary: '#9aa6b2',
-    placeholder: '#6f7d8c',
+    canvas: '#0d1117',
+    surface: '#161b22',
+    surfaceMuted: '#21262d',
+    border: '#30363d',
+    textPrimary: '#f0f6fc',
+    textSecondary: '#8b949e',
+    placeholder: '#6e7681',
     accent: '#58a6ff',
     accentSoft: '#10233a',
     accentContrast: '#06101a',

@@ -1,10 +1,10 @@
 import React from 'react';
-import {StyleSheet, Text, View} from 'react-native';
-import {createThemedStyles} from '../../app/theme/tokens';
-import {useAppTheme} from '../../app/theme/context';
-import {MaterialSymbolIcon} from '../../components/TabIcons';
-import {AppBadge} from './AppBadge';
-import {AppButton} from './AppButton';
+import { StyleSheet, Text, View } from 'react-native';
+import { createThemedStyles } from '../../app/theme/tokens';
+import { useAppTheme } from '../../app/theme/context';
+import { MaterialSymbolIcon } from '../../components/TabIcons';
+import { AppBadge } from './AppBadge';
+import { AppButton } from './AppButton';
 
 interface AppEmptyStateProps {
   title: string;
@@ -21,21 +21,29 @@ export function AppEmptyState({
   actionLabel,
   onAction,
 }: AppEmptyStateProps) {
-  const {themeName} = useAppTheme();
+  const { themeName } = useAppTheme();
   const styles = getStyles(themeName);
 
   return (
     <View style={styles.container}>
       <View style={styles.panel}>
         <View style={styles.iconWrap}>
-          <MaterialSymbolIcon icon="description-outline-rounded" size={20} />
+          <MaterialSymbolIcon icon="description-outline-rounded" size={18} />
         </View>
         {badgeLabel ? <AppBadge label={badgeLabel} tone="public" /> : null}
         <Text style={styles.title}>{title}</Text>
-        {description ? <Text style={styles.description}>{description}</Text> : null}
+        {description ? (
+          <Text style={styles.description}>{description}</Text>
+        ) : null}
       </View>
       {actionLabel && onAction ? (
-        <AppButton fullWidth={false} label={actionLabel} onPress={onAction} variant="secondary" />
+        <AppButton
+          fullWidth={false}
+          label={actionLabel}
+          onPress={onAction}
+          size="compact"
+          variant="secondary"
+        />
       ) : null}
     </View>
   );
@@ -47,15 +55,15 @@ const getStyles = createThemedStyles(theme =>
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
       gap: theme.spacing.xs + 2,
     },
     panel: {
       width: '100%',
-      maxWidth: 340,
+      maxWidth: 360,
       alignItems: 'center',
       gap: theme.spacing.xs + 2,
-      borderRadius: theme.radius.md,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
@@ -64,9 +72,9 @@ const getStyles = createThemedStyles(theme =>
       paddingVertical: theme.spacing.sm + 2,
     },
     iconWrap: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
+      width: 32,
+      height: 32,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
@@ -76,14 +84,14 @@ const getStyles = createThemedStyles(theme =>
     },
     title: {
       color: theme.colors.textPrimary,
-      fontSize: 17,
+      fontSize: 15,
       fontWeight: '800',
       textAlign: 'center',
     },
     description: {
       color: theme.colors.textSecondary,
-      fontSize: 13,
-      lineHeight: 18,
+      fontSize: 12,
+      lineHeight: 17,
       textAlign: 'center',
     },
   }),

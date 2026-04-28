@@ -79,26 +79,25 @@ const getStyles = createThemedStyles(theme =>
     label: {
       color: theme.colors.textSecondary,
       fontSize: 12,
-      fontWeight: '800',
+      fontWeight: '700',
       letterSpacing: 0,
-      textTransform: 'uppercase',
     },
     input: {
-      minHeight: 44,
+      minHeight: 38,
       borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surfaceMuted,
+      backgroundColor: theme.colors.surface,
       color: theme.colors.textPrimary,
       paddingHorizontal: theme.spacing.sm + 2,
-      paddingVertical: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs + 2,
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: '500',
     },
     inputMultiline: {
       minHeight: 120,
-      paddingTop: theme.spacing.md,
+      paddingTop: theme.spacing.sm,
       textAlignVertical: 'top',
     },
     inputDisabled: {
@@ -110,8 +109,8 @@ const getStyles = createThemedStyles(theme =>
     },
     message: {
       color: theme.colors.textSecondary,
-      fontSize: 13,
-      lineHeight: 18,
+      fontSize: 12,
+      lineHeight: 17,
     },
     messageError: {
       color: theme.colors.danger,

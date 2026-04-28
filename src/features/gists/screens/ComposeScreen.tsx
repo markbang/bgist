@@ -5,16 +5,16 @@ import { createThemedStyles } from '../../../app/theme/tokens';
 import { useAppTheme } from '../../../app/theme/context';
 import { MaterialSymbolIcon } from '../../../components/TabIcons';
 import { useI18n } from '../../../i18n/context';
-import { AppBadge } from '../../../shared/ui/AppBadge';
 import { AppButton } from '../../../shared/ui/AppButton';
-import { AppCard } from '../../../shared/ui/AppCard';
-import { AppPageHeader } from '../../../shared/ui/AppPageHeader';
 import { AppScreen } from '../../../shared/ui/AppScreen';
+import { GistMobileHeader } from '../../../shared/ui/GistMobileHeader';
 
-function ComposeDetail({
+function ComposeRow({
+  icon,
   title,
   description,
 }: {
+  icon: React.ComponentProps<typeof MaterialSymbolIcon>['icon'];
   title: string;
   description: string;
 }) {
@@ -22,9 +22,14 @@ function ComposeDetail({
   const styles = getStyles(themeName);
 
   return (
-    <View style={styles.detailTile}>
-      <Text style={styles.detailTitle}>{title}</Text>
-      <Text style={styles.detailDescription}>{description}</Text>
+    <View style={styles.composeRow}>
+      <View style={styles.composeRowIcon}>
+        <MaterialSymbolIcon icon={icon} size={18} />
+      </View>
+      <View style={styles.composeRowCopy}>
+        <Text style={styles.composeRowTitle}>{title}</Text>
+        <Text style={styles.composeRowDescription}>{description}</Text>
+      </View>
     </View>
   );
 }
@@ -43,42 +48,45 @@ export function ComposeScreen({ navigation }: MainTabScreenProps<'Compose'>) {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <AppPageHeader
-            eyebrow={t('compose.eyebrow')}
-            title={t('compose.title')}
-            subtitle={t('compose.subtitle')}
-            accessory={<AppBadge label={t('compose.badge')} tone="public" />}
-          />
-        </View>
+        <GistMobileHeader
+          leftAction={{
+            label: 'x',
+            onPress: () => navigation.navigate('Home'),
+          }}
+          rightAction={{
+            label: '+',
+            onPress: handleCreate,
+          }}
+          showMark
+          title="Gist"
+        />
 
-        <AppCard style={styles.heroCard}>
-          <View style={styles.heroHeader}>
-            <View style={styles.heroIcon}>
-              <MaterialSymbolIcon icon="add-circle" size={22} />
-            </View>
-            <View style={styles.heroCopy}>
-              <AppBadge label={t('compose.eyebrow')} tone="public" />
-              <Text style={styles.heroTitle}>{t('compose.emptyTitle')}</Text>
-              <Text style={styles.heroDescription}>
-                {t('compose.emptyDescription')}
-              </Text>
-            </View>
+        <View style={styles.panel}>
+          <View style={styles.panelHeader}>
+            <Text style={styles.panelTitle}>{t('compose.title')}</Text>
+            <Text style={styles.panelDescription}>{t('compose.subtitle')}</Text>
           </View>
 
-          <View style={styles.detailsGrid}>
-            <ComposeDetail
+          <View style={styles.composeList}>
+            <ComposeRow
+              icon="description-outline-rounded"
               title={t('compose.badge')}
               description={t('compose.subtitle')}
             />
-            <ComposeDetail
+            <ComposeRow
+              icon="lock-rounded"
               title={t('compose.title')}
               description={t('compose.emptyDescription')}
             />
           </View>
 
-          <AppButton label={t('compose.cta')} onPress={handleCreate} />
-        </AppCard>
+          <AppButton
+            icon="add-circle-outline-rounded"
+            label={t('compose.cta')}
+            onPress={handleCreate}
+            style={styles.primaryAction}
+          />
+        </View>
       </ScrollView>
     </AppScreen>
   );
@@ -89,75 +97,72 @@ export default ComposeScreen;
 const getStyles = createThemedStyles(theme =>
   StyleSheet.create({
     content: {
-      paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
+      paddingTop: 0,
       paddingBottom: theme.spacing.xl,
-      gap: theme.spacing.md,
-    },
-    header: {
-      gap: theme.spacing.xs,
-    },
-    heroCard: {
-      gap: theme.spacing.md,
-    },
-    heroHeader: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
       gap: theme.spacing.sm,
     },
-    heroIcon: {
-      width: 44,
-      height: 44,
+    panel: {
       borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surfaceMuted,
-      alignItems: 'center',
-      justifyContent: 'center',
+      backgroundColor: theme.colors.surface,
+      overflow: 'hidden',
     },
-    heroCopy: {
-      flex: 1,
+    panelHeader: {
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.spacing.md,
+      paddingBottom: theme.spacing.sm,
       gap: theme.spacing.xs,
     },
-    heroTitle: {
+    panelTitle: {
       color: theme.colors.textPrimary,
-      fontSize: 22,
-      lineHeight: 28,
-      fontWeight: '900',
+      fontSize: 17,
+      lineHeight: 23,
+      fontWeight: '800',
       letterSpacing: 0,
     },
-    heroDescription: {
+    panelDescription: {
       color: theme.colors.textSecondary,
-      fontSize: 14,
-      lineHeight: 20,
+      fontSize: 13,
+      lineHeight: 18,
     },
-    detailsGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: theme.spacing.sm,
-    },
-    detailTile: {
-      flexGrow: 1,
-      minWidth: '47%',
-      borderRadius: theme.radius.md,
-      borderCurve: 'continuous',
-      borderWidth: 1,
+    composeList: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderBottomWidth: StyleSheet.hairlineWidth,
       borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surfaceMuted,
-      paddingHorizontal: theme.spacing.sm,
-      paddingVertical: theme.spacing.sm,
-      gap: theme.spacing.xs,
     },
-    detailTitle: {
+    composeRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: theme.spacing.sm,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.colors.border,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+    },
+    composeRowIcon: {
+      width: 26,
+      alignItems: 'center',
+      paddingTop: 1,
+    },
+    composeRowCopy: {
+      flex: 1,
+      gap: 2,
+    },
+    composeRowTitle: {
       color: theme.colors.textPrimary,
       fontSize: 14,
       fontWeight: '700',
     },
-    detailDescription: {
+    composeRowDescription: {
       color: theme.colors.textSecondary,
-      fontSize: 13,
-      lineHeight: 18,
+      fontSize: 12,
+      lineHeight: 17,
+    },
+    primaryAction: {
+      margin: theme.spacing.sm,
     },
   }),
 );

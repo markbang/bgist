@@ -1,8 +1,8 @@
 import React from 'react';
-import {StyleSheet, Text, View} from 'react-native';
-import {createThemedStyles} from '../../app/theme/tokens';
-import {useAppTheme} from '../../app/theme/context';
-import {AppButton} from './AppButton';
+import { StyleSheet, Text, View } from 'react-native';
+import { createThemedStyles } from '../../app/theme/tokens';
+import { useAppTheme } from '../../app/theme/context';
+import { AppButton } from './AppButton';
 
 interface AppErrorStateProps {
   title?: string;
@@ -17,7 +17,7 @@ export function AppErrorState({
   actionLabel = 'Try again',
   onRetry,
 }: AppErrorStateProps) {
-  const {themeName} = useAppTheme();
+  const { themeName } = useAppTheme();
   const styles = getStyles(themeName);
 
   return (
@@ -30,7 +30,13 @@ export function AppErrorState({
         <Text style={styles.description}>{description}</Text>
       </View>
       {onRetry ? (
-        <AppButton fullWidth={false} label={actionLabel} onPress={onRetry} variant="danger" />
+        <AppButton
+          fullWidth={false}
+          label={actionLabel}
+          onPress={onRetry}
+          size="compact"
+          variant="danger"
+        />
       ) : null}
     </View>
   );
@@ -42,15 +48,15 @@ const getStyles = createThemedStyles(theme =>
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
       gap: theme.spacing.xs + 2,
     },
     panel: {
       width: '100%',
-      maxWidth: 340,
+      maxWidth: 360,
       alignItems: 'center',
       gap: theme.spacing.xs + 2,
-      borderRadius: theme.radius.md,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       borderWidth: 1,
       borderColor: theme.colors.dangerBorder,
@@ -59,9 +65,9 @@ const getStyles = createThemedStyles(theme =>
       paddingVertical: theme.spacing.sm + 2,
     },
     icon: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
+      width: 32,
+      height: 32,
+      borderRadius: theme.radius.sm,
       borderCurve: 'continuous',
       alignItems: 'center',
       justifyContent: 'center',
@@ -74,14 +80,14 @@ const getStyles = createThemedStyles(theme =>
     },
     title: {
       color: theme.colors.textPrimary,
-      fontSize: 17,
+      fontSize: 15,
       fontWeight: '800',
       textAlign: 'center',
     },
     description: {
       color: theme.colors.textSecondary,
-      fontSize: 13,
-      lineHeight: 18,
+      fontSize: 12,
+      lineHeight: 17,
       textAlign: 'center',
     },
   }),
